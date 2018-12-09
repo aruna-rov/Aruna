@@ -1,57 +1,81 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
-  <component name="CMakeRunConfigurationManager" shouldGenerate="true" assignedExecutableTargets="true" buildAllGenerated="true">
+  <component name="CMakeRunConfigurationManager" shouldGenerate="true" shouldDeleteObsolete="true">
     <generated>
-      <config projectName="Aruna" targetName="PLATFORMIO" />
-      <config projectName="Aruna" targetName="Aruna" />
-      <config projectName="Aruna" targetName="PLATFORMIO_BUILD" />
       <config projectName="Aruna" targetName="PLATFORMIO_UPLOAD" />
-      <config projectName="Aruna" targetName="PLATFORMIO_CLEAN" />
-      <config projectName="Aruna" targetName="PLATFORMIO_TEST" />
-      <config projectName="Aruna" targetName="PLATFORMIO_PROGRAM" />
-      <config projectName="Aruna" targetName="PLATFORMIO_UPLOADFS" />
-      <config projectName="Aruna" targetName="PLATFORMIO_UPDATE_ALL" />
-      <config projectName="Aruna" targetName="PLATFORMIO_REBUILD_PROJECT_INDEX" />
       <config projectName="Aruna" targetName="DEBUG" />
+      <config projectName="Aruna" targetName="PLATFORMIO_BUILD" />
+      <config projectName="Aruna" targetName="PLATFORMIO_PROGRAM" />
+      <config projectName="Aruna" targetName="PLATFORMIO" />
+      <config projectName="Aruna" targetName="PLATFORMIO_REBUILD_PROJECT_INDEX" />
+      <config projectName="Aruna" targetName="PLATFORMIO_TEST" />
+      <config projectName="Aruna" targetName="PLATFORMIO_CLEAN" />
+      <config projectName="Aruna" targetName="Aruna" />
+      <config projectName="Aruna" targetName="PLATFORMIO_UPDATE_ALL" />
+      <config projectName="Aruna" targetName="PLATFORMIO_UPLOADFS" />
     </generated>
   </component>
-  <component name="CMakeSettings" AUTO_RELOAD="true" GENERATION_PASS_SYSTEM_ENVIRONMENT="true">
-    <ADDITIONAL_GENERATION_ENVIRONMENT>
-      <envs />
-    </ADDITIONAL_GENERATION_ENVIRONMENT>
+  <component name="CMakeSettings" AUTO_RELOAD="true">
+    <configurations>
+      <configuration PROFILE_NAME="Debug" CONFIG_NAME="Debug" />
+    </configurations>
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="ec922180-b3d3-40f1-af0b-2568113a9075" name="Default" comment="" />
+    <list default="true" id="ec922180-b3d3-40f1-af0b-2568113a9075" name="Default" comment="">
+      <change beforePath="$PROJECT_DIR$/.idea/clion.iml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/clion.iml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/platformio.iml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/platformio.iml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/include/main.h" beforeDir="false" afterPath="$PROJECT_DIR$/include/main.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/platformio.ini" beforeDir="false" afterPath="$PROJECT_DIR$/platformio.ini" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main.c" beforeDir="false" afterPath="$PROJECT_DIR$/src/main.c" afterDir="false" />
+    </list>
     <ignored path="platformio.iws" />
     <ignored path=".idea/workspace.xml" />
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
-    <option name="TRACKING_ENABLED" value="true" />
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
     <option name="LAST_RESOLUTION" value="IGNORE" />
   </component>
-  <component name="ChangesViewManager" flattened_view="true" show_ignored="false" />
   <component name="CreatePatchCommitExecutor">
     <option name="PATCH_PATH" value="" />
   </component>
-  <component name="ExecutionTargetManager" SELECTED_TARGET="default_target" />
+  <component name="ExecutionTargetManager" SELECTED_TARGET="CMakeBuildProfile:Debug" />
   <component name="FavoritesManager">
     <favorites_list name="Aruna" />
   </component>
   <component name="FileEditorManager">
-    <leaf>
-      <file leaf-file-name="platformio.ini" pinned="false" current-in-tab="true">
-        <entry file="file://$PROJECT_DIR$/platformio.ini"></entry>
+    <leaf SIDE_TABS_SIZE_LIMIT_KEY="300">
+      <file pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/platformio.ini">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="210">
+              <caret line="14" lean-forward="true" selection-start-line="14" selection-end-line="14" />
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file pinned="false" current-in-tab="true">
+        <entry file="file://$PROJECT_DIR$/.gitignore">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="450">
+              <caret line="30" lean-forward="true" selection-start-line="30" selection-end-line="30" />
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/src/main.c">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="135">
+              <caret line="9" column="1" lean-forward="true" selection-start-line="9" selection-start-column="1" selection-end-line="9" selection-end-column="1" />
+              <folding>
+                <element signature="e#39#56#0" expanded="true" />
+              </folding>
+            </state>
+          </provider>
+        </entry>
       </file>
     </leaf>
-  </component>
-  <component name="JsBuildToolGruntFileManager" detection-done="true" />
-  <component name="JsGulpfileManager">
-    <detection-done>true</detection-done>
-  </component>
-  <component name="NamedScopeManager">
-    <order />
   </component>
   <component name="ProjectFrameBounds">
     <option name="x" value="252" />
@@ -75,65 +99,28 @@
       </profile-state>
     </entry>
   </component>
-  <component name="ProjectLevelVcsManager" settingsEditedManually="false">
-    <OptionsSetting value="true" id="Add" />
-    <OptionsSetting value="true" id="Remove" />
-    <OptionsSetting value="true" id="Checkout" />
-    <OptionsSetting value="true" id="Update" />
-    <OptionsSetting value="true" id="Status" />
-    <OptionsSetting value="true" id="Edit" />
-    <ConfirmationsSetting value="0" id="Add" />
-    <ConfirmationsSetting value="0" id="Remove" />
-  </component>
   <component name="ProjectView">
-    <navigator currentView="ProjectPane" proportions="" version="1">
-      <flattenPackages />
-      <showMembers />
-      <showModules />
-      <showLibraryContents />
-      <hideEmptyPackages />
-      <abbreviatePackageNames />
-      <autoscrollToSource />
-      <autoscrollFromSource />
-      <sortByType />
-      <manualOrder />
+    <navigator proportions="" version="1">
       <foldersAlwaysOnTop value="true" />
     </navigator>
     <panes>
       <pane id="ProjectPane">
         <subPane>
-          <PATH>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="Aruna" />
-              <option name="myItemType" value="com.jetbrains.cidr.projectView.CidrFilesViewHelper$MyProjectTreeStructure$1" />
-            </PATH_ELEMENT>
-          </PATH>
-          <PATH>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="Aruna" />
-              <option name="myItemType" value="com.jetbrains.cidr.projectView.CidrFilesViewHelper$MyProjectTreeStructure$1" />
-            </PATH_ELEMENT>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="Aruna" />
-              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
-            </PATH_ELEMENT>
-          </PATH>
-          <PATH>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="Aruna" />
-              <option name="myItemType" value="com.jetbrains.cidr.projectView.CidrFilesViewHelper$MyProjectTreeStructure$1" />
-            </PATH_ELEMENT>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="Aruna" />
-              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
-            </PATH_ELEMENT>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="src" />
-              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
-            </PATH_ELEMENT>
-          </PATH>
+          <expand>
+            <path>
+              <item name="Aruna" type="b2602c69:ProjectViewProjectNode" />
+              <item name="Aruna" type="462c0819:PsiDirectoryNode" />
+            </path>
+            <path>
+              <item name="Aruna" type="b2602c69:ProjectViewProjectNode" />
+              <item name="Aruna" type="462c0819:PsiDirectoryNode" />
+              <item name="src" type="462c0819:PsiDirectoryNode" />
+            </path>
+          </expand>
+          <select />
         </subPane>
       </pane>
+      <pane id="Scope" />
     </panes>
   </component>
   <component name="PropertiesComponent">
@@ -144,69 +131,90 @@
     <property name="restartRequiresConfirmation" value="true" />
     <property name="FullScreen" value="false" />
   </component>
+  <component name="RunDashboard">
+    <option name="ruleStates">
+      <list>
+        <RuleState>
+          <option name="name" value="ConfigurationTypeDashboardGroupingRule" />
+        </RuleState>
+        <RuleState>
+          <option name="name" value="StatusDashboardGroupingRule" />
+        </RuleState>
+      </list>
+    </option>
+  </component>
   <component name="RunManager" selected="Application.PLATFORMIO_BUILD">
-    <configuration default="true" type="CMakeRunConfiguration" factoryName="Application" PASS_PARENT_ENVS="FALSE" PROJECT_NAME="Aruna" TARGET_NAME="Aruna" CONFIG_NAME="Debug">
-      <envs />
-      <method />
+    <configuration name="Build All" type="CMakeRunConfiguration" factoryName="Application" PASS_PARENT_ENVS_2="true" CONFIG_NAME="Debug" EXPLICIT_BUILD_TARGET_NAME="all">
+      <method v="2">
+        <option name="com.jetbrains.cidr.execution.CidrBuildBeforeRunTaskProvider$BuildBeforeRunTask" enabled="true" />
+      </method>
     </configuration>
-    <configuration default="true" type="js.build_tools.gulp" factoryName="Gulp.js">
+    <configuration name="PLATFORMIO_BUILD" type="CMakeRunConfiguration" factoryName="Application" PASS_PARENT_ENVS_2="true" PROJECT_NAME="Aruna" TARGET_NAME="PLATFORMIO_BUILD" CONFIG_NAME="Debug">
+      <method v="2">
+        <option name="com.jetbrains.cidr.execution.CidrBuildBeforeRunTaskProvider$BuildBeforeRunTask" enabled="true" />
+      </method>
+    </configuration>
+    <configuration name="PLATFORMIO_CLEAN" type="CMakeRunConfiguration" factoryName="Application" PASS_PARENT_ENVS_2="true" PROJECT_NAME="Aruna" TARGET_NAME="PLATFORMIO_CLEAN" CONFIG_NAME="Debug">
+      <method v="2">
+        <option name="com.jetbrains.cidr.execution.CidrBuildBeforeRunTaskProvider$BuildBeforeRunTask" enabled="true" />
+      </method>
+    </configuration>
+    <configuration name="PLATFORMIO_PROGRAM" type="CMakeRunConfiguration" factoryName="Application" PASS_PARENT_ENVS_2="true" PROJECT_NAME="Aruna" TARGET_NAME="PLATFORMIO_PROGRAM" CONFIG_NAME="Debug">
+      <method v="2">
+        <option name="com.jetbrains.cidr.execution.CidrBuildBeforeRunTaskProvider$BuildBeforeRunTask" enabled="true" />
+      </method>
+    </configuration>
+    <configuration name="PLATFORMIO_REBUILD_PROJECT_INDEX" type="CMakeRunConfiguration" factoryName="Application" PASS_PARENT_ENVS_2="true" PROJECT_NAME="Aruna" TARGET_NAME="PLATFORMIO_REBUILD_PROJECT_INDEX" CONFIG_NAME="Debug">
+      <method v="2">
+        <option name="com.jetbrains.cidr.execution.CidrBuildBeforeRunTaskProvider$BuildBeforeRunTask" enabled="true" />
+      </method>
+    </configuration>
+    <configuration name="PLATFORMIO_TEST" type="CMakeRunConfiguration" factoryName="Application" PASS_PARENT_ENVS_2="true" PROJECT_NAME="Aruna" TARGET_NAME="PLATFORMIO_TEST" CONFIG_NAME="Debug">
+      <method v="2">
+        <option name="com.jetbrains.cidr.execution.CidrBuildBeforeRunTaskProvider$BuildBeforeRunTask" enabled="true" />
+      </method>
+    </configuration>
+    <configuration name="PLATFORMIO_UPDATE" type="CMakeRunConfiguration" factoryName="Application" PASS_PARENT_ENVS_2="true" PROJECT_NAME="Aruna" TARGET_NAME="PLATFORMIO_UPDATE_ALL" CONFIG_NAME="Debug">
+      <method v="2">
+        <option name="com.jetbrains.cidr.execution.CidrBuildBeforeRunTaskProvider$BuildBeforeRunTask" enabled="true" />
+      </method>
+    </configuration>
+    <configuration name="PLATFORMIO_UPLOAD" type="CMakeRunConfiguration" factoryName="Application" PASS_PARENT_ENVS_2="true" PROJECT_NAME="Aruna" TARGET_NAME="PLATFORMIO_UPLOAD" CONFIG_NAME="Debug">
+      <method v="2">
+        <option name="com.jetbrains.cidr.execution.CidrBuildBeforeRunTaskProvider$BuildBeforeRunTask" enabled="true" />
+      </method>
+    </configuration>
+    <configuration name="PLATFORMIO_UPLOADFS" type="CMakeRunConfiguration" factoryName="Application" PASS_PARENT_ENVS_2="true" PROJECT_NAME="Aruna" TARGET_NAME="PLATFORMIO_UPLOADFS" CONFIG_NAME="Debug">
+      <method v="2">
+        <option name="com.jetbrains.cidr.execution.CidrBuildBeforeRunTaskProvider$BuildBeforeRunTask" enabled="true" />
+      </method>
+    </configuration>
+    <configuration default="true" type="CMakeRunConfiguration" factoryName="Application" PASS_PARENT_ENVS_2="true" PROJECT_NAME="Aruna" TARGET_NAME="Aruna" CONFIG_NAME="Debug">
+      <method v="2">
+        <option name="com.jetbrains.cidr.execution.CidrBuildBeforeRunTaskProvider$BuildBeforeRunTask" enabled="true" />
+      </method>
+    </configuration>
+    <configuration default="true" type="js.build_tools.gulp">
+      <node-interpreter>project</node-interpreter>
       <node-options />
       <gulpfile />
       <tasks />
       <arguments />
       <pass-parent-envs>true</pass-parent-envs>
-      <envs />
-      <method />
+      <method v="2" />
     </configuration>
-    <configuration default="false" name="Build All" type="CMakeRunConfiguration" factoryName="Application" WORKING_DIR="" PASS_PARENT_ENVS="FALSE" CONFIG_NAME="Debug" EXPLICIT_BUILD_TARGET_NAME="all">
-      <envs />
-      <method />
-    </configuration>
-    <configuration default="false" name="PLATFORMIO_BUILD" type="CMakeRunConfiguration" factoryName="Application" WORKING_DIR="" PASS_PARENT_ENVS="FALSE" PROJECT_NAME="Aruna" TARGET_NAME="PLATFORMIO_BUILD" CONFIG_NAME="Debug">
-      <envs />
-      <method />
-    </configuration>
-    <configuration default="false" name="PLATFORMIO_CLEAN" type="CMakeRunConfiguration" factoryName="Application" WORKING_DIR="" PASS_PARENT_ENVS="FALSE" PROJECT_NAME="Aruna" TARGET_NAME="PLATFORMIO_CLEAN" CONFIG_NAME="Debug">
-      <envs />
-      <method />
-    </configuration>
-    <configuration default="false" name="PLATFORMIO_TEST" type="CMakeRunConfiguration" factoryName="Application" WORKING_DIR="" PASS_PARENT_ENVS="FALSE" PROJECT_NAME="Aruna" TARGET_NAME="PLATFORMIO_TEST" CONFIG_NAME="Debug">
-      <envs />
-      <method />
-    </configuration>
-    <configuration default="false" name="PLATFORMIO_UPLOAD" type="CMakeRunConfiguration" factoryName="Application" WORKING_DIR="" PASS_PARENT_ENVS="FALSE" PROJECT_NAME="Aruna" TARGET_NAME="PLATFORMIO_UPLOAD" CONFIG_NAME="Debug">
-      <envs />
-      <method />
-    </configuration>
-    <configuration default="false" name="PLATFORMIO_UPLOADFS" type="CMakeRunConfiguration" factoryName="Application" WORKING_DIR="" PASS_PARENT_ENVS="FALSE" PROJECT_NAME="Aruna" TARGET_NAME="PLATFORMIO_UPLOADFS" CONFIG_NAME="Debug">
-      <envs />
-      <method />
-    </configuration>
-    <configuration default="false" name="PLATFORMIO_PROGRAM" type="CMakeRunConfiguration" factoryName="Application" WORKING_DIR="" PASS_PARENT_ENVS="FALSE" PROJECT_NAME="Aruna" TARGET_NAME="PLATFORMIO_PROGRAM" CONFIG_NAME="Debug">
-      <envs />
-      <method />
-    </configuration>
-    <configuration default="false" name="PLATFORMIO_UPDATE" type="CMakeRunConfiguration" factoryName="Application" WORKING_DIR="" PASS_PARENT_ENVS="FALSE" PROJECT_NAME="Aruna" TARGET_NAME="PLATFORMIO_UPDATE_ALL" CONFIG_NAME="Debug">
-      <envs />
-      <method />
-    </configuration>
-    <configuration default="false" name="PLATFORMIO_REBUILD_PROJECT_INDEX" type="CMakeRunConfiguration" factoryName="Application" WORKING_DIR="" PASS_PARENT_ENVS="FALSE" PROJECT_NAME="Aruna" TARGET_NAME="PLATFORMIO_REBUILD_PROJECT_INDEX" CONFIG_NAME="Debug">
-      <envs />
-      <method />
-    </configuration>
-    <list size="9">
-      <item index="0" class="java.lang.String" itemvalue="Application.Build All" />
-      <item index="1" class="java.lang.String" itemvalue="Application.PLATFORMIO_BUILD" />
-      <item index="2" class="java.lang.String" itemvalue="Application.PLATFORMIO_UPLOAD" />
-      <item index="3" class="java.lang.String" itemvalue="Application.PLATFORMIO_CLEAN" />
-      <item index="4" class="java.lang.String" itemvalue="Application.PLATFORMIO_TEST" />
-      <item index="5" class="java.lang.String" itemvalue="Application.PLATFORMIO_PROGRAM" />
-      <item index="6" class="java.lang.String" itemvalue="Application.PLATFORMIO_UPLOADFS" />
-      <item index="7" class="java.lang.String" itemvalue="Application.PLATFORMIO_UPDATE" />
-      <item index="8" class="java.lang.String" itemvalue="Application.PLATFORMIO_REBUILD_PROJECT_INDEX" />
+    <list>
+      <item itemvalue="Application.Build All" />
+      <item itemvalue="Application.PLATFORMIO_BUILD" />
+      <item itemvalue="Application.PLATFORMIO_UPLOAD" />
+      <item itemvalue="Application.PLATFORMIO_CLEAN" />
+      <item itemvalue="Application.PLATFORMIO_TEST" />
+      <item itemvalue="Application.PLATFORMIO_PROGRAM" />
+      <item itemvalue="Application.PLATFORMIO_UPLOADFS" />
+      <item itemvalue="Application.PLATFORMIO_UPDATE" />
+      <item itemvalue="Application.PLATFORMIO_REBUILD_PROJECT_INDEX" />
     </list>
   </component>
-  <component name="ShelveChangesManager" show_recycled="false" />
   <component name="SvnConfiguration">
     <configuration />
   </component>
@@ -215,15 +223,18 @@
       <changelist id="ec922180-b3d3-40f1-af0b-2568113a9075" name="Default" comment="" />
       <created>1435919971910</created>
       <option name="number" value="Default" />
+      <option name="presentableId" value="Default" />
       <updated>1435919971910</updated>
     </task>
     <servers />
   </component>
+  <component name="TimeTrackingManager">
+    <option name="totallyTimeSpent" value="2000" />
+  </component>
   <component name="ToolWindowManager">
-    <frame x="181" y="23" width="1400" height="1000" extended-state="0" />
-    <editor active="true" />
+    <frame x="0" y="6" width="1920" height="1074" extended-state="6" />
     <layout>
-      <window_info id="Project" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.24945612" sideWeight="0.5" order="0" side_tool="false" content_ui="tabs" />
+      <window_info id="Project" order="0" visible="true" weight="0.18643162" />
     </layout>
   </component>
   <component name="Vcs.Log.UiProperties">
@@ -233,15 +244,6 @@
     <option name="RECENTLY_FILTERED_BRANCH_GROUPS">
       <collection />
     </option>
-  </component>
-  <component name="VcsContentAnnotationSettings">
-    <option name="myLimit" value="2678400000" />
-  </component>
-  <component name="XDebuggerManager">
-    <breakpoint-manager>
-      <option name="time" value="4" />
-    </breakpoint-manager>
-    <watches-manager />
   </component>
   <component name="masterDetails">
     <states>

@@ -5,6 +5,6 @@
 #ifndef ARUNA_MAIN_H
 #define ARUNA_MAIN_H
 
-void main_app();
+void app_main();
 
 #endif //ARUNA_MAIN_H
