@@ -5,6 +5,6 @@
 #ifndef ARUNA_MAIN_H
 #define ARUNA_MAIN_H
 
-void app_main();
+extern "C" void app_main(void);
 
 #endif //ARUNA_MAIN_H

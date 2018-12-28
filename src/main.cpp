@@ -5,6 +5,7 @@
 #include "main.h"
 #include <stdio.h>
 
-void app_main() {
+extern "C" void app_main(void) {
     printf("hello world!");
+    fflush(stdout);
 }
