@@ -37,10 +37,10 @@ typedef struct {
      * @brief  Data to be transmitted.
      */
     com_data_t data;
-} _com_transmitpackege_t;
+} _com_transmitpackage_t;
 
 /**
- * datapackege containing the endpoint and data to be send.
+ * datapackage containing the endpoint and data to be send.
  */
 typedef struct {
     /**
@@ -48,15 +48,15 @@ typedef struct {
      * @retval None
      */
     struct com_endpoint_t *com_endpoint;
-    
+
     /**
-     * @brief Data to be send. size of `COM_DATA_SIZE`
+     * @brief Data to be send.
      */
     com_data_t data;
-} com_datapackege_t;
+} com_datapackage_t;
 
 /**
- * endpoint to of a com channel
+ * endpoint type of a com channel
  */
 typedef struct {
     /**
@@ -74,25 +74,26 @@ typedef struct {
      * @brief handeler to handle incomming connections 
      * @note incomming data is not garanteed to be `COM_DATA_SIZE` in length. Could be smaller.
      * @param: `com_data_t` incomming data
-     * @retval com_datapackege_t: reply to send back.
+     * @retval com_datapackage_t: reply to send back.
      */
-    com_datapackege_t (*handeler)(com_data_t);
+    com_datapackage_t (*handeler)(com_data_t);
+    // TODO infestigate if com_datapackage_t and com_endpoint_t dont loop.
 } com_endpoint_t;
 
 /**
  * @brief high priority transmission queue
  */
-com_datapackege_t _transmission0_queue[COM_BUFFER_SIZE];
+_com_transmitpackage_t _com_transmission0_queue[COM_BUFFER_SIZE];
 
 /**
  * @brief mid priority transmission queue
  */
-com_datapackege_t _transmission1_queue[COM_BUFFER_SIZE];
+_com_transmitpackage_t _com_transmission1_queue[COM_BUFFER_SIZE];
 
 /**
  * @brief low priority transmission queue
  */
-com_datapackege_t _transmission2_queue[COM_BUFFER_SIZE];
+_com_transmitpackage_t _com_transmission2_queue[COM_BUFFER_SIZE];
 
 /**
  * @brief  Get the link type
@@ -114,7 +115,7 @@ unsigned int com_get_speed();
  *  * `COM_ERR_INVALID_PARAMETERS` if parameters are invalid
  *  * `COM_OK` if it was succesfully added.
  */
-com_err com_register(com_endpoint_t endpoint);
+com_err com_register_endpoint(com_endpoint_t endpoint);
 
 /**
  * @brief  unregester an endpoint
@@ -123,19 +124,19 @@ com_err com_register(com_endpoint_t endpoint);
  *  * `COM_ERR_INVALID_PARAMETERS` if parameters are invalid
  *  * `COM_OK` if it was succesfully removed.
  */
-com_err com_unregister(com_endpoint_t endpoint);
+com_err com_unregister_endpoint(com_endpoint_t endpoint);
 
 /**
  * @brief  Send data.
  * @note   
- * @param  data: com_datapackege_t to be placed in the queue.
+ * @param  data: com_datapackage_t to be placed in the queue.
  * @retval com_err
  *  * `COM_ERR_INVALID_PARAMETERS` if parameters are invalid
  *  * `COM_OK` if it was succesfully send.
  *  * `COM_ERR_NO_CONNECTION` if there is no connection,
  *  * `COM_ERR_BUFFER_OVERFLOW` if the data was not added to the bugger due an overflow,
  */
-com_err com_send(com_datapackege_t data);
+com_err com_send(com_datapackage_t data);
 
 /**
  * @brief  Start communication. Using `COM_LINK_HARDWARE` to define hardware
@@ -178,11 +179,18 @@ void _com_int_incomming_connection();
 void _com_transmissionQueueHandeler();
 
 /**
- * @brief  directly transmit a packege. Do not call directly. Use `com_send()` instead.
- * @param  package: packege to be send
+ * @brief  directly transmit a package. Do not call directly. Use `com_send()` instead.
+ * @param  package: package to be send
  * @retval None
  */
-void _com_transmit(_com_transmitpackege_t package);
+void _com_transmit(_com_transmitpackage_t package);
+
+/**
+ * @brief  Strips `com_datapackage_t` to `_com_transmitpackage_t`
+ * @param  datap: paclage to be stripped.
+ * @retval _com_transmitpackage_t
+ */
+_com_transmitpackage_t _com_datapackage2transmitpackage(com_datapackage_t datap);
 
 
 #endif // ARUNA_COM_H
