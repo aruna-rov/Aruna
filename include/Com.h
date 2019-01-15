@@ -102,7 +102,9 @@ public:
     /**
      * Constructor
      */
-    Com();
+    Com(){
+
+    }
 
     /**
      * @brief  Start new communication. Using `COM_LINK_HARDWARE` to define hardware

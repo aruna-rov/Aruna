@@ -77,20 +77,24 @@ public:
      * start the driver.
      * @return
      */
-    virtual com_err start() = 0;
+    virtual com_err start(){
+        return COM_OK;
+    }
 
     /**
      * Stop the driver.
      * @return
      */
-    virtual com_err stop() = 0;
+    virtual com_err stop(){
+        return COM_OK;
+    }
 
     /**
      * Constuctor
      */
     ComDriver() {
         start();
-    };
+    }
 
     /**
      * Destructor
