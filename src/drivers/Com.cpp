@@ -206,6 +206,25 @@ unsigned int Com::rateDriver(ComDriver &driver) {
 }
 
 void Com::transmissionQueueHandeler() {
-    std::queue<com_transmitpackage_t> q0;
-//    TODO transmissionN_queue moet een queue object zijn, anders is dit erg lastig te programeren.
+//    TODO deze vergelijking kost misschien te veel tijd.
+    while (this->get_status() == COM_RUNNING) {
+        if (!transmission1_queue->empty()) {
+            this->getDriver()->transmit(transmission1_queue->front(), 1);
+            transmission1_queue->pop();
+        }
+        while (!transmission0_queue->empty()) {
+            this->getDriver()->transmit(transmission0_queue->front(), 0);
+            transmission0_queue->pop();
+        }
+        if (!transmission1_queue->empty()) {
+            this->getDriver()->transmit(transmission1_queue->front(), 1);
+            transmission1_queue->pop();
+        }
+        if (!transmission2_queue->empty()) {
+            this->getDriver()->transmit(transmission2_queue->front(), 2);
+            transmission2_queue->pop();
+        }
+    }
+//    deze recursie kost misschien heel veel geheugen.
+    return this->transmissionQueueHandeler();
 }
