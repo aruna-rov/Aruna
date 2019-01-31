@@ -8,6 +8,7 @@
 #include <stddef.h>
 //#include <drivers/com/UART.h>
 #include "queue"
+#include "set"
 static const size_t COM_DATA_SIZE = 32;
 static const size_t COM_ENDPOINT_NAME_SIZE = 7;
 
@@ -23,7 +24,9 @@ enum com_err {
     COM_ERR_INVALID_PARAMETERS,
     COM_ERR_HARDWARE,
     COM_ERR_PROTOCOL,
-    COM_ERR_NO_RESPONSE
+    COM_ERR_NO_RESPONSE,
+    COM_ERR_NO_CHANNEL,
+    COM_ERR_CHANNEL_EXISTS
 };
 
 enum com_link_t {
@@ -100,7 +103,6 @@ class UART;
 
 class Com {
 public:
-    static const short CHANNEL_BUFFER_SIZE = 32;
 
 // control functions
 
@@ -263,8 +265,7 @@ private:
     /**
      * @brief all endpoints
      */
-    com_endpoint_t *channels[CHANNEL_BUFFER_SIZE];
-//    TODO misschien is het beter als we een linked list of vector gebruiken?
+    std::set<com_endpoint_t> *channels;
 
     /**
      * @brief stores the com status

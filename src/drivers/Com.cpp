@@ -79,33 +79,24 @@ com_err Com::resume() {
 }
 
 com_err Com::register_channel(com_endpoint_t &endpoint) {
-//    TODO testen, denk niet dat dit werkt namelijk. Want de size is altijd 32. Misschien linked list of vector gebruiken?
-    size_t size = (sizeof(this->channels) / sizeof(*this->channels));
-    if (size > this->CHANNEL_BUFFER_SIZE)
+    if( channels->find(endpoint) != channels->end())
+        return COM_ERR_CHANNEL_EXISTS;
+    if (channels->insert(endpoint).second)
+        return COM_OK;
+    else
         return COM_ERR_BUFFER_OVERFLOW;
-//    dit creerd volgens mij memory leaks.
-//    this->channels[size++] = &endpoint;
-    return COM_OK;
+//    TODO handeler fixen.
 }
 
 com_err Com::unregister_channel(com_endpoint_t &endpoint) {
-//    channel array plekje word nu verwijderd, maar kan niet opnieuw worden gevuld.
-    for (int i = 0; i < (sizeof(this->channels) / sizeof(*this->channels)); ++i) {
-        if (this->channels[i]->name == endpoint.name) {
-            com_endpoint_t empty = {
-                    "0",
-                    0,
-//                    geeft compiler warning omdat hij geen handeler heeft.
-            };
-//            dit maakt volgens mij memory leaks.
-            this->channels[i] = &empty;
-        }
-    }
-//    TODO error handeling
-    return COM_OK;
+    if (channels->erase(endpoint))
+        return COM_OK;
+    else
+        return COM_ERR_NO_CHANNEL;
 }
 
 com_err Com::send(com_datapackage_t data) {
+//    TODO checken of com_datap endpoint wel bestaat.
     switch (data.com_endpoint->priority) {
 //        TODO error handeling
         case 0:
@@ -225,6 +216,7 @@ void Com::transmissionQueueHandeler() {
             transmission2_queue->pop();
         }
     }
+//    deze methode doet nu aan busy waiting, wat natuurlijk niet idiaal is.
 //    deze recursie kost misschien heel veel geheugen.
     return this->transmissionQueueHandeler();
 }
