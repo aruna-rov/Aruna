@@ -79,6 +79,7 @@ com_err Com::resume() {
 }
 
 com_err Com::register_channel(com_endpoint_t &endpoint) {
+//    TODO testen of deze check wel werkt.
     if( channels->find(endpoint) != channels->end())
         return COM_ERR_CHANNEL_EXISTS;
     if (channels->insert(endpoint).second)
@@ -96,9 +97,10 @@ com_err Com::unregister_channel(com_endpoint_t &endpoint) {
 }
 
 com_err Com::send(com_datapackage_t data) {
-//    TODO checken of com_datap endpoint wel bestaat.
+    if (channels->find(*data.com_endpoint) == channels->end()) {
+        return COM_ERR_NO_CHANNEL;
+    }
     switch (data.com_endpoint->priority) {
-//        TODO error handeling
         case 0:
             transmission0_queue->push(this->datapackage2transmitpackage(data));
             break;

@@ -77,6 +77,10 @@ struct com_endpoint_t {
      * @param: `com_data_t` incomming data
      */
     void (*handeler)(com_data_t);
+
+    bool operator<(const com_endpoint_t &b) const {
+        return this->name < b.name;
+    }
 };
 
 /**
@@ -103,6 +107,7 @@ class UART;
 
 class Com {
 public:
+    static const short CHANNEL_BUFFER_SIZE = 32;
 
 // control functions
 
