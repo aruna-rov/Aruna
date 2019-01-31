@@ -6,7 +6,8 @@
 #define ARUNA_COM_H
 
 #include <stddef.h>
-
+//#include <drivers/com/UART.h>
+#include "queue"
 static const size_t COM_DATA_SIZE = 32;
 static const size_t COM_ENDPOINT_NAME_SIZE = 7;
 
@@ -16,6 +17,7 @@ enum com_err {
     COM_OK,
     COM_ERR_NOT_STARTED,
     COM_ERR_NOT_PAUSED,
+    COM_ERR_NOT_STOPPED,
     COM_ERR_NO_CONNECTION,
     COM_ERR_BUFFER_OVERFLOW,
     COM_ERR_INVALID_PARAMETERS,
@@ -90,8 +92,11 @@ struct com_datapackage_t {
     com_data_t data;
 };
 
-#include "ComDriver.h"
+#include "com/ComDriver.h"
 class ComDriver;
+
+// candidates
+class UART;
 
 class Com {
 public:
@@ -102,9 +107,7 @@ public:
     /**
      * Constructor
      */
-    Com(){
-
-    }
+    Com();
 
     /**
      * @brief  Start new communication. Using `COM_LINK_HARDWARE` to define hardware
@@ -121,7 +124,8 @@ public:
      *  * `COM_HARDWARE_ERROR` if the hardware fails.
      *  * `COM_OK` great success!
      */
-    com_err start(ComDriver& driver);
+//     TODO documentatie
+    com_err start(ComDriver* driver);
 
     /**
      * @brief  Stop the communication, free all queue's, channels and buffers
@@ -139,7 +143,7 @@ public:
      *  * `COM_ERR_INVALID_PARAMETERS` if parameters are invalid
      *  * `COM_OK` if it was succesfully added.
      */
-    com_err register_channel(com_endpoint_t endpoint);
+    com_err register_channel(com_endpoint_t &endpoint);
 
     /**
      * @brief  unregister an endpoint
@@ -148,7 +152,7 @@ public:
      *  * `COM_ERR_INVALID_PARAMETERS` if parameters are invalid
      *  * `COM_OK` if it was succesfully removed.
      */
-    com_err unregister_channel(com_endpoint_t endpoint);
+    com_err unregister_channel(com_endpoint_t &endpoint);
 
     /**
      * @brief  Send data.
@@ -232,30 +236,35 @@ private:
 
     // variables
 
+    ComDriver** driverCandidates = {
+//            TODO geeft errors, had even geen zin om het te fixen. Weet ook nog niet of dit wel de beste manier is.
+//            UART
+    };
     /**
      * @brief high priority transmission queue
      */
-    com_transmitpackage_t transmission0_queue[TRANSMIT_QUEUE_BUFFER_SIZE];
+    std::queue<com_transmitpackage_t> transmission0_queue[TRANSMIT_QUEUE_BUFFER_SIZE];
 
     /**
      * @brief mid priority transmission queue
      */
-    com_transmitpackage_t transmission1_queue[TRANSMIT_QUEUE_BUFFER_SIZE];
+    std::queue<com_transmitpackage_t> transmission1_queue[TRANSMIT_QUEUE_BUFFER_SIZE];
 
     /**
      * @brief low priority transmission queue
      */
-    com_transmitpackage_t transmission2_queue[TRANSMIT_QUEUE_BUFFER_SIZE];
+    std::queue<com_transmitpackage_t> transmission2_queue[TRANSMIT_QUEUE_BUFFER_SIZE];
 
     /**
      * @brief incomming stransmission queue.
      */
-    com_transmitpackage_t incomming_transmission_queue[TRANSMIT_QUEUE_BUFFER_SIZE];
+    std::queue<com_transmitpackage_t> incomming_transmission_queue[TRANSMIT_QUEUE_BUFFER_SIZE];
 
     /**
      * @brief all endpoints
      */
-    com_endpoint_t channels[CHANNEL_BUFFER_SIZE];
+    com_endpoint_t *channels[CHANNEL_BUFFER_SIZE];
+//    TODO misschien is het beter als we een linked list of vector gebruiken?
 
     /**
      * @brief stores the com status
@@ -263,15 +272,9 @@ private:
     com_status status;
 
     /**
-     * stores the link type.
+     * stores the driver.
      */
-    com_link_t link;
-
-    /**
-     * com speed
-     */
-    unsigned int speed;
-
+    ComDriver *driver;
 
     /**
      * @brief  Strips `com_datapackage_t` to `_com_transmitpackage_t`
@@ -285,6 +288,33 @@ private:
      * @retval None
      */
     void transmissionQueueHandeler();
+
+
+//    TODO misschien moeten de driver public gemaakt worden?
+    /**
+     * get the driver
+     * @return ComdDriver object
+     */
+    ComDriver* getDriver();
+
+    /**
+     * pick the best available driver
+     * @return ComDriver best candidate object.
+     */
+    ComDriver* pickDriver();
+
+    /**
+     * set the driver
+     * @param driver to use.
+     */
+    void setDriver(ComDriver &driver);
+
+    /**
+     * rate the driver on speed, errors, active connection, realtime, connection type etc.
+     * @param driver
+     * @return rating of the driver. Higher is better.
+     */
+    unsigned int rateDriver(ComDriver &driver);
 
 
 };

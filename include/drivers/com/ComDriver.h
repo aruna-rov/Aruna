@@ -5,8 +5,9 @@
 #ifndef ARUNA_COMDRIVER_H
 #define ARUNA_COMDRIVER_H
 
-#include <stddef.h>
-#include "Com.h"
+//#include <stddef.h>
+#include <drivers/Com.h>
+#include "drivers/Com.h"
 
 class ComDriver {
 public:
@@ -71,7 +72,9 @@ public:
      * is the hardware found and operationable?
      * @return true/false
      */
-    virtual bool isHardwareConnected() = 0;
+    virtual bool isHardwareConnected() {
+        return isEndpointConnected();
+    }
 
     /**
      * start the driver.
