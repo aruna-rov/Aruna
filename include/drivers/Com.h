@@ -5,10 +5,9 @@
 #ifndef ARUNA_COM_H
 #define ARUNA_COM_H
 
-#include <stddef.h>
-//#include <drivers/com/UART.h>
 #include "queue"
 #include "set"
+#include "tuple"
 static const size_t COM_DATA_SIZE = 32;
 static const size_t COM_ENDPOINT_NAME_SIZE = 7;
 
@@ -108,9 +107,6 @@ struct com_datapackage_t {
 
 #include "com/ComDriver.h"
 class ComDriver;
-
-// candidates
-class UART;
 
 class Com {
 public:
@@ -335,7 +331,8 @@ private:
      * pick the best available driver
      * @return ComDriver best candidate object.
      */
-    ComDriver* pickDriver();
+//     TODO documentatie
+    std::tuple<ComDriver*, com_err> pickDriver();
 
     /**
      * set the driver
@@ -361,5 +358,5 @@ private:
 
 };
 
-static Com Com;
+extern Com COM;
 #endif //ARUNA_COM_H

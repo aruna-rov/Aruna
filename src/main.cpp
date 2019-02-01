@@ -3,9 +3,11 @@
 //
 
 #include "main.h"
-#include <stdio.h>
-
+#include <drivers/Com.h>
+#include "esp_log.h"
 extern "C" void app_main(void) {
-    printf("hello world!");
-    fflush(stdout);
+    Com COM;
+    ESP_LOGI("MAIN", "hello world!");
+    COM.start();
+    ESP_LOGD("COM", "COM status: %d", COM.get_status());
 }

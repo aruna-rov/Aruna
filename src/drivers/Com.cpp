@@ -3,7 +3,6 @@
 //
 
 #include <drivers/Com.h>
-#include <esp_intr_alloc.h>
 
 
 Com::Com() {
@@ -11,7 +10,11 @@ Com::Com() {
 }
 
 com_err Com::start() {
-    return this->start(pickDriver());
+    auto dr = pickDriver();
+    if (std::get<1>(dr) == COM_OK) {
+        return this->start(std::get<0>(dr));
+    }
+    return std::get<1>(dr);
 }
 
 com_err Com::start(ComDriver *driver) {
@@ -155,15 +158,13 @@ void Com::setDriver(ComDriver &driver) {
     this->driver = &driver;
 }
 
-ComDriver *Com::pickDriver() {
+std::tuple<ComDriver*, com_err> Com::pickDriver() {
 //    bestpick initalisren omdat hij anders een lege terug kan geven.
     ComDriver *bestPick = NULL;
     unsigned int bestPickScore = 0;
     unsigned int s = 0;
-//    TODO error handeling als er geen driver candidates zijn.
-//      we moeten een soort van tupple ofzo returnen.
-//    if (!driverCandidates.size())
-//        return COM_ERR_NO_DRIVER;
+    if (!driverCandidates.size())
+        return std::make_tuple(bestPick, COM_ERR_NO_DRIVER);
     for (auto driver=driverCandidates.cbegin(); driver != driverCandidates.cend(); ++driver) {
         s = rateDriver(**driver);
         if (s > bestPickScore) {
@@ -171,10 +172,11 @@ ComDriver *Com::pickDriver() {
             bestPickScore = s;
         }
     }
-    return bestPick;
+    return std::make_tuple(bestPick, COM_OK);
 }
 
 unsigned int Com::rateDriver(ComDriver &driver) {
+//    TODO error handeling
     unsigned int score = 0;
     driver.start();
     if (driver.isHardwareConnected())
@@ -252,22 +254,22 @@ com_err Com::register_candidate_driver(ComDriver *driver) {
     }
     if (!driverCandidates.insert(driver).second)
         return COM_ERR_BUFFER_OVERFLOW;
-    if (get_status() == COM_RUNNING) {
-//    TODO    pickDriver moet in een aparte thread.
-        pickDriver();
-    }
+//    if (get_status() == COM_RUNNING) {
+////    TODO    pickDriver moet in een aparte thread.
+////          error correctie
+//        pickDriver();
+//    }
     return COM_OK;
 }
 
 com_err Com::unregister_candidate_driver(ComDriver *driver) {
     if (driverCandidates.erase(driver)) {
-        if (this->driver == driver)
-//        TODO pickdriver moet in aparte thread.
-            pickDriver();
+//        if (this->driver == driver)
+////        TODO pickdriver moet in aparte thread.
+////          error correctie
+//            pickDriver();
         return COM_OK;
     }
     else
         return COM_ERR_NO_DRIVER;
 }
-
-
