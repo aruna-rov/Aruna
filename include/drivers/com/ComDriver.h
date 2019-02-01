@@ -7,7 +7,6 @@
 
 //#include <stddef.h>
 #include <drivers/Com.h>
-#include "drivers/Com.h"
 
 class ComDriver {
 public:

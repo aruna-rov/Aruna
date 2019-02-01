@@ -3,6 +3,7 @@
 //
 
 #include <drivers/Com.h>
+#include <esp_intr_alloc.h>
 
 
 Com::Com() {
@@ -156,17 +157,20 @@ void Com::setDriver(ComDriver &driver) {
 
 ComDriver *Com::pickDriver() {
 //    bestpick initalisren omdat hij anders een lege terug kan geven.
-    ComDriver *bestPick = driverCandidates[0];
+    ComDriver *bestPick = NULL;
     unsigned int bestPickScore = 0;
     unsigned int s = 0;
-    for (int i = 0; i < (sizeof(driverCandidates) / sizeof(*driverCandidates)); ++i) {
-        s = rateDriver(*driverCandidates[i]);
+//    TODO error handeling als er geen driver candidates zijn.
+//      we moeten een soort van tupple ofzo returnen.
+//    if (!driverCandidates.size())
+//        return COM_ERR_NO_DRIVER;
+    for (auto driver=driverCandidates.cbegin(); driver != driverCandidates.cend(); ++driver) {
+        s = rateDriver(**driver);
         if (s > bestPickScore) {
-            bestPick = driverCandidates[i];
+            bestPick = *driver;
             bestPickScore = s;
         }
     }
-//    TODO error handeling als er geen driver candidates zijn.
     return bestPick;
 }
 
@@ -201,6 +205,7 @@ unsigned int Com::rateDriver(ComDriver &driver) {
 void Com::transmissionQueueHandeler() {
 //    TODO deze vergelijking kost misschien te veel tijd.
     while (this->get_status() == COM_RUNNING) {
+//        TODO error handeling.
         if (!transmission1_queue->empty()) {
             this->getDriver()->transmit(transmission1_queue->front(), 1);
             transmission1_queue->pop();
@@ -222,3 +227,47 @@ void Com::transmissionQueueHandeler() {
 //    deze recursie kost misschien heel veel geheugen.
     return this->transmissionQueueHandeler();
 }
+
+com_err Com::incoming_connection(com_transmitpackage_t package) {
+
+/*
+ *    TODO O(N) is eigenlijk te langzaam.
+ *    Als we het meteen kunnen opzoeken door ook nog een set te maken (of hashing table) van de namen
+ *    scheelt dat ons heel veel tijd want dan is het O(1)!
+ */
+    for (auto it=channels->cbegin(); it != channels->cend(); ++it) {
+        if(it->name == package.endpoint_name) {
+            it->handeler(package.data);
+            return COM_OK;
+            break;
+        }
+    }
+    return COM_ERR_NO_CHANNEL;
+
+}
+
+com_err Com::register_candidate_driver(ComDriver *driver) {
+    if (driverCandidates.find(driver) != driverCandidates.end()) {
+        return COM_ERR_DRIVER_EXISTS;
+    }
+    if (!driverCandidates.insert(driver).second)
+        return COM_ERR_BUFFER_OVERFLOW;
+    if (get_status() == COM_RUNNING) {
+//    TODO    pickDriver moet in een aparte thread.
+        pickDriver();
+    }
+    return COM_OK;
+}
+
+com_err Com::unregister_candidate_driver(ComDriver *driver) {
+    if (driverCandidates.erase(driver)) {
+        if (this->driver == driver)
+//        TODO pickdriver moet in aparte thread.
+            pickDriver();
+        return COM_OK;
+    }
+    else
+        return COM_ERR_NO_DRIVER;
+}
+
+

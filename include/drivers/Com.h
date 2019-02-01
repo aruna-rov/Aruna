@@ -26,7 +26,9 @@ enum com_err {
     COM_ERR_PROTOCOL,
     COM_ERR_NO_RESPONSE,
     COM_ERR_NO_CHANNEL,
-    COM_ERR_CHANNEL_EXISTS
+    COM_ERR_CHANNEL_EXISTS,
+    COM_ERR_DRIVER_EXISTS,
+    COM_ERR_NO_DRIVER
 };
 
 enum com_link_t {
@@ -76,10 +78,15 @@ struct com_endpoint_t {
      * @note incomming data is not garanteed to be `COM_DATA_SIZE` in length. Could be smaller.
      * @param: `com_data_t` incomming data
      */
+//     TODO nu heeft de handeler alleen de data, het is ook handig als hij de afzender weet.
     void (*handeler)(com_data_t);
 
     bool operator<(const com_endpoint_t &b) const {
         return this->name < b.name;
+    }
+
+    bool operator==(const char name[COM_ENDPOINT_NAME_SIZE]) const {
+        return this->name == name;
     }
 };
 
@@ -210,6 +217,7 @@ public:
      */
     com_link_t get_link_type();
 
+//    TODO documentatie
     void getName(char buffer[COM_ENDPOINT_NAME_SIZE]);
 
     /**
@@ -229,6 +237,28 @@ public:
      */
     unsigned int get_speed();
 
+    /**
+     * register a driver to be a com driver candidate.
+     * @param driver ComDriver object
+     * @return com_err
+     */
+//     TODO documenatie: com_err
+    com_err register_candidate_driver(ComDriver* driver);
+
+    /**
+     * unregister a driver to be a comdiver candidate
+     * @param driver ComDriver to be deleted
+     * @return com_err
+     */
+//     TODO documenatie com_err
+    com_err unregister_candidate_driver(ComDriver* driver);
+
+    /**
+     * get all the com driver candidates
+     */
+//     TODO maken, en documenatie
+    void get_candidate_drivers(char* buffer[]);
+
 protected:
 
     static const short TRANSMIT_QUEUE_BUFFER_SIZE = 16;
@@ -243,10 +273,7 @@ private:
 
     // variables
 
-    ComDriver** driverCandidates = {
-//            TODO geeft errors, had even geen zin om het te fixen. Weet ook nog niet of dit wel de beste manier is.
-//            UART
-    };
+    std::set<ComDriver*> driverCandidates;
     /**
      * @brief high priority transmission queue
      */
@@ -265,6 +292,7 @@ private:
     /**
      * @brief incomming stransmission queue.
      */
+//     TODO is deze nog wel nodig?
     std::queue<com_transmitpackage_t> incomming_transmission_queue[TRANSMIT_QUEUE_BUFFER_SIZE];
 
     /**
@@ -321,6 +349,14 @@ private:
      * @return rating of the driver. Higher is better.
      */
     unsigned int rateDriver(ComDriver &driver);
+
+    /**
+     * @brief  Interrupt incomming connection handeler
+     * @param package
+     * @retval None
+     */
+//     TODO documentatie
+    com_err incoming_connection(com_transmitpackage_t package);
 
 
 };

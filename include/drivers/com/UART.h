@@ -5,9 +5,7 @@
 #ifndef ARUNA_UART_H
 #define ARUNA_UART_H
 
-// including comdriver breaks comdriver.h refrences to com.h
 #include "ComDriver.h"
-
 //#include <drivers/Com.h>
 
 class UART: ComDriver {
@@ -18,5 +16,6 @@ class UART: ComDriver {
     bool isEndpointConnected();
 };
 
-
+// TODO UART registreren.
+//com.register_candidate_driver(UART);
 #endif //ARUNA_UART_H
