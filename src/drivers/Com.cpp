@@ -20,8 +20,8 @@ com_err Com::start() {
 com_err Com::start(ComDriver *driver) {
     switch (get_status()) {
         case COM_RUNNING:
+//            TODO COM_ERR_RUNNING betere error?
             return COM_ERR_NOT_STOPPED;
-            break;
         case COM_PAUSED:
 //            TODO is dit slim? kan ongwenst gedrag vertonen als je van driver wilt wisselen.
             return resume();
@@ -29,10 +29,11 @@ com_err Com::start(ComDriver *driver) {
             break;
     }
     setDriver(*driver);
+//    TODO error handeling
     getDriver()->start();
     this->set_status(COM_RUNNING);
 //    TODO in freeRTOS thread opstarten.
-    this->transmissionQueueHandeler();
+//    this->transmissionQueueHandeler();
 //    TODO error handeling
     return COM_OK;
 }
@@ -44,6 +45,7 @@ com_err Com::stop() {
         default:
             break;
     }
+//    TODO com_Err error handeling
     getDriver()->stop();
     this->set_status(COM_STOPPED);
 //    TODO destroy threads and clear all arrays and queues
@@ -84,7 +86,7 @@ com_err Com::resume() {
 
 com_err Com::register_channel(com_endpoint_t &endpoint) {
 //    TODO testen of deze check wel werkt.
-    if( channels->find(endpoint) != channels->end())
+    if (channels->find(endpoint) != channels->end())
         return COM_ERR_CHANNEL_EXISTS;
     if (channels->insert(endpoint).second)
         return COM_OK;
@@ -158,17 +160,17 @@ void Com::setDriver(ComDriver &driver) {
     this->driver = &driver;
 }
 
-std::tuple<ComDriver*, com_err> Com::pickDriver() {
+std::tuple<ComDriver *, com_err> Com::pickDriver() {
 //    bestpick initalisren omdat hij anders een lege terug kan geven.
-    ComDriver *bestPick = NULL;
+    ComDriver *bestPick = nullptr;
     unsigned int bestPickScore = 0;
     unsigned int s = 0;
-    if (!driverCandidates.size())
+    if (driverCandidates.empty())
         return std::make_tuple(bestPick, COM_ERR_NO_DRIVER);
-    for (auto driver=driverCandidates.cbegin(); driver != driverCandidates.cend(); ++driver) {
-        s = rateDriver(**driver);
+    for (auto driverCandidate : driverCandidates) {
+        s = rateDriver(*driverCandidate);
         if (s > bestPickScore) {
-            bestPick = *driver;
+            bestPick = driverCandidate;
             bestPickScore = s;
         }
     }
@@ -206,23 +208,24 @@ unsigned int Com::rateDriver(ComDriver &driver) {
 
 void Com::transmissionQueueHandeler() {
 //    TODO deze vergelijking kost misschien te veel tijd.
+    int schedularCount = 0;
     while (this->get_status() == COM_RUNNING) {
-//        TODO error handeling.
-        if (!transmission1_queue->empty()) {
-            this->getDriver()->transmit(transmission1_queue->front(), 1);
-            transmission1_queue->pop();
-        }
-        while (!transmission0_queue->empty()) {
+//        TODO error handeling bij de transmit().
+
+        if (!transmission0_queue->empty()) {
             this->getDriver()->transmit(transmission0_queue->front(), 0);
             transmission0_queue->pop();
-        }
-        if (!transmission1_queue->empty()) {
-            this->getDriver()->transmit(transmission1_queue->front(), 1);
-            transmission1_queue->pop();
-        }
-        if (!transmission2_queue->empty()) {
-            this->getDriver()->transmit(transmission2_queue->front(), 2);
-            transmission2_queue->pop();
+        } else {
+            if (schedularCount < 2 && !transmission1_queue->empty()) {
+                this->getDriver()->transmit(transmission1_queue->front(), 1);
+                transmission1_queue->pop();
+                schedularCount++;
+            }
+            else if (!transmission2_queue->empty()) {
+                this->getDriver()->transmit(transmission2_queue->front(), 2);
+                transmission2_queue->pop();
+                schedularCount = 0;
+            }
         }
     }
 //    deze methode doet nu aan busy waiting, wat natuurlijk niet idiaal is.
@@ -237,11 +240,10 @@ com_err Com::incoming_connection(com_transmitpackage_t package) {
  *    Als we het meteen kunnen opzoeken door ook nog een set te maken (of hashing table) van de namen
  *    scheelt dat ons heel veel tijd want dan is het O(1)!
  */
-    for (auto it=channels->cbegin(); it != channels->cend(); ++it) {
-        if(it->name == package.endpoint_name) {
-            it->handeler(package.data);
+    for (const auto &channel : *channels) {
+        if (channel.name == package.endpoint_name) {
+            channel.handeler(package.data);
             return COM_OK;
-            break;
         }
     }
     return COM_ERR_NO_CHANNEL;
@@ -269,7 +271,6 @@ com_err Com::unregister_candidate_driver(ComDriver *driver) {
 ////          error correctie
 //            pickDriver();
         return COM_OK;
-    }
-    else
+    } else
         return COM_ERR_NO_DRIVER;
 }
