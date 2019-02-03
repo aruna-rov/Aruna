@@ -3,10 +3,10 @@
 //
 
 #include <drivers/Com.h>
+#include <esp_log.h>
 
 
 Com::Com() {
-
 }
 
 com_err Com::start() {
@@ -28,13 +28,29 @@ com_err Com::start(ComDriver *driver) {
         default:
             break;
     }
+    com_err driver_err;
     setDriver(*driver);
-//    TODO error handeling
-    getDriver()->start();
+    driver_err = getDriver()->start();
+    if(driver_err != COM_OK)
+        return driver_err;
+
+//    TODO priority goed zetten.
+//      Gaat zoiezo mis als je meerdere Com objecten probeerd aan temaken.
+//      Misschien kunnen we beter de hele class static maken?
+    if(xTaskCreate(transmissionQueueHandeler,
+            "COM_transmissionQueueHandeler",
+            configMINIMAL_STACK_SIZE,
+            this,
+            tskIDLE_PRIORITY,
+            &this->transmissionQueueHandeler_task ) != pdPASS) {
+        driver_err = getDriver()->stop();
+        if (driver_err != COM_OK)
+            ESP_LOGW(LOG_TAG, "Driver failed to stop: %d", driver_err);
+//        TODO driver unsetten en destroyen.
+        return COM_ERR_TASK_FAILED;
+    }
     this->set_status(COM_RUNNING);
-//    TODO in freeRTOS thread opstarten.
-//    this->transmissionQueueHandeler();
-//    TODO error handeling
+
     return COM_OK;
 }
 
@@ -45,11 +61,13 @@ com_err Com::stop() {
         default:
             break;
     }
-//    TODO com_Err error handeling
-    getDriver()->stop();
+    com_err driver_err;
+    driver_err = getDriver()->stop();
+    vTaskDelete(transmissionQueueHandeler_task);
     this->set_status(COM_STOPPED);
+    if (driver_err != COM_OK)
+        return driver_err;
 //    TODO destroy threads and clear all arrays and queues
-//      TODO error handeling
     return COM_OK;
 }
 
@@ -61,9 +79,8 @@ com_err Com::pause() {
         default:
             break;
     }
+    vTaskSuspend(transmissionQueueHandeler_task);
     this->set_status(COM_PAUSED);
-//    TODO pause queuehandler thread.
-//      TODO error handeling
     return COM_OK;
 }
 
@@ -78,9 +95,8 @@ com_err Com::resume() {
         default:
             break;
     }
+    vTaskResume(transmissionQueueHandeler_task);
     this->set_status(COM_RUNNING);
-//    TODO resume threads
-//  TODO error handeling
     return COM_OK;
 }
 
@@ -107,6 +123,8 @@ com_err Com::send(com_datapackage_t data) {
         return COM_ERR_NO_CHANNEL;
     }
     switch (data.com_endpoint->priority) {
+//        TODO error detectie op dat de queue vol zit.
+//        Maar queue->push() return void :( ?
         case 0:
             transmission0_queue->push(this->datapackage2transmitpackage(data));
             break;
@@ -173,14 +191,15 @@ std::tuple<ComDriver *, com_err> Com::pickDriver() {
             bestPick = driverCandidate;
             bestPickScore = s;
         }
+//        TODO drivers die het niet zijn geworden moeten worden gedeleted.
     }
     return std::make_tuple(bestPick, COM_OK);
 }
 
 unsigned int Com::rateDriver(ComDriver &driver) {
-//    TODO error handeling
     unsigned int score = 0;
-    driver.start();
+    if (driver.start() != COM_OK)
+        return score;
     if (driver.isHardwareConnected())
         score += 10;
     if (!driver.isEndpointConnected())
@@ -202,36 +221,38 @@ unsigned int Com::rateDriver(ComDriver &driver) {
     if (driver.isRealTime())
         score *= 6;
 
-    driver.stop();
+    if(driver.stop() != COM_OK)
+        return score / 1000;
     return score;
 }
 
 void Com::transmissionQueueHandeler() {
-//    TODO deze vergelijking kost misschien te veel tijd.
     int schedularCount = 0;
-    while (this->get_status() == COM_RUNNING) {
-//        TODO error handeling bij de transmit().
-
+    while (1) {
         if (!transmission0_queue->empty()) {
-            this->getDriver()->transmit(transmission0_queue->front(), 0);
-            transmission0_queue->pop();
+            if (this->getDriver()->transmit(transmission0_queue->front(), 0) == COM_OK)
+                transmission0_queue->pop();
         } else {
             if (schedularCount < 2 && !transmission1_queue->empty()) {
-                this->getDriver()->transmit(transmission1_queue->front(), 1);
-                transmission1_queue->pop();
-                schedularCount++;
+                if(this->getDriver()->transmit(transmission1_queue->front(), 1) == COM_OK) {
+                    transmission1_queue->pop();
+                    schedularCount++;
+                }
             }
             else if (!transmission2_queue->empty()) {
-                this->getDriver()->transmit(transmission2_queue->front(), 2);
-                transmission2_queue->pop();
-                schedularCount = 0;
+                if(this->getDriver()->transmit(transmission2_queue->front(), 2) == COM_OK) {
+                    transmission2_queue->pop();
+                    schedularCount = 0;
+                }
             }
         }
     }
-//    deze methode doet nu aan busy waiting, wat natuurlijk niet idiaal is.
-//    deze recursie kost misschien heel veel geheugen.
-    return this->transmissionQueueHandeler();
 }
+
+void Com::transmissionQueueHandeler(void *_this) {
+    static_cast<Com*>(_this)->transmissionQueueHandeler();
+}
+
 
 com_err Com::incoming_connection(com_transmitpackage_t package) {
 
@@ -251,26 +272,54 @@ com_err Com::incoming_connection(com_transmitpackage_t package) {
 }
 
 com_err Com::register_candidate_driver(ComDriver *driver) {
+//    comdriver moet eigenlijk een referentie zijn en niet een levend object.
+    char name[CHANNEL_BUFFER_SIZE];
+    driver->getName(name);
+//    TODO print maar 1 letter.
+    ESP_LOGD(LOG_TAG, "registering driver: %s", name);
     if (driverCandidates.find(driver) != driverCandidates.end()) {
         return COM_ERR_DRIVER_EXISTS;
     }
     if (!driverCandidates.insert(driver).second)
         return COM_ERR_BUFFER_OVERFLOW;
-//    if (get_status() == COM_RUNNING) {
-////    TODO    pickDriver moet in een aparte thread.
-////          error correctie
-//        pickDriver();
-//    }
+    if (get_status() == COM_RUNNING) {
+        selectDriverTask();
+    }
     return COM_OK;
 }
 
+
 com_err Com::unregister_candidate_driver(ComDriver *driver) {
     if (driverCandidates.erase(driver)) {
-//        if (this->driver == driver)
-////        TODO pickdriver moet in aparte thread.
-////          error correctie
-//            pickDriver();
+        if (this->driver == driver)
+            selectDriverTask();
         return COM_OK;
     } else
         return COM_ERR_NO_DRIVER;
 }
+
+void Com::_selectDriverTask() {
+    auto dr = pickDriver();
+    if (std::get<1>(dr) == COM_OK) {
+        setDriver(*std::get<0>(dr));
+    } else
+//        TODO status aanpassen ofzo.
+        ESP_LOGE(LOG_TAG, "Failed to pick new driver: %d",std::get<1>(dr) );
+    vTaskDelete(NULL);
+}
+
+void Com::_selectDriverTask(void * _this) {
+    static_cast<Com*>(_this)->_selectDriverTask();
+
+}
+
+void Com::selectDriverTask() {
+//    TODO priority hoger zetten en misschien nog een timeout ofzo toevoegen.
+    xTaskCreate(_selectDriverTask,
+            "COM_selectDriverTask",
+            configMINIMAL_STACK_SIZE,
+            this,
+            tskIDLE_PRIORITY,
+            NULL);
+}
+

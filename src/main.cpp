@@ -4,10 +4,19 @@
 
 #include "main.h"
 #include <drivers/Com.h>
+#include "drivers/com/UART.h"
 #include "esp_log.h"
+Com COM;
+
 extern "C" void app_main(void) {
-    Com COM;
+//    TODO driver moet geregistreerd worden in de driver zelf
+//      Dit is niet zo elegant.
+    ComDriver* uart_driver = new UART;
+    COM.register_candidate_driver(uart_driver);
     ESP_LOGI("MAIN", "hello world!");
-    COM.start();
+    char nabu[COM_ENDPOINT_NAME_SIZE];
+    COM.getName(nabu);
+    ESP_LOGD("COM", "COM start: %d", COM.start());
     ESP_LOGD("COM", "COM status: %d", COM.get_status());
+    ESP_LOGD("COM", "COM driver: %s", nabu);
 }

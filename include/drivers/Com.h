@@ -8,6 +8,9 @@
 #include "queue"
 #include "set"
 #include "tuple"
+#include "freertos/FreeRTOS.h"
+#include "freertos/task.h"
+
 static const size_t COM_DATA_SIZE = 32;
 static const size_t COM_ENDPOINT_NAME_SIZE = 7;
 
@@ -27,7 +30,8 @@ enum com_err {
     COM_ERR_NO_CHANNEL,
     COM_ERR_CHANNEL_EXISTS,
     COM_ERR_DRIVER_EXISTS,
-    COM_ERR_NO_DRIVER
+    COM_ERR_NO_DRIVER,
+    COM_ERR_TASK_FAILED
 };
 
 enum com_link_t {
@@ -269,6 +273,8 @@ private:
 
     // variables
 
+    static constexpr char * LOG_TAG = (char*) "COM";
+
     std::set<ComDriver*> driverCandidates;
     /**
      * @brief high priority transmission queue
@@ -299,12 +305,15 @@ private:
     /**
      * @brief stores the com status
      */
-    com_status status;
+    com_status status = COM_STOPPED;
 
     /**
      * stores the driver.
      */
     ComDriver *driver;
+
+//    TODO documentatie
+    TaskHandle_t transmissionQueueHandeler_task;
 
     /**
      * @brief  Strips `com_datapackage_t` to `_com_transmitpackage_t`
@@ -318,6 +327,9 @@ private:
      * @retval None
      */
     void transmissionQueueHandeler();
+
+//    TODO documentation
+    static void transmissionQueueHandeler(void* _this);
 
 
 //    TODO misschien moeten de driver public gemaakt worden?
@@ -355,8 +367,14 @@ private:
 //     TODO documentatie
     com_err incoming_connection(com_transmitpackage_t package);
 
+//    TODO documentatie
+    void _selectDriverTask();
+    static void _selectDriverTask(void * _this);
+    void selectDriverTask();
+
 
 };
 
 extern Com COM;
+
 #endif //ARUNA_COM_H

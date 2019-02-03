@@ -8,14 +8,16 @@
 #include "ComDriver.h"
 //#include <drivers/Com.h>
 
-class UART: ComDriver {
+class UART: public ComDriver {
+//    TODO overwrite?
     com_err transmit(com_transmitpackage_t package);
     void getName(char *buffer);
     unsigned int getSpeed();
     com_link_t getLinkType();
     bool isEndpointConnected();
+    void int_incoming_connection();
+//    static com_err registerDriver();
+//    static com_err registerd = registerDriver();
 };
 
-// TODO UART registreren.
-//com.register_candidate_driver(UART);
 #endif //ARUNA_UART_H

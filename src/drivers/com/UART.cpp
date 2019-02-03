@@ -4,6 +4,10 @@
 
 #include <stdio.h>
 #include "drivers/com/UART.h"
+#include <drivers/Com.h>
+#include <drivers/com/UART.h>
+#include <esp_log.h>
+
 
 com_err UART::transmit(com_transmitpackage_t package) {
 //    printf(package);
@@ -26,4 +30,16 @@ com_link_t UART::getLinkType() {
 bool UART::isEndpointConnected() {
 //    TODO endpoint detection
     return true;
-};
+}
+
+void UART::int_incoming_connection() {
+//    TODO
+}
+
+//com_err UART::registerDriver() {
+//    ESP_LOGD("UART", "registering driver!");
+//    ComDriver * driver = this;
+////    TODO error handeling.
+//    return this->registerd = COM.register_candidate_driver(driver);
+//};
+

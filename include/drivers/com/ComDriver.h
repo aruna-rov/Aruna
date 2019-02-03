@@ -11,6 +11,9 @@ class ComDriver {
 public:
     static const size_t nameSize = 7;
 
+//    TODO documentatie
+//    com_err registerd;
+
     /**
      * @brief  directly transmit a package on the link.
      * @param  package: package to be send
@@ -78,6 +81,7 @@ public:
      * start the driver.
      * @return
      */
+//     TODO documentatie
     virtual com_err start(){
         return COM_OK;
     }
@@ -109,6 +113,7 @@ public:
      * @retval None
      */
     virtual void int_incoming_connection() = 0;
+
 
 
 };
