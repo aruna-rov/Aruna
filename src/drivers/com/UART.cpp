@@ -15,11 +15,7 @@ com_err UART::transmit(com_transmitpackage_t package) {
 //    TODO error handeling
     return COM_OK;
 }
-void UART::getName(char *buffer) {
-//    TODO testen
-    char name[] = "UART";
-    *buffer = *name;
-}
+
 unsigned int UART::getSpeed() {
 //    TODO get braudrate dynamicly
     return (unsigned int) 115200 / 8;
@@ -34,6 +30,10 @@ bool UART::isEndpointConnected() {
 
 void UART::int_incoming_connection() {
 //    TODO
+}
+
+char *UART::getName() {
+    return (char*) "UART";
 }
 
 //com_err UART::registerDriver() {

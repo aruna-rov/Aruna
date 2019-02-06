@@ -218,7 +218,11 @@ public:
     com_link_t get_link_type();
 
 //    TODO documentatie
-    void getName(char buffer[COM_ENDPOINT_NAME_SIZE]);
+    void getName(char *buffer);
+
+//    TODO documentatie en naam veranderen
+    char* getName();
+
 
     /**
      * @brief get all names of the channels currently registered

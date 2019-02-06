@@ -14,9 +14,7 @@ extern "C" void app_main(void) {
     ComDriver* uart_driver = new UART;
     COM.register_candidate_driver(uart_driver);
     ESP_LOGI("MAIN", "hello world!");
-    char nabu[COM_ENDPOINT_NAME_SIZE];
-    COM.getName(nabu);
     ESP_LOGD("COM", "COM start: %d", COM.start());
     ESP_LOGD("COM", "COM status: %d", COM.get_status());
-    ESP_LOGD("COM", "COM driver: %s", nabu);
+    ESP_LOGD("COM", "COM driver: %s", COM.getName());
 }

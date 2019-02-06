@@ -35,7 +35,16 @@ public:
      * Get name of link.
      * @param buffer
      */
-    virtual void getName(char buffer[nameSize]) = 0;
+    void getName(char *buffer) {
+        //    TODO testen
+        *buffer = *getName();
+    };
+
+    /**
+     * Get name of the driver
+     * @return pointer to char array.
+     */
+    virtual char* getName() = 0;
 
     /**
      * Get speed of link (B/s)

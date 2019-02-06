@@ -157,8 +157,12 @@ com_link_t Com::get_link_type() {
     return this->getDriver()->getLinkType();
 }
 
-void Com::getName(char buffer[COM_ENDPOINT_NAME_SIZE]) {
+void Com::getName(char *buffer) {
     this->getDriver()->getName(buffer);
+}
+
+char* Com::getName() {
+    return this->getDriver()->getName();
 }
 
 com_err Com::get_channels(char buffer[COM_ENDPOINT_NAME_SIZE][CHANNEL_BUFFER_SIZE]) {
@@ -274,9 +278,9 @@ com_err Com::incoming_connection(com_transmitpackage_t package) {
 com_err Com::register_candidate_driver(ComDriver *driver) {
 //    comdriver moet eigenlijk een referentie zijn en niet een levend object.
     char name[CHANNEL_BUFFER_SIZE];
-    driver->getName(name);
+
 //    TODO print maar 1 letter.
-    ESP_LOGD(LOG_TAG, "registering driver: %s", name);
+    ESP_LOGD(LOG_TAG, "registering driver: %s", driver->getName());
     if (driverCandidates.find(driver) != driverCandidates.end()) {
         return COM_ERR_DRIVER_EXISTS;
     }

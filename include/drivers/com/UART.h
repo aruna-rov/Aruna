@@ -12,6 +12,7 @@ class UART: public ComDriver {
 //    TODO overwrite?
     com_err transmit(com_transmitpackage_t package);
     void getName(char *buffer);
+    char* getName();
     unsigned int getSpeed();
     com_link_t getLinkType();
     bool isEndpointConnected();
