@@ -14,7 +14,14 @@ extern "C" void app_main(void) {
     ComDriver* uart_driver = new UART;
     COM.register_candidate_driver(uart_driver);
     ESP_LOGI("MAIN", "hello world!");
-    ESP_LOGD("COM", "COM start: %d", COM.start());
+    uart_driver->start();
+//    ESP_LOGD("COM", "COM start: %d", COM.start());
     ESP_LOGD("COM", "COM status: %d", COM.get_status());
-    ESP_LOGD("COM", "COM driver: %s", COM.getName());
+//    ESP_LOGD("COM", "COM driver: %s", COM.getName());
+
+    while(1)
+    {
+        ESP_LOGD("MAIN", "loop");
+        vTaskDelay(1000);
+    }
 }

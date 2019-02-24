@@ -267,6 +267,7 @@ com_err Com::incoming_connection(com_transmitpackage_t package) {
  */
     for (const auto &channel : *channels) {
         if (channel.name == package.endpoint_name) {
+//            TODO handeler moet in een aparte thread worden gestart.
             channel.handeler(package.data);
             return COM_OK;
         }

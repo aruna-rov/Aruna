@@ -18,6 +18,7 @@ typedef char com_data_t[COM_DATA_SIZE];
 
 enum com_err {
     COM_OK,
+    COM_FAIL,
     COM_ERR_NOT_STARTED,
     COM_ERR_NOT_PAUSED,
     COM_ERR_NOT_STOPPED,

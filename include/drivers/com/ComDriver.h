@@ -117,14 +117,6 @@ public:
         stop();
     }
 
-    /**
-     * @brief  Interrupt incomming connection handeler
-     * @retval None
-     */
-    virtual void int_incoming_connection() = 0;
-
-
-
 };
 
 
