@@ -10,17 +10,23 @@
 #include <esp_log.h>
 
 static intr_handle_t handle_console;
+static bool installed = false;
+
 
 com_err UART::transmit(com_transmitpackage_t package) {
-//    printf(package);
-    printf("hello world!");
-//    TODO error handeling
-    return COM_OK;
+    ESP_LOGD("UART", "sending...");
+    com_bin_t bin_data = {0};
+    com_transmitpackage_t::transmitpackage_to_binary(package, &bin_data);
+
+    if (uart_write_bytes(UART_NUM, (const char *) bin_data, sizeof(bin_data)) == sizeof(bin_data))
+        return COM_OK;
+    else
+        return COM_ERR_HARDWARE;
 }
 
 unsigned int UART::getSpeed() {
 //    TODO get braudrate dynamicly
-    return (unsigned int) BROAD_RATE / 8;
+    return (unsigned int) (BROAD_RATE / 8);
 }
 
 com_link_t UART::getLinkType() {
@@ -54,6 +60,10 @@ void IRAM_ATTR UART::uart_intr_handle(void *arg) {
     // a test code or debug code to indicate UART receives successfully,
     // you can redirect received byte as echo also
     uart_write_bytes(UART_NUM_0, (const char *) rxbuf, i);
+
+//    TODO binnenkomende bericht afhandelen.
+//    com_bin_t *bin_data = rxbuf;
+//    COM.incoming_connection()
 }
 
 com_err UART::start() {
@@ -62,35 +72,42 @@ com_err UART::start() {
 
     /* Configure parameters of an UART driver,
      * communication pins and install the driver */
-    uart_config_t uart_config = {
-            .baud_rate = BROAD_RATE,
-            .data_bits = UART_DATA_8_BITS,
-            .parity    = UART_PARITY_DISABLE,
-            .stop_bits = UART_STOP_BITS_1,
-            .flow_ctrl = UART_HW_FLOWCTRL_DISABLE
+    if (!installed) {
+//        uart fails when initialized two times.
+        uart_config_t uart_config = {
+                .baud_rate = BROAD_RATE,
+                .data_bits = UART_DATA_8_BITS,
+                .parity    = UART_PARITY_DISABLE,
+                .stop_bits = UART_STOP_BITS_1,
+                .flow_ctrl = UART_HW_FLOWCTRL_DISABLE
 //                TODO krijg nu een warning dat niet alles geconfugureerd is.
-    };
-    ESP_ERROR_CHECK(uart_param_config(UART_NUM, &uart_config));
-    ESP_ERROR_CHECK(uart_set_pin(UART_NUM, TXD_PIN, RXD_PIN, RTS_PIN, CTS_PIN));
-    ESP_ERROR_CHECK(uart_driver_install(UART_NUM, BUF_SIZE * 2, 0, 0, NULL, 0));
+        };
+        ESP_ERROR_CHECK(uart_param_config(UART_NUM, &uart_config));
+        ESP_ERROR_CHECK(uart_set_pin(UART_NUM, TXD_PIN, RXD_PIN, RTS_PIN, CTS_PIN));
+        ESP_ERROR_CHECK(uart_driver_install(UART_NUM, BUF_SIZE * 2, 0, 0, NULL, 0));
+        ESP_ERROR_CHECK(uart_isr_free(UART_NUM));
+        ESP_ERROR_CHECK(uart_isr_register(UART_NUM, UART::uart_intr_handle, NULL, ESP_INTR_FLAG_IRAM, &handle_console));
+        ESP_ERROR_CHECK(uart_enable_rx_intr(UART_NUM));
+        installed = true;
+    }
 
-    ESP_ERROR_CHECK(uart_isr_free(UART_NUM));
-
-
-    ESP_ERROR_CHECK(uart_isr_register(UART_NUM, UART::uart_intr_handle, NULL, ESP_INTR_FLAG_IRAM, &handle_console));
-    ESP_ERROR_CHECK(uart_enable_rx_intr(UART_NUM));
     return COM_OK;
 }
 
 com_err UART::stop() {
     ESP_LOGD("UART", "STOP");
 //    TODO flush queue
-    return (uart_isr_free(UART_NUM) || uart_driver_delete(UART_NUM)) ? COM_ERR_HARDWARE : COM_OK;
+//    TODO doesn't propabily delete driver.
+//    return (
+//            (uart_disable_rx_intr(UART_NUM) ||
+////    "uart: UART driver already installed" error on reinstall.
+////            uart_driver_delete(UART_NUM) ||
+//            uart_isr_free(UART_NUM)
+//            ) !=
+//           ESP_OK) ? COM_ERR_HARDWARE : COM_OK;
+    return COM_OK;
 }
 
-void UART::intr_incoming_connection() {
-
-}
 
 
 

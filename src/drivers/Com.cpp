@@ -31,18 +31,18 @@ com_err Com::start(ComDriver *driver) {
     com_err driver_err;
     setDriver(*driver);
     driver_err = getDriver()->start();
-    if(driver_err != COM_OK)
+    if (driver_err != COM_OK)
         return driver_err;
 
 //    TODO priority goed zetten.
 //      Gaat zoiezo mis als je meerdere Com objecten probeerd aan temaken.
 //      Misschien kunnen we beter de hele class static maken?
-    if(xTaskCreate(transmissionQueueHandeler,
-            "COM_transmissionQueueHandeler",
-            configMINIMAL_STACK_SIZE,
-            this,
-            tskIDLE_PRIORITY,
-            &this->transmissionQueueHandeler_task ) != pdPASS) {
+    if (xTaskCreate(transmissionQueueHandeler,
+                    "COM_transmissionQueueHandeler",
+                    (configMINIMAL_STACK_SIZE * 10),
+                    this,
+                    tskIDLE_PRIORITY,
+                    &this->transmissionQueueHandeler_task) != pdPASS) {
         driver_err = getDriver()->stop();
         if (driver_err != COM_OK)
             ESP_LOGW(LOG_TAG, "Driver failed to stop: %d", driver_err);
@@ -100,11 +100,11 @@ com_err Com::resume() {
     return COM_OK;
 }
 
-com_err Com::register_channel(com_endpoint_t &endpoint) {
+com_err Com::register_channel(com_endpoint_t *endpoint) {
 //    TODO testen of deze check wel werkt.
-    if (channels->find(endpoint) != channels->end())
+    if (channels.find(*endpoint) != channels.end())
         return COM_ERR_CHANNEL_EXISTS;
-    if (channels->insert(endpoint).second)
+    if (channels.insert(*endpoint).second)
         return COM_OK;
     else
         return COM_ERR_BUFFER_OVERFLOW;
@@ -112,14 +112,14 @@ com_err Com::register_channel(com_endpoint_t &endpoint) {
 }
 
 com_err Com::unregister_channel(com_endpoint_t &endpoint) {
-    if (channels->erase(endpoint))
+    if (channels.erase(endpoint))
         return COM_OK;
     else
         return COM_ERR_NO_CHANNEL;
 }
 
 com_err Com::send(com_datapackage_t data) {
-    if (channels->find(*data.com_endpoint) == channels->end()) {
+    if (channels.find(*data.com_endpoint) == channels.end()) {
         return COM_ERR_NO_CHANNEL;
     }
     switch (data.com_endpoint->priority) {
@@ -161,7 +161,7 @@ void Com::getName(char *buffer) {
     this->getDriver()->getName(buffer);
 }
 
-char* Com::getName() {
+char *Com::getName() {
     return this->getDriver()->getName();
 }
 
@@ -225,7 +225,7 @@ unsigned int Com::rateDriver(ComDriver &driver) {
     if (driver.isRealTime())
         score *= 6;
 
-    if(driver.stop() != COM_OK)
+    if (driver.stop() != COM_OK)
         return score / 1000;
     return score;
 }
@@ -234,17 +234,19 @@ void Com::transmissionQueueHandeler() {
     int schedularCount = 0;
     while (1) {
         if (!transmission0_queue->empty()) {
+            ESP_LOGD("COM_TRANS", "sending prio 0");
             if (this->getDriver()->transmit(transmission0_queue->front(), 0) == COM_OK)
                 transmission0_queue->pop();
         } else {
             if (schedularCount < 2 && !transmission1_queue->empty()) {
-                if(this->getDriver()->transmit(transmission1_queue->front(), 1) == COM_OK) {
+                ESP_LOGD("COM_TRANS", "sending prio 1");
+                if (this->getDriver()->transmit(transmission1_queue->front(), 1) == COM_OK) {
                     transmission1_queue->pop();
                     schedularCount++;
                 }
-            }
-            else if (!transmission2_queue->empty()) {
-                if(this->getDriver()->transmit(transmission2_queue->front(), 2) == COM_OK) {
+            } else if (!transmission2_queue->empty()) {
+                ESP_LOGD("COM_TRANS", "sending prio 2");
+                if (this->getDriver()->transmit(transmission2_queue->front(), 2) == COM_OK) {
                     transmission2_queue->pop();
                     schedularCount = 0;
                 }
@@ -254,7 +256,7 @@ void Com::transmissionQueueHandeler() {
 }
 
 void Com::transmissionQueueHandeler(void *_this) {
-    static_cast<Com*>(_this)->transmissionQueueHandeler();
+    static_cast<Com *>(_this)->transmissionQueueHandeler();
 }
 
 
@@ -265,8 +267,8 @@ com_err Com::incoming_connection(com_transmitpackage_t package) {
  *    Als we het meteen kunnen opzoeken door ook nog een set te maken (of hashing table) van de namen
  *    scheelt dat ons heel veel tijd want dan is het O(1)!
  */
-    for (const auto &channel : *channels) {
-        if (channel.name == package.endpoint_name) {
+    for (const auto &channel : channels) {
+        if (channel.port == package.from_port) {
 //            TODO handeler moet in een aparte thread worden gestart.
             channel.handeler(package.data);
             return COM_OK;
@@ -278,7 +280,6 @@ com_err Com::incoming_connection(com_transmitpackage_t package) {
 
 com_err Com::register_candidate_driver(ComDriver *driver) {
 //    comdriver moet eigenlijk een referentie zijn en niet een levend object.
-    char name[CHANNEL_BUFFER_SIZE];
 
 //    TODO print maar 1 letter.
     ESP_LOGD(LOG_TAG, "registering driver: %s", driver->getName());
@@ -309,22 +310,27 @@ void Com::_selectDriverTask() {
         setDriver(*std::get<0>(dr));
     } else
 //        TODO status aanpassen ofzo.
-        ESP_LOGE(LOG_TAG, "Failed to pick new driver: %d",std::get<1>(dr) );
+        ESP_LOGE(LOG_TAG, "Failed to pick new driver: %d", std::get<1>(dr));
     vTaskDelete(NULL);
 }
 
-void Com::_selectDriverTask(void * _this) {
-    static_cast<Com*>(_this)->_selectDriverTask();
+void Com::_selectDriverTask(void *_this) {
+    static_cast<Com *>(_this)->_selectDriverTask();
 
 }
 
 void Com::selectDriverTask() {
 //    TODO priority hoger zetten en misschien nog een timeout ofzo toevoegen.
     xTaskCreate(_selectDriverTask,
-            "COM_selectDriverTask",
-            configMINIMAL_STACK_SIZE,
-            this,
-            tskIDLE_PRIORITY,
-            NULL);
+                "COM_selectDriverTask",
+                configMINIMAL_STACK_SIZE,
+                this,
+                tskIDLE_PRIORITY,
+                NULL);
+}
+
+com_transmitpackage_t Com::datapackage2transmitpackage(com_datapackage_t datap) {
+
+    return com_transmitpackage_t();
 }
 

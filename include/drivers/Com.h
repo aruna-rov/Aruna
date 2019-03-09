@@ -11,6 +11,7 @@
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
 
+
 static const size_t COM_DATA_SIZE = 32;
 static const size_t COM_ENDPOINT_NAME_SIZE = 7;
 
@@ -47,6 +48,9 @@ enum com_status {
     COM_PAUSED
 };
 
+typedef uint8_t com_port_t;
+typedef char com_bin_t[(sizeof(com_port_t) * 2) + sizeof(com_data_t)];
+
 /**
  * transmit ready package.
  */
@@ -54,12 +58,38 @@ struct com_transmitpackage_t {
     /**
      * @brief  endpoint who is sending the data.
      */
-    char endpoint_name[COM_ENDPOINT_NAME_SIZE];
+    com_port_t from_port;
+
+    /**
+    * to whom to send it to.
+    */
+    com_port_t to_port;
 
     /**
      * @brief  Data to be transmitted.
      */
     com_data_t data;
+
+    /*
+     * Get binary array of transmitpackage.
+     * arrangement: from_port, to_port, data.
+     * @return pointer to char array.
+     */
+//    TODO documentatie bijwerken
+    static void transmitpackage_to_binary(com_transmitpackage_t transp, com_bin_t *bin) {
+//        TODO data word nu gelinked, is beter als het gekopieerd word.
+        *bin[0] = transp.from_port;
+        *bin[sizeof(from_port)] = transp.to_port;
+        *bin[sizeof(to_port) + sizeof(from_port)] = *transp.data;
+    }
+
+//  TODO documentatie
+    static void binary_to_transmitpackage(com_bin_t bin, com_transmitpackage_t *transp) {
+        //        TODO data word nu gelinked, is beter als het gekopieerd word.
+        transp->from_port = (com_port_t) bin[0];
+        transp->to_port = (com_port_t) bin[sizeof(from_port)];
+        *transp->data = bin[sizeof(to_port) + sizeof(from_port)];
+    }
 };
 
 /**
@@ -67,9 +97,9 @@ struct com_transmitpackage_t {
  */
 struct com_endpoint_t {
     /**
-     * @brief Name of the endpoint
+     * @brief port nr. of the endpoint
      */
-    char name[COM_ENDPOINT_NAME_SIZE];
+    com_port_t port;
 
     /**
      * @brief priority 0-2
@@ -86,17 +116,18 @@ struct com_endpoint_t {
     void (*handeler)(com_data_t);
 
     bool operator<(const com_endpoint_t &b) const {
-        return this->name < b.name;
+        return this->port < b.port;
     }
 
-    bool operator==(const char name[COM_ENDPOINT_NAME_SIZE]) const {
-        return this->name == name;
+    bool operator==(const uint8_t port) const {
+        return this->port == port;
     }
 };
 
 /**
  * datapackage containing the endpoint and data to be send.
  */
+// TODO deze naam lijkt te erg op `com_data_t`. Moet ff allemaal wat duidelijk.
 struct com_datapackage_t {
     /**
      * @brief  Communication endpoint to send reply to.
@@ -105,15 +136,22 @@ struct com_datapackage_t {
     struct com_endpoint_t *com_endpoint;
 
     /**
+    * to whom to send it to.
+    */
+    com_port_t to_port;
+
+    /**
      * @brief Data to be send.
      */
-    com_data_t data;
+    com_data_t *data;
 };
 
 #include "com/ComDriver.h"
+
 class ComDriver;
 
 class Com {
+    friend ComDriver;
 public:
     static const short CHANNEL_BUFFER_SIZE = 32;
 
@@ -140,7 +178,7 @@ public:
      *  * `COM_OK` great success!
      */
 //     TODO documentatie
-    com_err start(ComDriver* driver);
+    com_err start(ComDriver *driver);
 
     /**
      * @brief  Stop the communication, free all queue's, channels and buffers
@@ -158,7 +196,7 @@ public:
      *  * `COM_ERR_INVALID_PARAMETERS` if parameters are invalid
      *  * `COM_OK` if it was succesfully added.
      */
-    com_err register_channel(com_endpoint_t &endpoint);
+    com_err register_channel(com_endpoint_t *endpoint);
 
     /**
      * @brief  unregister an endpoint
@@ -222,7 +260,7 @@ public:
     void getName(char *buffer);
 
 //    TODO documentatie en naam veranderen
-    char* getName();
+    char *getName();
 
 
     /**
@@ -248,7 +286,7 @@ public:
      * @return com_err
      */
 //     TODO documenatie: com_err
-    com_err register_candidate_driver(ComDriver* driver);
+    com_err register_candidate_driver(ComDriver *driver);
 
     /**
      * unregister a driver to be a comdiver candidate
@@ -256,13 +294,13 @@ public:
      * @return com_err
      */
 //     TODO documenatie com_err
-    com_err unregister_candidate_driver(ComDriver* driver);
+    com_err unregister_candidate_driver(ComDriver *driver);
 
     /**
      * get all the com driver candidates
      */
 //     TODO maken, en documenatie
-    void get_candidate_drivers(char* buffer[]);
+    void get_candidate_drivers(char *buffer[]);
 
 protected:
 
@@ -278,9 +316,9 @@ private:
 
     // variables
 
-    static constexpr char * LOG_TAG = (char*) "COM";
+    static constexpr char *LOG_TAG = (char *) "COM";
 
-    std::set<ComDriver*> driverCandidates;
+    std::set<ComDriver *> driverCandidates;
     /**
      * @brief high priority transmission queue
      */
@@ -305,7 +343,7 @@ private:
     /**
      * @brief all endpoints
      */
-    std::set<com_endpoint_t> *channels;
+    std::set<com_endpoint_t> channels;
 
     /**
      * @brief stores the com status
@@ -334,7 +372,7 @@ private:
     void transmissionQueueHandeler();
 
 //    TODO documentation
-    static void transmissionQueueHandeler(void* _this);
+    static void transmissionQueueHandeler(void *_this);
 
 
 //    TODO misschien moeten de driver public gemaakt worden?
@@ -342,14 +380,14 @@ private:
      * get the driver
      * @return ComdDriver object
      */
-    ComDriver* getDriver();
+    ComDriver *getDriver();
 
     /**
      * pick the best available driver
      * @return ComDriver best candidate object.
      */
 //     TODO documentatie
-    std::tuple<ComDriver*, com_err> pickDriver();
+    std::tuple<ComDriver *, com_err> pickDriver();
 
     /**
      * set the driver
@@ -374,7 +412,9 @@ private:
 
 //    TODO documentatie
     void _selectDriverTask();
-    static void _selectDriverTask(void * _this);
+
+    static void _selectDriverTask(void *_this);
+
     void selectDriverTask();
 
 

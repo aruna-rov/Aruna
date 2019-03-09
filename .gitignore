@@ -1,6 +1,9 @@
 .pio
 .pioenvs
 .piolibdeps
+build
+sdkconfig
+main
 
 # IDE specific
 # VScode
