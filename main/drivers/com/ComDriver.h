@@ -5,7 +5,7 @@
 #ifndef ARUNA_COMDRIVER_H
 #define ARUNA_COMDRIVER_H
 
-#include <drivers/Com.h>
+#include "../Com.h"
 
 class ComDriver {
 public:

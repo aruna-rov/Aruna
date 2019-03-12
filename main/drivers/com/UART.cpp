@@ -3,10 +3,8 @@
 //
 
 #include <stdio.h>
-// TODO dubbele imports weghalen
-#include "drivers/com/UART.h"
-#include <drivers/Com.h>
-#include <drivers/com/UART.h>
+#include "UART.h"
+#include "../Com.h"
 #include <esp_log.h>
 
 static intr_handle_t handle_console;
