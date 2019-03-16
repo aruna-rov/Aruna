@@ -3,12 +3,12 @@
 .piolibdeps
 build
 # willen we sdkconfig pushen?
-sdkconfig
+sdkconfig*
 
 # IDE specific
 # VScode
 .vscode
 # Intellij Idea
 .idea
-cmake-build-debug
+cmake-build-*
 CMakeListsPrivate.txt
