@@ -28,10 +28,12 @@ class UART: public ComDriver {
 
 private:
     static void IRAM_ATTR uart_intr_handle(void *arg);
+    static void handle_rx_task(void *arg);
 
-    const static unsigned int BUF_SIZE = 1024;
+    const static unsigned int TX_BUF_SIZE = 1024;
+    const static unsigned int RX_BUF_SIZE = 1024;
     const static uart_port_t UART_NUM = UART_NUM_0;
-    const static unsigned int BROAD_RATE = 115200;
+    const static unsigned int BROAD_RATE = 921600;
 
     const static int TXD_PIN = UART_PIN_NO_CHANGE;
     const static int RXD_PIN = UART_PIN_NO_CHANGE;
