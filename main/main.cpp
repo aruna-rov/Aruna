@@ -16,7 +16,6 @@ ComDriver* uart_driver;
 //}
 
 void testUART_task(void *param){
-//    uart_write_bytes(UART_NUM_0, (const char*)"AAis is a test string.\n", 23);
     uart_driver->start();
     com_transmitpackage_t transmitpackage = {
             1,
@@ -31,11 +30,12 @@ extern "C" void app_main(void) {
 //    TODO driver moet geregistreerd worden in de driver zelf
 //      Dit is niet zo elegant.
     uart_driver = new UART;
-//    COM.register_candidate_driver(uart_driver);
+    COM.register_candidate_driver(uart_driver);
     ESP_LOGI("MAIN", "hello world!");
-//    ESP_LOGD("COM", "COM start: %d", COM.start());
-//    ESP_LOGD("COM", "COM status: %d", COM.get_status());
-//    ESP_LOGD("COM", "COM driver: %s", COM.getName());
+    ESP_LOGD("COM", "COM start: %d", COM.start());
+    ESP_LOGD("COM", "COM status: %d", COM.get_status());
+    ESP_LOGD("COM", "COM driver: %s", COM.getName());
+    ESP_LOGD("COM", "COM speed: %d", COM.get_speed());
 
 //    test application
 
@@ -54,7 +54,7 @@ extern "C" void app_main(void) {
 //    };
 //    ESP_LOGI("testApp", "send: %d", COM.send(testAppData));
 
-    xTaskCreate(testUART_task, "UART_TEST", 2048, NULL, 10, NULL);
+//    xTaskCreate(testUART_task, "UART_TEST", 2048, NULL, 10, NULL);
 //    while(1)
 //    {
 //        ESP_LOGD("MAIN", "loop");

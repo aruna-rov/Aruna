@@ -85,8 +85,9 @@ struct com_transmitpackage_t {
     }
 
 //  TODO documentatie
-    static void binary_to_transmitpackage(com_bin_t bin, com_transmitpackage_t &transp) {
+    static bool binary_to_transmitpackage(com_bin_t bin, com_transmitpackage_t &transp) {
         //        TODO
+        return 1;
     }
 };
 
@@ -300,6 +301,14 @@ public:
 //     TODO maken, en documenatie
     void get_candidate_drivers(char *buffer[]);
 
+    /**
+     * @brief  Interrupt incomming connection handeler
+     * @param package
+     * @retval None
+     */
+    //     TODO documentatie
+    com_err incoming_connection(com_transmitpackage_t package);
+
 protected:
 
     static const short TRANSMIT_QUEUE_BUFFER_SIZE = 16;
@@ -399,14 +408,6 @@ private:
      * @return rating of the driver. Higher is better.
      */
     unsigned int rateDriver(ComDriver &driver);
-
-    /**
-     * @brief  Interrupt incomming connection handeler
-     * @param package
-     * @retval None
-     */
-//     TODO documentatie
-    com_err incoming_connection(com_transmitpackage_t package);
 
 //    TODO documentatie
     void _selectDriverTask();
