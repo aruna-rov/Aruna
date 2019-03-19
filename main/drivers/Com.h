@@ -85,8 +85,11 @@ struct com_transmitpackage_t {
     }
 
 //  TODO documentatie
-    static bool binary_to_transmitpackage(com_bin_t bin, com_transmitpackage_t &transp) {
-        //        TODO
+    static bool binary_to_transmitpackage(com_bin_t bin, com_transmitpackage_t &transp, size_t bin_length) {
+        memcpy(&transp.from_port, &bin[0], (sizeof(transp.from_port)));
+        memcpy(&transp.to_port, &bin[sizeof(transp.from_port)], (sizeof(transp.to_port)));
+        memcpy(transp.data, &bin[sizeof(transp.from_port) + sizeof(transp.to_port)], bin_length);
+//        TODO validate transistion.
         return 1;
     }
 };
