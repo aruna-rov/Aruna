@@ -5,6 +5,8 @@
 #ifndef ARUNA_COM_H
 #define ARUNA_COM_H
 
+#include <string.h>
+#include <esp_log.h>
 #include "queue"
 #include "set"
 #include "tuple"
@@ -49,7 +51,7 @@ enum com_status {
 };
 
 typedef uint8_t com_port_t;
-typedef char com_bin_t[(sizeof(com_port_t) * 2) + sizeof(com_data_t)];
+typedef uint8_t com_bin_t[(sizeof(com_port_t) * 2) + sizeof(com_data_t)];
 
 /**
  * transmit ready package.
@@ -76,19 +78,15 @@ struct com_transmitpackage_t {
      * @return pointer to char array.
      */
 //    TODO documentatie bijwerken
-    static void transmitpackage_to_binary(com_transmitpackage_t transp, com_bin_t *bin) {
-//        TODO data word nu gelinked, is beter als het gekopieerd word.
-        *bin[0] = transp.from_port;
-        *bin[sizeof(from_port)] = transp.to_port;
-        *bin[sizeof(to_port) + sizeof(from_port)] = *transp.data;
+    static void transmitpackage_to_binary(com_transmitpackage_t transp, com_bin_t &bin) {
+        memcpy(&bin[0], &transp.from_port, (sizeof(transp.from_port)));
+        memcpy(&bin[sizeof(transp.from_port)], &transp.to_port, sizeof(transp.to_port));
+        memcpy(&bin[sizeof(transp.from_port) + sizeof(transp.to_port)], &transp.data, sizeof(transp.data));
     }
 
 //  TODO documentatie
-    static void binary_to_transmitpackage(com_bin_t bin, com_transmitpackage_t *transp) {
-        //        TODO data word nu gelinked, is beter als het gekopieerd word.
-        transp->from_port = (com_port_t) bin[0];
-        transp->to_port = (com_port_t) bin[sizeof(from_port)];
-        *transp->data = bin[sizeof(to_port) + sizeof(from_port)];
+    static void binary_to_transmitpackage(com_bin_t bin, com_transmitpackage_t &transp) {
+        //        TODO
     }
 };
 
