@@ -5,22 +5,23 @@
 #include "Com.h"
 #include <esp_log.h>
 
-
 Com::Com() {
 }
 
 com_err Com::start() {
+//    pick a driver
     auto dr = pickDriver();
     if (std::get<1>(dr) == COM_OK) {
+//        if driver is found start COM with driver as paramter
         return this->start(std::get<0>(dr));
     }
+//    return pickDriver error.
     return std::get<1>(dr);
 }
 
 com_err Com::start(ComDriver *driver) {
     switch (get_status()) {
         case COM_RUNNING:
-//            TODO COM_ERR_RUNNING betere error?
             return COM_ERR_NOT_STOPPED;
         case COM_PAUSED:
 //            TODO is dit slim? kan ongwenst gedrag vertonen als je van driver wilt wisselen.
@@ -28,6 +29,7 @@ com_err Com::start(ComDriver *driver) {
         default:
             break;
     }
+//    set the driver
     com_err driver_err;
     setDriver(*driver);
     driver_err = getDriver()->start();
@@ -39,16 +41,18 @@ com_err Com::start(ComDriver *driver) {
 //      Misschien kunnen we beter de hele class static maken?
     if (xTaskCreate(transmissionQueueHandeler,
                     "COM_transmissionQueueHandeler",
-                    (configMINIMAL_STACK_SIZE * 10),
+                    (2048),
                     this,
                     tskIDLE_PRIORITY,
                     &this->transmissionQueueHandeler_task) != pdPASS) {
+//        stop when task failes
         driver_err = getDriver()->stop();
         if (driver_err != COM_OK)
-            ESP_LOGW(LOG_TAG, "Driver failed to stop: %d", driver_err);
+            ESP_LOGE(LOG_TAG, "Driver failed to stop: %d", driver_err);
 //        TODO driver unsetten en destroyen.
         return COM_ERR_TASK_FAILED;
     }
+//    set status to running if all succeeded
     this->set_status(COM_RUNNING);
 
     return COM_OK;
@@ -61,13 +65,16 @@ com_err Com::stop() {
         default:
             break;
     }
+//    stop all
     com_err driver_err;
     driver_err = getDriver()->stop();
     vTaskDelete(transmissionQueueHandeler_task);
     this->set_status(COM_STOPPED);
+    bzero(transmission0_queue, sizeof(transmission0_queue)/ sizeof(*transmission0_queue));
+    bzero(transmission1_queue, sizeof(transmission1_queue)/ sizeof(*transmission1_queue));
+    bzero(transmission2_queue, sizeof(transmission2_queue)/ sizeof(*transmission2_queue));
     if (driver_err != COM_OK)
         return driver_err;
-//    TODO destroy threads and clear all arrays and queues
     return COM_OK;
 }
 
@@ -87,9 +94,7 @@ com_err Com::pause() {
 com_err Com::resume() {
     switch (get_status()) {
         case COM_STOPPED:
-//            TODO is start aanroepen slim? Als je eerst start(driver) hebt gedaan kan het ongewenste dingen doen.
-//              TODO kan nu ook een null pointer geven als je hem vanuit een koude start `resume` doet.
-            return start(getDriver());
+            return COM_ERR_NOT_STARTED;
         case COM_RUNNING:
             return COM_ERR_NOT_PAUSED;
         default:
@@ -100,26 +105,31 @@ com_err Com::resume() {
     return COM_OK;
 }
 
-com_err Com::register_channel(com_channel_t *endpoint) {
+com_err Com::register_channel(com_channel_t *channel) {
+/*
+ * TODO paramters should consist of the paramters of com_channel together with a handeler.
+ * handeler can then later be used for sending and accessing Rx array
+ */
+
 //    TODO testen of deze check wel werkt.
-    if (channels.find(*endpoint) != channels.end())
+    if (channels.find(*channel) != channels.end())
         return COM_ERR_CHANNEL_EXISTS;
-    if (channels.insert(*endpoint).second)
+    if (channels.insert(*channel).second)
         return COM_OK;
     else
         return COM_ERR_BUFFER_OVERFLOW;
 //    TODO handeler fixen.
 }
 
-com_err Com::unregister_channel(com_channel_t &endpoint) {
-    if (channels.erase(endpoint))
+com_err Com::unregister_channel(com_channel_t &channel) {
+    if (channels.erase(channel))
         return COM_OK;
     else
         return COM_ERR_NO_CHANNEL;
 }
 
 com_err Com::send(com_channel_t *channel, com_port_t to_port, com_data_t data, size_t data_size) {
-//    TODO checken of com wel aanstaan en verbinding heeft.
+    if (get_status() != COM_RUNNING) return COM_ERR_NOT_STARTED;
     if (channels.find(*channel) == channels.end()) {
         return COM_ERR_NO_CHANNEL;
     }
@@ -132,6 +142,7 @@ com_err Com::send(com_channel_t *channel, com_port_t to_port, com_data_t data, s
     tp.to_port = to_port;
     tp.from_port = channel->port;
 
+//    loop until all data in send
     while (data_size > 0) {
         ds_l = (data_size >= COM_DATA_SIZE) ? COM_DATA_SIZE : data_size;
 
@@ -186,7 +197,7 @@ char *Com::getName() {
     return this->getDriver()->getName();
 }
 
-com_err Com::get_channels(char buffer[COM_ENDPOINT_NAME_SIZE][CHANNEL_BUFFER_SIZE]) {
+com_err Com::get_channels(char *buffer) {
 // TODO
     return COM_OK;
 }
@@ -223,12 +234,19 @@ std::tuple<ComDriver *, com_err> Com::pickDriver() {
 
 unsigned int Com::rateDriver(ComDriver &driver) {
     unsigned int score = 0;
-    if (driver.start() != COM_OK)
+    com_err drivstrt = driver.start();
+    if (drivstrt != COM_OK) {
+        ESP_LOGW(LOG_TAG, "driver:%s, failed to start: %d", driver.getName(), drivstrt);
         return score;
-    if (driver.isHardwareConnected())
+    }
+    if (!driver.isHardwareConnected())
+        return score;
+    else
         score += 10;
     if (!driver.isEndpointConnected())
         return score;
+    else
+        score += 15;
 
     switch (driver.getLinkType()) {
         case COM_WIRED:
@@ -238,7 +256,7 @@ unsigned int Com::rateDriver(ComDriver &driver) {
             score *= 2;
             break;
         case COM_NONE:
-//            TODO is COM_NONE eingelijk wel mogelijk?
+//            TODO is COM_NONE even posible?
             return score;
     }
     score *= (int) driver.getSpeed() / 100;
@@ -246,8 +264,11 @@ unsigned int Com::rateDriver(ComDriver &driver) {
     if (driver.isRealTime())
         score *= 6;
 
-    if (driver.stop() != COM_OK)
+    com_err drivstp = driver.stop();
+    if (drivstp != COM_OK) {
+        ESP_LOGW(LOG_TAG, "driver: %s, failed to stop: %d", driver.getName(), drivstp);
         return score / 1000;
+    }
     return score;
 }
 
@@ -256,18 +277,18 @@ void Com::transmissionQueueHandeler() {
     while (1) {
 //        TODO busy loop, niet zo best. moet een xQueue RTOS zijn.
         if (!transmission0_queue->empty()) {
-            ESP_LOGD("COM_TRANS", "sending prio 0");
+            ESP_LOGD(LOG_TAG, "sending prio 0");
             if (this->getDriver()->transmit(transmission0_queue->front(), 0) == COM_OK)
                 transmission0_queue->pop();
         } else {
             if (schedularCount < 2 && !transmission1_queue->empty()) {
-                ESP_LOGD("COM_TRANS", "sending prio 1");
+                ESP_LOGD(LOG_TAG, "sending prio 1");
                 if (this->getDriver()->transmit(transmission1_queue->front(), 1) == COM_OK) {
                     transmission1_queue->pop();
                     schedularCount++;
                 }
             } else if (!transmission2_queue->empty()) {
-                ESP_LOGD("COM_TRANS", "sending prio 2");
+                ESP_LOGD(LOG_TAG, "sending prio 2");
                 if (this->getDriver()->transmit(transmission2_queue->front(), 2) == COM_OK) {
                     transmission2_queue->pop();
                     schedularCount = 0;
@@ -278,21 +299,26 @@ void Com::transmissionQueueHandeler() {
 }
 
 void Com::transmissionQueueHandeler(void *_this) {
+//    static overload to enable RTOS task of an object
     static_cast<Com *>(_this)->transmissionQueueHandeler();
 }
 
 
 com_err Com::incoming_connection(com_transmitpackage_t package) {
-
+// TODO use com_bin_t as parameter instead if com_transmitpackage
 /*
  *    TODO O(N) is eigenlijk te langzaam.
  *    Als we het meteen kunnen opzoeken door ook nog een set te maken (of hashing table) van de namen
  *    scheelt dat ons heel veel tijd want dan is het O(1)!
  */
-    ESP_LOGV("COM", "incoming connection");
+    if (get_status() != COM_RUNNING) return COM_ERR_NOT_STARTED;
+    ESP_LOGV(LOG_TAG, "incoming connection");
+/*  TODO should push to an array instead of handeling this in-function.
+ *  the handeler should then watch that array and access it on change.
+ */
     for (const auto &channel : channels) {
         if (channel.port == package.to_port) {
-//            TODO handeler moet in een aparte thread worden gestart.
+//            TODO handeler moet in een aparte thread worden gestart. dmv een nieuwe task (of pointer naar task via de com_channel)
             channel.handeler(package);
             return COM_OK;
         }
@@ -304,14 +330,15 @@ com_err Com::incoming_connection(com_transmitpackage_t package) {
 com_err Com::register_candidate_driver(ComDriver *driver) {
 //    comdriver moet eigenlijk een referentie zijn en niet een levend object.
 
-//    TODO print maar 1 letter.
     ESP_LOGD(LOG_TAG, "registering driver: %s", driver->getName());
     if (driverCandidates.find(driver) != driverCandidates.end()) {
         return COM_ERR_DRIVER_EXISTS;
     }
     if (!driverCandidates.insert(driver).second)
         return COM_ERR_BUFFER_OVERFLOW;
+//    select new driver if com is running
     if (get_status() == COM_RUNNING) {
+//        TODO its better to rate this new driver and compare its score to the current driver.
         selectDriverTask();
     }
     return COM_OK;
@@ -320,6 +347,7 @@ com_err Com::register_candidate_driver(ComDriver *driver) {
 
 com_err Com::unregister_candidate_driver(ComDriver *driver) {
     if (driverCandidates.erase(driver)) {
+//        if we delete our own driver, search for a new one
         if (this->driver == driver)
             selectDriverTask();
         return COM_OK;
@@ -331,13 +359,16 @@ void Com::_selectDriverTask() {
     auto dr = pickDriver();
     if (std::get<1>(dr) == COM_OK) {
         setDriver(*std::get<0>(dr));
-    } else
-//        TODO status aanpassen ofzo.
+    } else {
         ESP_LOGE(LOG_TAG, "Failed to pick new driver: %d", std::get<1>(dr));
+        COM.stop();
+    }
+
     vTaskDelete(NULL);
 }
 
 void Com::_selectDriverTask(void *_this) {
+//    static overload, for RTOS to work,
     static_cast<Com *>(_this)->_selectDriverTask();
 
 }

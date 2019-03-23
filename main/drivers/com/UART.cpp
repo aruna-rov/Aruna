@@ -16,9 +16,11 @@ static xTaskHandle uart_rx_handle = nullptr;
 com_err UART::transmit(com_transmitpackage_t package) {
     ESP_LOGV(TAG, "sending...");
     com_bin_t bin_data;
+    // make binary of the package
     com_transmitpackage_t::transmitpackage_to_binary(package, bin_data);
     ESP_LOG_BUFFER_HEXDUMP(TAG, bin_data, sizeof(bin_data), ESP_LOG_VERBOSE);
-    size_t package_size = package.data_lenght + sizeof(package.from_port) + sizeof(package.to_port);
+    size_t package_size = strlen((char*) bin_data);
+//    transmit
     if (uart_write_bytes(UART_NUM,
                          (const char *) bin_data,
                          package_size)
@@ -64,11 +66,15 @@ com_err UART::start() {
                 .rx_flow_ctrl_thresh = 122,
                 .use_ref_tick = false
         };
+//        set config
         ESP_ERROR_CHECK(uart_param_config(UART_NUM, &uart_config));
+//        set pins
         ESP_ERROR_CHECK(uart_set_pin(UART_NUM, TXD_PIN, RXD_PIN, RTS_PIN, CTS_PIN));
+//        install driver (driver can only be installed once, even if you uart_driver_delete is used)
         ESP_ERROR_CHECK(uart_driver_install(UART_NUM, RX_BUF_SIZE, TX_BUF_SIZE, 20, &uart_queue, 0));
         installed = true;
     }
+//    task to handle incomming messages.
     if (uart_rx_handle == nullptr)
         xTaskCreate(UART::handle_rx_task, "handle_rx_uart", 2048, NULL, 12, &uart_rx_handle);
     return COM_OK;
@@ -77,12 +83,20 @@ com_err UART::start() {
 com_err UART::stop() {
     ESP_LOGD(TAG, "STOP");
 //    TODO flush tx queue
+//  flush rx queue
     esp_err_t ufi = uart_flush_input(UART_NUM);
     if (ufi != ESP_OK)
         ESP_LOGE(TAG, "error on flush: %s", esp_err_to_name(ufi));
+/*
+ *      new driver cannot be installed even if uart_delete_driver is called.
+ *      this causes an issue in driver selection because the winning driver gets restarted
+ */
+
 //    esp_err_t udd = uart_driver_delete(UART_NUM);
 //    if (udd != ESP_OK)
 //        ESP_LOGE(TAG, "error on driver delete: %s", esp_err_to_name(udd));
+
+//  delete task
     vTaskDelete(uart_rx_handle);
     uart_rx_handle = nullptr;
     return (ufi) != ESP_OK ? COM_ERR_HARDWARE : COM_OK;
@@ -90,6 +104,7 @@ com_err UART::stop() {
 
 void UART::handle_rx_task(void *arg) {
     uart_event_t event;
+//    smaller size for dtmp results in an stack overflow.
     uint8_t *dtmp = (uint8_t *) malloc(RX_BUF_SIZE);
     int read;
     com_transmitpackage_t incoming_info;
@@ -106,14 +121,17 @@ void UART::handle_rx_task(void *arg) {
                 case UART_DATA:
 //                    TODO UART_DATA event gets triggerd without any data being avaliable
                     read = uart_read_bytes(UART_NUM, dtmp, COM_DATA_SIZE, 4);
+//                    stop if read fails
                     if (read <= 0) break;
                     ESP_LOGV(TAG, "incoming data[%d]:", read);
 //                    TODO first byte should be a the size of the array so that packages bigger then COM_DATA_SIZE can be send.
                     ESP_LOG_BUFFER_HEXDUMP(TAG, dtmp, COM_DATA_SIZE, ESP_LOG_VERBOSE);
+//                    convert binary to transmitpackage and alert COM of an incomming connection.
                     com_transmitpackage_t::binary_to_transmitpackage(dtmp, incoming_info, strlen((char *) dtmp));
                     if (COM.incoming_connection(incoming_info) != COM_OK) {
                         ESP_LOGV(TAG, "protocol error");
                     }
+//                    delete incoming_info to prefent old data being present once a new package arrives.
                     bzero(&incoming_info, sizeof(incoming_info));
                     break;
                     //Event of HW FIFO overflow detected
@@ -158,14 +176,3 @@ void UART::handle_rx_task(void *arg) {
     dtmp = NULL;
     vTaskDelete(NULL);
 }
-
-
-
-
-//com_err UART::registerDriver() {
-//    ESP_LOGD(TAG, "registering driver!");6
-//    ComDriver * driver = this;
-////    TODO error handeling.
-//    return this->registerd = COM.register_candidate_driver(driver);
-//};
-

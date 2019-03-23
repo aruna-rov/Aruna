@@ -5,27 +5,26 @@
 #ifndef ARUNA_COMDRIVER_H
 #define ARUNA_COMDRIVER_H
 
-#include "../Com.h"
+#include "Com.h"
 
 class ComDriver {
 public:
-    static const size_t nameSize = 7;
-
-//    TODO documentatie
-//    com_err registerd;
 
     /**
      * @brief  directly transmit a package on the link.
      * @param  package: package to be send
-     * @retval
+     * @retval  `COM_OK` if all went well.
+     *          `COM_ERR_HARDWARE` if the hardware failes
      */
     virtual com_err transmit(com_transmitpackage_t package) = 0;
+//    TODO use com_bin as transmit parameter
 
     /**
      * @brief  directly transmit a package on the link.
      * @param  package: package to be send
-     * @param  priority: only supported if link is realtime.
-     * @retval
+     * @param  priority: (0 hightest to 2 lowest) only supported if link is realtime.
+     * @retval  `COM_OK` if all went well.
+     *          `COM_ERR_HARDWARE` if the hardware failes
      */
     virtual com_err transmit(com_transmitpackage_t package, unsigned short priority) {
         return transmit(package);
@@ -48,7 +47,7 @@ public:
 
     /**
      * Get speed of link (B/s)
-     * @return
+     * @return unsigned int speed in Bytes per second.
      */
     virtual unsigned int getSpeed() {
         return 0;
@@ -64,7 +63,7 @@ public:
 
     /**
      * Get link type (RADIO, WIRED, NONE)
-     * @return
+     * @return com_link_t. COM_NONE if not connected.
      */
     virtual com_link_t getLinkType() {
         return COM_NONE;
@@ -79,7 +78,7 @@ public:
     }
 
     /**
-     * is the hardware found and operationable?
+     * is the external hardware found and operationable?
      * @return true/false
      */
     virtual bool isHardwareConnected() {
@@ -88,35 +87,19 @@ public:
 
     /**
      * start the driver.
-     * @return
+     * @return com_err, `COM_OK` if started succesfully, `COM_ERR_HARDWARE` or other hardware error on failure.
      */
-//     TODO documentatie
     virtual com_err start(){
         return COM_OK;
     }
 
     /**
      * Stop the driver.
-     * @return
+     * @return com_err, `COM_OK` if started succesfully, `COM_ERR_HARDWARE` or other hardware error on failure.
      */
     virtual com_err stop(){
         return COM_OK;
     }
-
-    /**
-     * Constuctor
-     */
-    ComDriver() {
-        start();
-    }
-
-    /**
-     * Destructor
-     */
-    ~ComDriver() {
-        stop();
-    }
-
 };
 
 

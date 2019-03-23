@@ -20,16 +20,6 @@ void testAppHandeler(com_transmitpackage_t d) {
     ESP_LOGI("MAIN", "me: '%d'", d.to_port);
 }
 
-void testUART_task(void *param) {
-    uart_driver->start();
-    com_transmitpackage_t transmitpackage = {
-            1,
-            2,
-            "abc"
-    };
-    uart_driver->transmit(transmitpackage);
-    vTaskDelete(NULL);
-}
 
 extern "C" void app_main(void) {
 //    TODO driver moet geregistreerd worden in de driver zelf
@@ -51,16 +41,10 @@ extern "C" void app_main(void) {
     };
 //    TODO register channel needs redesign, all endpoint data as paramter. handeler should be used.
     ESP_LOGI("testApp", "register: %d", COM.register_channel(&testapp));
-//    ESP_LOGI("testApp", "send: %d", COM.send(&testapp, 0xDE, (char*) "My man!", 7));
-//    ESP_LOGI("testApp", "send: %d", COM.send(&testapp, 0xAA, (char*) "precies 32 bytes aan data size!!", 32));
-//    ESP_LOGI("testApp", "send: %d", COM.send(&testapp, 0xAE, (char*) "een overflow van data! ohh nee, wat gebeurt er nu?", 50));
+    ESP_LOGI("testApp", "send: %d", COM.send(&testapp, 0xDE, (char*) "My man!", 7));
+    ESP_LOGI("testApp", "send: %d", COM.send(&testapp, 0xAA, (char*) "precies 32 bytes aan data size!!", 32));
+    ESP_LOGI("testApp", "send: %d", COM.send(&testapp, 0xAE, (char*) "een overflow van data! ohh nee, wat gebeurt er nu?", 50));
 
-//    xTaskCreate(testUART_task, "UART_TEST", 2048, NULL, 10, NULL);
-//    while(1)
-//    {
-//        ESP_LOGD("MAIN", "loop");
-//        vTaskDelay(1000);
-//    }
 
 
 
