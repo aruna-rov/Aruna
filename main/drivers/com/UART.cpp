@@ -10,7 +10,7 @@
 static QueueHandle_t uart_queue;
 static bool installed = false;
 const static char TAG[] = "UART";
-static xTaskHandle uart_rx_handle;
+static xTaskHandle uart_rx_handle = nullptr;
 
 
 com_err UART::transmit(com_transmitpackage_t package) {
@@ -18,7 +18,11 @@ com_err UART::transmit(com_transmitpackage_t package) {
     com_bin_t bin_data;
     com_transmitpackage_t::transmitpackage_to_binary(package, bin_data);
     ESP_LOG_BUFFER_HEXDUMP(TAG, bin_data, sizeof(bin_data), ESP_LOG_VERBOSE);
-    if (uart_write_bytes(UART_NUM, (const char *) bin_data, strlen((char *) bin_data)) == strlen((char *) bin_data))
+    size_t package_size = package.data_lenght + sizeof(package.from_port) + sizeof(package.to_port);
+    if (uart_write_bytes(UART_NUM,
+                         (const char *) bin_data,
+                         package_size)
+        == (package_size))
         return COM_OK;
     else
         return COM_ERR_HARDWARE;
@@ -49,10 +53,12 @@ com_err UART::start() {
 
     /* Configure parameters of an UART driver,
      * communication pins and install the driver */
+    if (!installed) {
+
         uart_config_t uart_config = {
                 .baud_rate = BROAD_RATE,
                 .data_bits = UART_DATA_8_BITS,
-                .parity    = UART_PARITY_DISABLE,
+                .parity    = UART_PARITY_EVEN,
                 .stop_bits = UART_STOP_BITS_1,
                 .flow_ctrl = UART_HW_FLOWCTRL_DISABLE,
                 .rx_flow_ctrl_thresh = 122,
@@ -61,7 +67,10 @@ com_err UART::start() {
         ESP_ERROR_CHECK(uart_param_config(UART_NUM, &uart_config));
         ESP_ERROR_CHECK(uart_set_pin(UART_NUM, TXD_PIN, RXD_PIN, RTS_PIN, CTS_PIN));
         ESP_ERROR_CHECK(uart_driver_install(UART_NUM, RX_BUF_SIZE, TX_BUF_SIZE, 20, &uart_queue, 0));
-    xTaskCreate(UART::handle_rx_task, "handle_rx_task", 2048, NULL, 12, &uart_rx_handle);
+        installed = true;
+    }
+    if (uart_rx_handle == nullptr)
+        xTaskCreate(UART::handle_rx_task, "handle_rx_uart", 2048, NULL, 12, &uart_rx_handle);
     return COM_OK;
 }
 
@@ -71,16 +80,19 @@ com_err UART::stop() {
     esp_err_t ufi = uart_flush_input(UART_NUM);
     if (ufi != ESP_OK)
         ESP_LOGE(TAG, "error on flush: %s", esp_err_to_name(ufi));
-    esp_err_t udd = uart_driver_delete(UART_NUM);
-    if (udd != ESP_OK)
-        ESP_LOGE(TAG, "error on driver delete: %s", esp_err_to_name(udd));
+//    esp_err_t udd = uart_driver_delete(UART_NUM);
+//    if (udd != ESP_OK)
+//        ESP_LOGE(TAG, "error on driver delete: %s", esp_err_to_name(udd));
     vTaskDelete(uart_rx_handle);
-    return (udd || ufi) != ESP_OK ? COM_ERR_HARDWARE : COM_OK;
+    uart_rx_handle = nullptr;
+    return (ufi) != ESP_OK ? COM_ERR_HARDWARE : COM_OK;
 }
 
 void UART::handle_rx_task(void *arg) {
     uart_event_t event;
     uint8_t *dtmp = (uint8_t *) malloc(RX_BUF_SIZE);
+    int read;
+    com_transmitpackage_t incoming_info;
     for (;;) {
         //Waiting for UART event.
         if (xQueueReceive(uart_queue, (void *) &event, (portTickType) portMAX_DELAY)) {
@@ -92,19 +104,17 @@ void UART::handle_rx_task(void *arg) {
                 other types of events. If we take too much time on data event, the queue might
                 be full.*/
                 case UART_DATA:
-                    ESP_LOGV(TAG, "[UART DATA]: %d", event.size);
-                    uart_read_bytes(UART_NUM, dtmp, event.size, portMAX_DELAY);
-                    ESP_LOGV(TAG, "[DATA EVT]:");
-                    uart_write_bytes(UART_NUM, (const char *) dtmp, event.size);
-                    //    TODO binnenkomende bericht afhandelen. testen!
-                    com_transmitpackage_t incoming_info;
-                    if (com_transmitpackage_t::binary_to_transmitpackage(dtmp, incoming_info))
-                        COM.incoming_connection(incoming_info);
-                    else {
+//                    TODO UART_DATA event gets triggerd without any data being avaliable
+                    read = uart_read_bytes(UART_NUM, dtmp, COM_DATA_SIZE, 4);
+                    if (read <= 0) break;
+                    ESP_LOGV(TAG, "incoming data[%d]:", read);
+//                    TODO first byte should be a the size of the array so that packages bigger then COM_DATA_SIZE can be send.
+                    ESP_LOG_BUFFER_HEXDUMP(TAG, dtmp, COM_DATA_SIZE, ESP_LOG_VERBOSE);
+                    com_transmitpackage_t::binary_to_transmitpackage(dtmp, incoming_info, strlen((char *) dtmp));
+                    if (COM.incoming_connection(incoming_info) != COM_OK) {
                         ESP_LOGV(TAG, "protocol error");
-                        ESP_LOG_BUFFER_HEXDUMP(TAG, dtmp, sizeof(dtmp), ESP_LOG_VERBOSE);
                     }
-                    bzero(&incoming_info, COM_DATA_SIZE);
+                    bzero(&incoming_info, sizeof(incoming_info));
                     break;
                     //Event of HW FIFO overflow detected
                 case UART_FIFO_OVF:

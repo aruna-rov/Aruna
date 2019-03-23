@@ -70,7 +70,11 @@ struct com_transmitpackage_t {
     /**
      * @brief  Data to be transmitted.
      */
+//     TODO moet eigenlijk malloc gebruiken anders kan je nu in iemand anders z'n ram schrijven als je lenght groter dan COM_DATA_SIZE
     com_data_t data;
+
+//    TODO documentation
+    size_t data_lenght;
 
     /*
      * Get binary array of transmitpackage.
@@ -86,9 +90,11 @@ struct com_transmitpackage_t {
 
 //  TODO documentatie
     static bool binary_to_transmitpackage(com_bin_t bin, com_transmitpackage_t &transp, size_t bin_length) {
+        size_t dataLength = bin_length - (sizeof(transp.from_port) + sizeof(transp.to_port));
         memcpy(&transp.from_port, &bin[0], (sizeof(transp.from_port)));
         memcpy(&transp.to_port, &bin[sizeof(transp.from_port)], (sizeof(transp.to_port)));
-        memcpy(transp.data, &bin[sizeof(transp.from_port) + sizeof(transp.to_port)], bin_length);
+        memcpy(transp.data, &bin[sizeof(transp.from_port) + sizeof(transp.to_port)], dataLength);
+        transp.data_lenght = dataLength;
 //        TODO validate transistion.
         return 1;
     }
@@ -97,7 +103,7 @@ struct com_transmitpackage_t {
 /**
  * endpoint type of a com channel
  */
-struct com_endpoint_t {
+struct com_channel_t {
     /**
      * @brief port nr. of the endpoint
      */
@@ -115,37 +121,15 @@ struct com_endpoint_t {
      * @param: `com_data_t` incomming data
      */
 //     TODO nu heeft de handeler alleen de data, het is ook handig als hij de afzender weet.
-    void (*handeler)(com_data_t);
+    void (*handeler)(com_transmitpackage_t);
 
-    bool operator<(const com_endpoint_t &b) const {
+    bool operator<(const com_channel_t &b) const {
         return this->port < b.port;
     }
 
     bool operator==(const uint8_t port) const {
         return this->port == port;
     }
-};
-
-/**
- * datapackage containing the endpoint and data to be send.
- */
-// TODO deze naam lijkt te erg op `com_data_t`. Moet ff allemaal wat duidelijk.
-struct com_datapackage_t {
-    /**
-     * @brief  Communication endpoint to send reply to.
-     * @retval None
-     */
-    struct com_endpoint_t *com_endpoint;
-
-    /**
-    * to whom to send it to.
-    */
-    com_port_t to_port;
-
-    /**
-     * @brief Data to be send.
-     */
-    com_data_t *data;
 };
 
 #include "com/ComDriver.h"
@@ -198,7 +182,7 @@ public:
      *  * `COM_ERR_INVALID_PARAMETERS` if parameters are invalid
      *  * `COM_OK` if it was succesfully added.
      */
-    com_err register_channel(com_endpoint_t *endpoint);
+    com_err register_channel(com_channel_t *endpoint);
 
     /**
      * @brief  unregister an endpoint
@@ -207,7 +191,7 @@ public:
      *  * `COM_ERR_INVALID_PARAMETERS` if parameters are invalid
      *  * `COM_OK` if it was succesfully removed.
      */
-    com_err unregister_channel(com_endpoint_t &endpoint);
+    com_err unregister_channel(com_channel_t &endpoint);
 
     /**
      * @brief  Send data.
@@ -219,7 +203,8 @@ public:
      *  * `COM_ERR_NO_CONNECTION` if there is no connection,
      *  * `COM_ERR_BUFFER_OVERFLOW` if the data was not added to the bugger due an overflow,
      */
-    com_err send(com_datapackage_t data);
+//     TODO documentatie bijwerken
+    com_err send(com_channel_t *channel, com_port_t to_port, com_data_t data, size_t data_size);
 
     /**
      * pause all communication. buffers, channels and queue's will be saved
@@ -353,7 +338,7 @@ private:
     /**
      * @brief all endpoints
      */
-    std::set<com_endpoint_t> channels;
+    std::set<com_channel_t> channels;
 
     /**
      * @brief stores the com status
@@ -367,13 +352,6 @@ private:
 
 //    TODO documentatie
     TaskHandle_t transmissionQueueHandeler_task;
-
-    /**
-     * @brief  Strips `com_datapackage_t` to `_com_transmitpackage_t`
-     * @param  datap: paclage to be stripped.
-     * @retval _com_transmitpackage_t
-     */
-    com_transmitpackage_t datapackage2transmitpackage(com_datapackage_t datap);
 
     /**
      * @brief  Tramsmission handeler. Do not call directly, blocks CPU.

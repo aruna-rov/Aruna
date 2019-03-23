@@ -100,7 +100,7 @@ com_err Com::resume() {
     return COM_OK;
 }
 
-com_err Com::register_channel(com_endpoint_t *endpoint) {
+com_err Com::register_channel(com_channel_t *endpoint) {
 //    TODO testen of deze check wel werkt.
     if (channels.find(*endpoint) != channels.end())
         return COM_ERR_CHANNEL_EXISTS;
@@ -111,32 +111,53 @@ com_err Com::register_channel(com_endpoint_t *endpoint) {
 //    TODO handeler fixen.
 }
 
-com_err Com::unregister_channel(com_endpoint_t &endpoint) {
+com_err Com::unregister_channel(com_channel_t &endpoint) {
     if (channels.erase(endpoint))
         return COM_OK;
     else
         return COM_ERR_NO_CHANNEL;
 }
 
-com_err Com::send(com_datapackage_t data) {
-    if (channels.find(*data.com_endpoint) == channels.end()) {
+com_err Com::send(com_channel_t *channel, com_port_t to_port, com_data_t data, size_t data_size) {
+//    TODO checken of com wel aanstaan en verbinding heeft.
+    if (channels.find(*channel) == channels.end()) {
         return COM_ERR_NO_CHANNEL;
     }
-    switch (data.com_endpoint->priority) {
+    //        datasize length
+    size_t ds_l;
+    //        datasize pointer
+    size_t ds_p = 0;
+
+    com_transmitpackage_t tp;
+    tp.to_port = to_port;
+    tp.from_port = channel->port;
+
+    while (data_size > 0) {
+        ds_l = (data_size >= COM_DATA_SIZE) ? COM_DATA_SIZE : data_size;
+
+        memcpy(tp.data, &data[ds_p], ds_l);
+        tp.data_lenght = ds_l;
+
+        ds_p += ds_l;
+        data_size -= ds_l;
+
+
+        switch (channel->priority) {
 //        TODO error detectie op dat de queue vol zit.
 //        Maar queue->push() return void :( ?
-        case 0:
-            transmission0_queue->push(this->datapackage2transmitpackage(data));
-            break;
-        case 1:
-            transmission1_queue->push(this->datapackage2transmitpackage(data));
-            break;
-        case 2:
-            transmission2_queue->push(this->datapackage2transmitpackage(data));
-            break;
-        default:
+            case 0:
+                transmission0_queue->push(tp);
+                break;
+            case 1:
+                transmission1_queue->push(tp);
+                break;
+            case 2:
+                transmission2_queue->push(tp);
+                break;
+            default:
 //            TODO COM__ERR_INVALID.. documentatie toevoegen.
-            return COM_ERR_INVALID_PARAMETERS;
+                return COM_ERR_INVALID_PARAMETERS;
+        }
     }
     return COM_OK;
 }
@@ -233,6 +254,7 @@ unsigned int Com::rateDriver(ComDriver &driver) {
 void Com::transmissionQueueHandeler() {
     int schedularCount = 0;
     while (1) {
+//        TODO busy loop, niet zo best. moet een xQueue RTOS zijn.
         if (!transmission0_queue->empty()) {
             ESP_LOGD("COM_TRANS", "sending prio 0");
             if (this->getDriver()->transmit(transmission0_queue->front(), 0) == COM_OK)
@@ -267,10 +289,11 @@ com_err Com::incoming_connection(com_transmitpackage_t package) {
  *    Als we het meteen kunnen opzoeken door ook nog een set te maken (of hashing table) van de namen
  *    scheelt dat ons heel veel tijd want dan is het O(1)!
  */
+    ESP_LOGV("COM", "incoming connection");
     for (const auto &channel : channels) {
-        if (channel.port == package.from_port) {
+        if (channel.port == package.to_port) {
 //            TODO handeler moet in een aparte thread worden gestart.
-            channel.handeler(package.data);
+            channel.handeler(package);
             return COM_OK;
         }
     }
@@ -328,9 +351,3 @@ void Com::selectDriverTask() {
                 tskIDLE_PRIORITY,
                 NULL);
 }
-
-com_transmitpackage_t Com::datapackage2transmitpackage(com_datapackage_t datap) {
-
-    return com_transmitpackage_t();
-}
-

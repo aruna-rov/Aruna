@@ -10,12 +10,17 @@
 #include <soc/uart_struct.h>
 
 Com COM;
-ComDriver* uart_driver;
-//void testAppHandeler(com_data_t d){
-//
-//}
+ComDriver *uart_driver;
 
-void testUART_task(void *param){
+void testAppHandeler(com_transmitpackage_t d) {
+    ESP_LOGI("MAIN", "howdy, partner!");
+    ESP_LOGI("MAIN", "data: '%s'", d.data);
+    ESP_LOGI("MAIN", "data_length: '%d'", d.data_lenght);
+    ESP_LOGI("MAIN", "from: '%d'", d.from_port);
+    ESP_LOGI("MAIN", "me: '%d'", d.to_port);
+}
+
+void testUART_task(void *param) {
     uart_driver->start();
     com_transmitpackage_t transmitpackage = {
             1,
@@ -39,20 +44,16 @@ extern "C" void app_main(void) {
 
 //    test application
 
-//    com_endpoint_t testapp = {
-//            .port = 1,
-//            .priority = 2,
-//            .handeler = &testAppHandeler
-//    };
-//    ESP_LOGD("dinges", "so far so good");
-//    ESP_LOGI("testApp", "register: %d", COM.register_channel(&testapp));
-//    com_data_t data = "hello world!";
-//    com_datapackage_t testAppData = {
-//            .com_endpoint = &testapp,
-//            .to_port = 2,
-//            .data = &data
-//    };
-//    ESP_LOGI("testApp", "send: %d", COM.send(testAppData));
+    com_channel_t testapp = {
+            .port = 1,
+            .priority = 2,
+            .handeler = &testAppHandeler
+    };
+//    TODO register channel needs redesign, all endpoint data as paramter. handeler should be used.
+    ESP_LOGI("testApp", "register: %d", COM.register_channel(&testapp));
+//    ESP_LOGI("testApp", "send: %d", COM.send(&testapp, 0xDE, (char*) "My man!", 7));
+//    ESP_LOGI("testApp", "send: %d", COM.send(&testapp, 0xAA, (char*) "precies 32 bytes aan data size!!", 32));
+//    ESP_LOGI("testApp", "send: %d", COM.send(&testapp, 0xAE, (char*) "een overflow van data! ohh nee, wat gebeurt er nu?", 50));
 
 //    xTaskCreate(testUART_task, "UART_TEST", 2048, NULL, 10, NULL);
 //    while(1)
