@@ -19,6 +19,4 @@ void start_blinky_task(void* arg);
 // TODO documentation
 void set_led(LED_STATUS ls);
 
-void blinky_com_handeler(com_transmitpackage_t tp);
-
 #endif //ARUNA_BLINKY_H

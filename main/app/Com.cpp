@@ -114,8 +114,10 @@ com_err Com::register_channel(com_channel_t *channel) {
 //    TODO testen of deze check wel werkt.
     if (channels.find(*channel) != channels.end())
         return COM_ERR_CHANNEL_EXISTS;
-    if (channels.insert(*channel).second)
+    if (channels.insert(*channel).second) {
+        *channel->handeler = xQueueCreate(TRANSMIT_QUEUE_BUFFER_SIZE, sizeof(com_transmitpackage_t));
         return COM_OK;
+    }
     else
         return COM_ERR_BUFFER_OVERFLOW;
 //    TODO handeler fixen.
@@ -313,13 +315,10 @@ com_err Com::incoming_connection(com_transmitpackage_t package) {
  */
     if (get_status() != COM_RUNNING) return COM_ERR_NOT_STARTED;
     ESP_LOGV(LOG_TAG, "incoming connection");
-/*  TODO should push to an array instead of handeling this in-function.
- *  the handeler should then watch that array and access it on change.
- */
+
     for (const auto &channel : channels) {
         if (channel.port == package.to_port) {
-//            TODO handeler moet in een aparte thread worden gestart. dmv een nieuwe task (of pointer naar task via de com_channel)
-            channel.handeler(package);
+            xQueueSend(*channel.handeler, &package, 1000);
             return COM_OK;
         }
     }

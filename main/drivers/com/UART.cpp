@@ -125,9 +125,11 @@ void UART::handle_rx_task(void *arg) {
                     if (read <= 0) break;
                     ESP_LOGV(TAG, "incoming data[%d]:", read);
 //                    TODO first byte should be a the size of the array so that packages bigger then COM_DATA_SIZE can be send.
+//                    if the data now contains a 0x0 then datalength will be set at that byte.
                     ESP_LOG_BUFFER_HEXDUMP(TAG, dtmp, COM_DATA_SIZE, ESP_LOG_VERBOSE);
 //                    convert binary to transmitpackage and alert COM of an incomming connection.
-                    com_transmitpackage_t::binary_to_transmitpackage(dtmp, incoming_info, strlen((char *) dtmp));
+                    if (!com_transmitpackage_t::binary_to_transmitpackage(dtmp, incoming_info, strlen((char *) dtmp)))
+                        break;
                     if (COM.incoming_connection(incoming_info) != COM_OK) {
                         ESP_LOGV(TAG, "protocol error");
                     }

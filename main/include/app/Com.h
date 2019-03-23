@@ -12,6 +12,7 @@
 #include "tuple"
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
+#include <freertos/queue.h>
 
 static const size_t COM_DATA_SIZE = 32;
 
@@ -109,12 +110,13 @@ struct com_transmitpackage_t {
      * @return true if succeeded, false if not (not yet implemented, will always return 1)
      */
     static bool binary_to_transmitpackage(com_bin_t bin, com_transmitpackage_t &transp, size_t bin_length) {
+        if (bin_length < (sizeof(transp.from_port) + sizeof(transp.to_port)))
+            return 0;
         size_t dataLength = bin_length - (sizeof(transp.from_port) + sizeof(transp.to_port));
         memcpy(&transp.from_port, &bin[0], (sizeof(transp.from_port)));
         memcpy(&transp.to_port, &bin[sizeof(transp.from_port)], (sizeof(transp.to_port)));
         memcpy(transp.data, &bin[sizeof(transp.from_port) + sizeof(transp.to_port)], dataLength);
         transp.data_lenght = dataLength;
-//        TODO validate transistion.
         return 1;
     }
 };
@@ -139,7 +141,8 @@ struct com_channel_t {
      * @note incomming data is not garanteed to be `COM_DATA_SIZE` in length. Could be smaller.
      * @param: `com_transmitpackage_t` incomming data
      */
-    void (*handeler)(com_transmitpackage_t);
+//     TODO documentation
+    QueueHandle_t *handeler;
 
     bool operator<(const com_channel_t &b) const {
         return this->port < b.port;
