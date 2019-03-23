@@ -2,8 +2,8 @@
 // Created by noeel on 9-12-18.
 //
 
-#include "main.h"
-#include "drivers/Com.h"
+#include <main.h>
+#include "app/Com.h"
 #include "drivers/com/UART.h"
 #include "esp_log.h"
 #include <freertos/task.h>

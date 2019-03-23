@@ -1,4 +1,4 @@
-set(COMPONENT_SRCS "main.cpp" "drivers/Com.cpp" "drivers/com/UART.cpp")
-set(COMPONENT_ADD_INCLUDEDIRS "drivers")
+set(COMPONENT_SRCS "main.cpp" "app/Com.cpp" "drivers/com/UART.cpp" "app/blinky.cpp")
+set(COMPONENT_ADD_INCLUDEDIRS "include")
 
 register_component()

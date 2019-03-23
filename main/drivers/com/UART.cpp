@@ -3,8 +3,8 @@
 //
 
 #include <stdio.h>
-#include "UART.h"
-#include "Com.h"
+#include "drivers/com/UART.h"
+#include "app/Com.h"
 #include "esp_log.h"
 
 static QueueHandle_t uart_queue;
