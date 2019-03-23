@@ -8,6 +8,7 @@
 #include "esp_log.h"
 #include <freertos/task.h>
 #include <soc/uart_struct.h>
+#include <app/blinky.h>
 
 Com COM;
 ComDriver *uart_driver;
@@ -39,6 +40,7 @@ extern "C" void app_main(void) {
             .priority = 2,
             .handeler = &testAppHandeler
     };
+    xTaskCreate(start_blinky_task, "blinkt_task", 2048, NULL, 0, NULL);
 //    TODO register channel needs redesign, all endpoint data as paramter. handeler should be used.
     ESP_LOGI("testApp", "register: %d", COM.register_channel(&testapp));
     ESP_LOGI("testApp", "send: %d", COM.send(&testapp, 0xDE, (char*) "My man!", 7));
