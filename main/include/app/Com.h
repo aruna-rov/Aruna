@@ -346,30 +346,11 @@ private:
     static constexpr char *LOG_TAG = (char *) "COM";
 
     std::set<ComDriver *> driverCandidates;
-//    TODO transmission queue should be and priority queue object or atleast one two dementional array.
-//    TODO transmission queue should store com_bin_t to reduse complexity and size.
-    /**
-     * @brief high priority transmission queue
-     */
-    std::queue<com_transmitpackage_t> transmission0_queue[TRANSMIT_QUEUE_BUFFER_SIZE];
 
     /**
-     * @brief mid priority transmission queue
+     * transmission queue
      */
-    std::queue<com_transmitpackage_t> transmission1_queue[TRANSMIT_QUEUE_BUFFER_SIZE];
-
-    /**
-     * @brief low priority transmission queue
-     */
-    std::queue<com_transmitpackage_t> transmission2_queue[TRANSMIT_QUEUE_BUFFER_SIZE];
-
-    /**
-     * @brief incomming stransmission queue.
-     */
-    /* TODO each channel need a Rx buffer. That the channel need to handle themself
-     * not in incoming_connection. The channel should have an xQueueReceive to watch the array
-     */
-//    std::queue<com_transmitpackage_t> incomming_transmission_queue[TRANSMIT_QUEUE_BUFFER_SIZE];
+    std::queue<com_transmitpackage_t> transmission_queue[3][TRANSMIT_QUEUE_BUFFER_SIZE];
 
     /**
      * @brief all endpoints

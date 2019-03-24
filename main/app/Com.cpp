@@ -70,9 +70,9 @@ com_err Com::stop() {
     driver_err = getDriver()->stop();
     vTaskDelete(transmissionQueueHandeler_task);
     this->set_status(COM_STOPPED);
-    bzero(transmission0_queue, sizeof(transmission0_queue)/ sizeof(*transmission0_queue));
-    bzero(transmission1_queue, sizeof(transmission1_queue)/ sizeof(*transmission1_queue));
-    bzero(transmission2_queue, sizeof(transmission2_queue)/ sizeof(*transmission2_queue));
+    bzero(transmission_queue[0], sizeof(transmission_queue[0])/ sizeof(*transmission_queue[0]));
+    bzero(transmission_queue[1], sizeof(transmission_queue[1])/ sizeof(*transmission_queue[1]));
+    bzero(transmission_queue[2], sizeof(transmission_queue[2])/ sizeof(*transmission_queue[2]));
     if (driver_err != COM_OK)
         return driver_err;
     return COM_OK;
@@ -159,13 +159,13 @@ com_err Com::send(com_channel_t *channel, com_port_t to_port, com_data_t data, s
 //        TODO error detectie op dat de queue vol zit.
 //        Maar queue->push() return void :( ?
             case 0:
-                transmission0_queue->push(tp);
+                transmission_queue[0]->push(tp);
                 break;
             case 1:
-                transmission1_queue->push(tp);
+                transmission_queue[1]->push(tp);
                 break;
             case 2:
-                transmission2_queue->push(tp);
+                transmission_queue[2]->push(tp);
                 break;
             default:
 //            TODO COM__ERR_INVALID.. documentatie toevoegen.
@@ -278,21 +278,21 @@ void Com::transmissionQueueHandeler() {
     int schedularCount = 0;
     while (1) {
 //        TODO busy loop, niet zo best. moet een xQueue RTOS zijn.
-        if (!transmission0_queue->empty()) {
+        if (!transmission_queue[0]->empty()) {
             ESP_LOGD(LOG_TAG, "sending prio 0");
-            if (this->getDriver()->transmit(transmission0_queue->front(), 0) == COM_OK)
-                transmission0_queue->pop();
+            if (this->getDriver()->transmit(transmission_queue[0]->front(), 0) == COM_OK)
+                transmission_queue[0]->pop();
         } else {
-            if (schedularCount < 2 && !transmission1_queue->empty()) {
+            if (schedularCount < 2 && !transmission_queue[1]->empty()) {
                 ESP_LOGD(LOG_TAG, "sending prio 1");
-                if (this->getDriver()->transmit(transmission1_queue->front(), 1) == COM_OK) {
-                    transmission1_queue->pop();
+                if (this->getDriver()->transmit(transmission_queue[1]->front(), 1) == COM_OK) {
+                    transmission_queue[1]->pop();
                     schedularCount++;
                 }
-            } else if (!transmission2_queue->empty()) {
+            } else if (!transmission_queue[2]->empty()) {
                 ESP_LOGD(LOG_TAG, "sending prio 2");
-                if (this->getDriver()->transmit(transmission2_queue->front(), 2) == COM_OK) {
-                    transmission2_queue->pop();
+                if (this->getDriver()->transmit(transmission_queue[2]->front(), 2) == COM_OK) {
+                    transmission_queue[2]->pop();
                     schedularCount = 0;
                 }
             }
