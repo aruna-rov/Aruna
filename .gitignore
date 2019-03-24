@@ -1,12 +1,14 @@
 .pio
 .pioenvs
 .piolibdeps
+build
+# willen we sdkconfig pushen?
+sdkconfig*
 
 # IDE specific
 # VScode
 .vscode
 # Intellij Idea
 .idea
-cmake-build-debug
-CMakeLists.txt
+cmake-build-*
 CMakeListsPrivate.txt
