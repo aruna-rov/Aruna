@@ -59,7 +59,8 @@ com_err Com::start(ComDriver *driver) {
                                                                            sizeof(*transmission_queue)));
     for (int i = 0; i < (sizeof(transmission_queue) / sizeof(*transmission_queue)); ++i) {
         transmission_queue[i] = xQueueCreate(TRANSMIT_QUEUE_BUFFER_SIZE, sizeof(com_transmitpackage_t));
-        xQueueAddToSet(transmission_queue[i], transmission_queue_set);
+        if(xQueueAddToSet(transmission_queue[i], transmission_queue_set) != pdPASS)
+            ESP_LOGW(LOG_TAG, "failed to add queue[%d] to set", i);
     }
     this->set_status(COM_RUNNING);
 
@@ -78,9 +79,12 @@ com_err Com::stop() {
     driver_err = getDriver()->stop();
     vTaskDelete(transmissionQueueHandeler_task);
     this->set_status(COM_STOPPED);
-//    bzero(transmission_queue[0], sizeof(transmission_queue[0])/ sizeof(*transmission_queue[0]));
-//    bzero(transmission_queue[1], sizeof(transmission_queue[1])/ sizeof(*transmission_queue[1]));
-//    bzero(transmission_queue[2], sizeof(transmission_queue[2])/ sizeof(*transmission_queue[2]));
+
+    for (int i = 0; i < (sizeof(transmission_queue) / sizeof(*transmission_queue)); ++i) {
+        xQueueReset(transmission_queue[i]);
+        if (xQueueRemoveFromSet(transmission_queue[i], transmission_queue_set) != pdPASS)
+            ESP_LOGW(LOG_TAG, "failed to remove queue[%d] from set", i);
+    }
     if (driver_err != COM_OK)
         return driver_err;
     return COM_OK;

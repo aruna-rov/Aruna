@@ -12,7 +12,7 @@
 
 Com COM;
 ComDriver *uart_driver;
-
+const static char* LOG_TAG = "MAIN";
 
 
 void com_test_task(void * arg) {
@@ -44,24 +44,29 @@ void com_test_task(void * arg) {
 
 
 extern "C" void app_main(void) {
-//    TODO driver moet geregistreerd worden in de driver zelf
-//      Dit is niet zo elegant.
-    uart_driver = new UART;
-    COM.register_candidate_driver(uart_driver);
-    ESP_LOGI("MAIN", "hello world!");
-    ESP_LOGD("COM", "COM start: %d", COM.start());
-    ESP_LOGD("COM", "COM status: %d", COM.get_status());
-    ESP_LOGD("COM", "COM driver: %s", COM.getName());
-    ESP_LOGD("COM", "COM speed: %d", COM.get_speed());
+
+    ESP_LOGI(LOG_TAG, "hello world!");
+    register_drivers();
+    start_COM();
 
 //    test application
 
-    xTaskCreate(com_test_task, "COM test task", 2048, NULL, 0, NULL);
+//    xTaskCreate(com_test_task, "COM test task", 2048, NULL, 0, NULL);
     xTaskCreate(start_blinky_task, "blinky_app", 2048, NULL, 0, NULL);
 
+}
 
-//    vTaskStartScheduler();
+void register_drivers() {
+//    TODO if there are more drivers, then this needs his own .cpp file
 
+//  COM
+    uart_driver = new UART;
+    COM.register_candidate_driver(uart_driver);
+}
 
-
+void start_COM() {
+    ESP_LOGD(LOG_TAG, "COM start: %d", COM.start());
+    ESP_LOGD(LOG_TAG, "COM status: %d", COM.get_status());
+    ESP_LOGD(LOG_TAG, "COM driver: %s", COM.getName());
+    ESP_LOGD(LOG_TAG, "COM speed: %d", COM.get_speed());
 }
