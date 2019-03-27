@@ -153,7 +153,7 @@ struct com_channel_t {
     }
 };
 
-#include "com/ComDriver.h"
+#include "drivers/com/ComDriver.h"
 
 class ComDriver;
 
@@ -220,7 +220,7 @@ public:
      * @note
      * @param  data: com_datapackage_t to be placed in the queue.
      * @retval com_err
-     *  * `COM_ERR_INVALID_PARAMETERS` if parameters are invalid (not implemented)
+     *  * `COM_ERR_INVALID_PARAMETERS` if parameters are invalid
      *  * `COM_OK` if it was succesfully send.
      *  * `COM_ERR_NO_CONNECTION` if there is no connection, (not implimented)
      *  * `COM_ERR_BUFFER_OVERFLOW` if the data was not added to the bugger due an overflow,
@@ -346,30 +346,16 @@ private:
     static constexpr char *LOG_TAG = (char *) "COM";
 
     std::set<ComDriver *> driverCandidates;
-//    TODO transmission queue should be and priority queue object or atleast one two dementional array.
-//    TODO transmission queue should store com_bin_t to reduse complexity and size.
-    /**
-     * @brief high priority transmission queue
-     */
-    std::queue<com_transmitpackage_t> transmission0_queue[TRANSMIT_QUEUE_BUFFER_SIZE];
 
     /**
-     * @brief mid priority transmission queue
+     * transmission queue
      */
-    std::queue<com_transmitpackage_t> transmission1_queue[TRANSMIT_QUEUE_BUFFER_SIZE];
+    QueueHandle_t transmission_queue[3];
 
     /**
-     * @brief low priority transmission queue
+     * xQueue set
      */
-    std::queue<com_transmitpackage_t> transmission2_queue[TRANSMIT_QUEUE_BUFFER_SIZE];
-
-    /**
-     * @brief incomming stransmission queue.
-     */
-    /* TODO each channel need a Rx buffer. That the channel need to handle themself
-     * not in incoming_connection. The channel should have an xQueueReceive to watch the array
-     */
-//    std::queue<com_transmitpackage_t> incomming_transmission_queue[TRANSMIT_QUEUE_BUFFER_SIZE];
+    QueueSetHandle_t transmission_queue_set;
 
     /**
      * @brief all endpoints

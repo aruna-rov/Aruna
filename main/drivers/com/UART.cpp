@@ -84,6 +84,7 @@ com_err UART::stop() {
     ESP_LOGD(TAG, "STOP");
 //    TODO flush tx queue
 //  flush rx queue
+    xQueueReset(uart_queue);
     esp_err_t ufi = uart_flush_input(UART_NUM);
     if (ufi != ESP_OK)
         ESP_LOGE(TAG, "error on flush: %s", esp_err_to_name(ufi));
