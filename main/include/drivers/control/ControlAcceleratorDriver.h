@@ -5,19 +5,21 @@
 #ifndef ARUNA_CONTROLACCELERATORDRIVER_H
 #define ARUNA_CONTROLACCELERATORDRIVER_H
 
-#include "control.h"
+#include <drivers/control.h>
+
+#include "drivers/control.h"
 
 class ControlAcceleratorDriver {
 public:
     /**
      * start the driver
      */
-    virtual void start();
+    virtual void start(){};
 
     /**
      * stop the driver
      */
-    virtual void stop();
+    virtual void stop(){};
 
     /**
      * get the control modes that this driver supports.
@@ -116,4 +118,6 @@ public:
     };
 
 };
+
+
 #endif //ARUNA_CONTROLACCELERATORDRIVER_H

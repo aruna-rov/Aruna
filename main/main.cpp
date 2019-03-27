@@ -9,6 +9,7 @@
 #include <freertos/task.h>
 #include <soc/uart_struct.h>
 #include <app/blinky.h>
+#include "drivers/control.h"
 
 Com COM;
 ComDriver *uart_driver;
@@ -48,6 +49,8 @@ extern "C" void app_main(void) {
     ESP_LOGI(LOG_TAG, "hello world!");
     register_drivers();
     start_COM();
+
+    control_start();
 
 //    test application
 

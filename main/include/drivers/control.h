@@ -5,6 +5,8 @@
 #ifndef ARUNA_CONTROL_H
 #define ARUNA_CONTROL_H
 
+#include <stdint.h>
+
 class ControlAcceleratorDriver;
 
 typedef enum {
@@ -20,6 +22,8 @@ typedef enum {
     CONTROL_OK,
     CONTROL_FAIL,
     CONTROL_ERR_NO_HARDWARE_FOUND,
+    CONTROL_ERR_NO_DRIVER_FOUND,
+    CONTROL_ERR_DRIVER_EXISTS,
     CONTROL_ERR_NO_ACTIVE_MODULES,
     CONTROL_ERR_NOT_STARTED,
     CONTROL_ERR_ALREADY_STARTED,
@@ -35,7 +39,20 @@ typedef enum {
     DAMP_STAND_STILL
 } control_damping_t;
 
+// status of control
+typedef enum  {
+    CONTROL_RUNNING,
+    CONTROL_STOPPED,
+} control_status_t;
+
+
 typedef uint8_t control_mode_t;
+
+// variables
+
+
+// functions
+
 
 /**
  * Set the speed of X is cm per second.
@@ -243,6 +260,12 @@ control_err_t control_start();
  *  * `CONTROL_ERR_NOT_STARTED` control was not started yet.
  */
 control_err_t control_stop();
+
+/**
+ * get the status of the control unit.
+ * @return status enum
+ */
+control_status_t control_get_status();
 
 /**
  * FreeRTOS task to handle all the incoming com requests.
