@@ -53,6 +53,14 @@ com_err Com::start(ComDriver *driver) {
         return COM_ERR_TASK_FAILED;
     }
 //    set status to running if all succeeded
+
+    transmission_queue_set = xQueueCreateSet(TRANSMIT_QUEUE_BUFFER_SIZE + sizeof(com_transmitpackage_t) *
+                                                                          (sizeof(transmission_queue) /
+                                                                           sizeof(*transmission_queue)));
+    for (int i = 0; i < (sizeof(transmission_queue) / sizeof(*transmission_queue)); ++i) {
+        transmission_queue[i] = xQueueCreate(TRANSMIT_QUEUE_BUFFER_SIZE, sizeof(com_transmitpackage_t));
+        xQueueAddToSet(transmission_queue[i], transmission_queue_set);
+    }
     this->set_status(COM_RUNNING);
 
     return COM_OK;
@@ -70,9 +78,9 @@ com_err Com::stop() {
     driver_err = getDriver()->stop();
     vTaskDelete(transmissionQueueHandeler_task);
     this->set_status(COM_STOPPED);
-    bzero(transmission_queue[0], sizeof(transmission_queue[0])/ sizeof(*transmission_queue[0]));
-    bzero(transmission_queue[1], sizeof(transmission_queue[1])/ sizeof(*transmission_queue[1]));
-    bzero(transmission_queue[2], sizeof(transmission_queue[2])/ sizeof(*transmission_queue[2]));
+//    bzero(transmission_queue[0], sizeof(transmission_queue[0])/ sizeof(*transmission_queue[0]));
+//    bzero(transmission_queue[1], sizeof(transmission_queue[1])/ sizeof(*transmission_queue[1]));
+//    bzero(transmission_queue[2], sizeof(transmission_queue[2])/ sizeof(*transmission_queue[2]));
     if (driver_err != COM_OK)
         return driver_err;
     return COM_OK;
@@ -117,8 +125,7 @@ com_err Com::register_channel(com_channel_t *channel) {
     if (channels.insert(*channel).second) {
         *channel->handeler = xQueueCreate(TRANSMIT_QUEUE_BUFFER_SIZE, sizeof(com_transmitpackage_t));
         return COM_OK;
-    }
-    else
+    } else
         return COM_ERR_BUFFER_OVERFLOW;
 //    TODO handeler fixen.
 }
@@ -144,6 +151,10 @@ com_err Com::send(com_channel_t *channel, com_port_t to_port, com_data_t data, s
     tp.to_port = to_port;
     tp.from_port = channel->port;
 
+    if (channel->priority >= sizeof(transmission_queue) / sizeof(*transmission_queue) ||
+        channel->priority < 0)
+        return COM_ERR_INVALID_PARAMETERS;
+
 //    loop until all data in send
     while (data_size > 0) {
         ds_l = (data_size >= COM_DATA_SIZE) ? COM_DATA_SIZE : data_size;
@@ -154,23 +165,11 @@ com_err Com::send(com_channel_t *channel, com_port_t to_port, com_data_t data, s
         ds_p += ds_l;
         data_size -= ds_l;
 
+        if (xQueueSend(transmission_queue[channel->priority], &tp, 0) != pdPASS)
+            return COM_ERR_BUFFER_OVERFLOW;
 
-        switch (channel->priority) {
-//        TODO error detectie op dat de queue vol zit.
-//        Maar queue->push() return void :( ?
-            case 0:
-                transmission_queue[0]->push(tp);
-                break;
-            case 1:
-                transmission_queue[1]->push(tp);
-                break;
-            case 2:
-                transmission_queue[2]->push(tp);
-                break;
-            default:
-//            TODO COM__ERR_INVALID.. documentatie toevoegen.
-                return COM_ERR_INVALID_PARAMETERS;
-        }
+//        clear any left over data
+        bzero(tp.data, tp.data_lenght);
     }
     return COM_OK;
 }
@@ -276,26 +275,31 @@ unsigned int Com::rateDriver(ComDriver &driver) {
 
 void Com::transmissionQueueHandeler() {
     int schedularCount = 0;
+    QueueSetMemberHandle_t xActivatedMember;
+    com_transmitpackage_t transpack;
+    com_err transmit_msg = COM_FAIL;
     while (1) {
-//        TODO busy loop, niet zo best. moet een xQueue RTOS zijn.
-        if (!transmission_queue[0]->empty()) {
-            ESP_LOGD(LOG_TAG, "sending prio 0");
-            if (this->getDriver()->transmit(transmission_queue[0]->front(), 0) == COM_OK)
-                transmission_queue[0]->pop();
+        xActivatedMember = xQueueSelectFromSet(transmission_queue_set, (portTickType) portMAX_DELAY);
+        if (xActivatedMember == transmission_queue[0]) {
+            xQueueReceive(transmission_queue[0], &transpack, 0);
+            transmit_msg = this->getDriver()->transmit(transpack, 0);
         } else {
-            if (schedularCount < 2 && !transmission_queue[1]->empty()) {
-                ESP_LOGD(LOG_TAG, "sending prio 1");
-                if (this->getDriver()->transmit(transmission_queue[1]->front(), 1) == COM_OK) {
-                    transmission_queue[1]->pop();
-                    schedularCount++;
-                }
-            } else if (!transmission_queue[2]->empty()) {
-                ESP_LOGD(LOG_TAG, "sending prio 2");
-                if (this->getDriver()->transmit(transmission_queue[2]->front(), 2) == COM_OK) {
-                    transmission_queue[2]->pop();
-                    schedularCount = 0;
-                }
+            if (schedularCount < 2 && xActivatedMember == transmission_queue[1]) {
+                xQueueReceive(transmission_queue[1], &transpack, 0);
+                transmit_msg = this->getDriver()->transmit(transpack, 1);
+
+                schedularCount++;
+            } else if (xActivatedMember == transmission_queue[2]) {
+                xQueueReceive(transmission_queue[2], &transpack, 0);
+                transmit_msg = this->getDriver()->transmit(transpack, 2);
+
+                schedularCount = 0;
             }
+        }
+        if (transmit_msg != COM_OK) {
+            ESP_LOGW(LOG_TAG, "transmit of:%d, to:%d, failed: %d", transpack.from_port, transpack.to_port,
+                     transmit_msg);
+            ESP_LOG_BUFFER_HEXDUMP(LOG_TAG, transpack.data, sizeof(transpack.data), ESP_LOG_WARN);
         }
     }
 }

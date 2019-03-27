@@ -153,7 +153,7 @@ struct com_channel_t {
     }
 };
 
-#include "com/ComDriver.h"
+#include "drivers/com/ComDriver.h"
 
 class ComDriver;
 
@@ -220,7 +220,7 @@ public:
      * @note
      * @param  data: com_datapackage_t to be placed in the queue.
      * @retval com_err
-     *  * `COM_ERR_INVALID_PARAMETERS` if parameters are invalid (not implemented)
+     *  * `COM_ERR_INVALID_PARAMETERS` if parameters are invalid
      *  * `COM_OK` if it was succesfully send.
      *  * `COM_ERR_NO_CONNECTION` if there is no connection, (not implimented)
      *  * `COM_ERR_BUFFER_OVERFLOW` if the data was not added to the bugger due an overflow,
@@ -350,7 +350,12 @@ private:
     /**
      * transmission queue
      */
-    std::queue<com_transmitpackage_t> transmission_queue[3][TRANSMIT_QUEUE_BUFFER_SIZE];
+    QueueHandle_t transmission_queue[3];
+
+    /**
+     * xQueue set
+     */
+    QueueSetHandle_t transmission_queue_set;
 
     /**
      * @brief all endpoints
