@@ -12,11 +12,35 @@
 #include "drivers/control/ControlAcceleratorDriver.h"
 
 namespace {
+//    variables
     const char* LOG_TAG = "CONTROL";
     control_status_t control_status = CONTROL_STOPPED;
     TaskHandle_t control_com_handler;
     TaskHandle_t control_damping;
     std::set<ControlAcceleratorDriver*> drivers;
+
+//    functions
+    /**
+     * Set the speed of the engine/moter etc. directly
+     * @param speed, how fast the motor must spin (min-max must be defined by the motor hardware interface)
+     * @return control_err_t
+     *  * `CONTROL_OK` if is was a success.
+     *  * `CONTROL_ERR_NOT_STARTED` control not started yet. Use `control_start()`.
+     *  * `CONTROL_ERR_MODE_NOT_ACTIVE` mode is not active! Check `control_get_active_modes()`.
+     *  * `CONTROL_ERR_HARDWARE_FAILURE` the hardware failed you :(.
+     *  * `CONTROL_ERR_OVERFLOW` speed overflow.
+     *  * `CONTROL_ERR_UNDERFLOW` speed underflow.
+     */
+    control_err_t set_X_speed(uint32_t speed, control_direction_t direction) {
+//    if()
+        for(ControlAcceleratorDriver* d: drivers) {
+            if ((d->get_control_mode() & CONTROL_X) > 0) {
+                d->set_X_speed(speed, direction);
+            }
+        }
+        return CONTROL_OK;
+    }
+
 }
 
 control_status_t control_start() {
@@ -39,8 +63,8 @@ control_status_t control_start() {
     }
 
 //    start threads.
-    xTaskCreate(control_com_handler_task, "control_com_handler", 2048, NULL, 12, &control_com_handler);
-    xTaskCreate(control_damping_task, "control_damping", 2048, NULL, 12, &control_damping);
+//    xTaskCreate(control_com_handler_task, "control_com_handler", 2048, NULL, 12, &control_com_handler);
+//    xTaskCreate(control_damping_task, "control_damping", 2048, NULL, 12, &control_damping);
     control_status = CONTROL_RUNNING;
     return control_status;
 }
@@ -99,16 +123,9 @@ float control_get_X_velocity() {
 }
 
 control_err_t control_set_X_velocity(float cm_per_second) {
-    set_X_speed((int) cm_per_second);
+    uint32_t MAX = 0xffffffff;
+
+    set_X_speed(MAX/50, CONTROL_FORWARD);
     return CONTROL_OK;
 }
 
-control_err_t set_X_speed(int speed) {
-//    if()
-    for(ControlAcceleratorDriver* d: drivers) {
-        if ((d->get_control_mode() & CONTROL_X) > 0) {
-            d->set_X_speed(speed);
-        }
-    }
-    return CONTROL_OK;
-}

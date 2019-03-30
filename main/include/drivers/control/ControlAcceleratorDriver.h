@@ -5,7 +5,6 @@
 #ifndef ARUNA_CONTROLACCELERATORDRIVER_H
 #define ARUNA_CONTROLACCELERATORDRIVER_H
 
-#include <drivers/control.h>
 
 #include "drivers/control.h"
 
@@ -14,12 +13,16 @@ public:
     /**
      * start the driver
      */
-    virtual control_err_t start(){};
+    virtual control_err_t start(){
+        return CONTROL_OK;
+    };
 
     /**
      * stop the driver
      */
-    virtual control_err_t stop(){};
+    virtual control_err_t stop(){
+        return CONTROL_OK;
+    };
 
     /**
      * get the control modes that this driver supports.
@@ -38,7 +41,7 @@ public:
      *  * `CONTROL_ERR_OVERFLOW` speed overflow.
      *  * `CONTROL_ERR_UNDERFLOW` speed underflow.
      */
-    virtual control_err_t set_X_speed(int speed) {
+    virtual control_err_t set_X_speed(uint32_t speed, control_direction_t direction) {
         return CONTROL_ERR_MODE_NOT_ACTIVE;
     };
 

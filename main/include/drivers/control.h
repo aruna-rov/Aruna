@@ -45,6 +45,12 @@ typedef enum  {
     CONTROL_STOPPED,
 } control_status_t;
 
+typedef enum {
+    CONTROL_FORWARD = 0,
+    CONTROL_BACKWARD = 1
+} control_direction_t;
+
+
 
 typedef uint8_t control_mode_t;
 
@@ -65,18 +71,7 @@ typedef uint8_t control_mode_t;
  */
 control_err_t control_set_X_velocity(float cm_per_second);
 
-/**
- * Set the speed of the engine/moter etc. directly
- * @param speed, how fast the motor must spin (min-max must be defined by the motor hardware interface)
- * @return control_err_t
- *  * `CONTROL_OK` if is was a success.
- *  * `CONTROL_ERR_NOT_STARTED` control not started yet. Use `control_start()`.
- *  * `CONTROL_ERR_MODE_NOT_ACTIVE` mode is not active! Check `control_get_active_modes()`.
- *  * `CONTROL_ERR_HARDWARE_FAILURE` the hardware failed you :(.
- *  * `CONTROL_ERR_OVERFLOW` speed overflow.
- *  * `CONTROL_ERR_UNDERFLOW` speed underflow.
- */
-static control_err_t set_X_speed(int speed);
+
 
 /**
  * get velocity of X
