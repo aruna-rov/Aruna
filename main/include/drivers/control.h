@@ -251,7 +251,7 @@ control_mode_t control_get_active_modes();
  *  * `CONTROL_ERR_NO_ACTIVE_MODULES` no module reported active,
  *  * `CONTROL_ERR_ALREADY_STARTED` control is already active,
  */
-control_err_t control_start();
+control_status_t control_start();
 
 /**
  * Stop all motors and free all processes.
@@ -259,7 +259,7 @@ control_err_t control_start();
  *  * `CONTROL_OK` stopped successfully.
  *  * `CONTROL_ERR_NOT_STARTED` control was not started yet.
  */
-control_err_t control_stop();
+control_status_t control_stop();
 
 /**
  * get the status of the control unit.
@@ -295,5 +295,14 @@ void control_set_damping(control_damping_t damp);
  * `CONTROL_FAIL` if not.
  */
 control_err_t control_register_driver(ControlAcceleratorDriver *driver);
+
+/**
+ * unregister a accelerator driver for use.
+ * @param driver pointer to the driver
+ * @return `CONTROL_OK` if it went well.
+ * `CONTROL_FAIL` if not.
+ */
+control_err_t control_unregister_driver(ControlAcceleratorDriver *driver);
+// TODO implement
 
 #endif //ARUNA_CONTROL_H

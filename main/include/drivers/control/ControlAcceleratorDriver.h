@@ -14,12 +14,12 @@ public:
     /**
      * start the driver
      */
-    virtual void start(){};
+    virtual control_err_t start(){};
 
     /**
      * stop the driver
      */
-    virtual void stop(){};
+    virtual control_err_t stop(){};
 
     /**
      * get the control modes that this driver supports.
