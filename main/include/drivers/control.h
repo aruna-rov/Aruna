@@ -300,4 +300,14 @@ control_err_t control_register_driver(ControlAcceleratorDriver *driver);
 control_err_t control_unregister_driver(ControlAcceleratorDriver *driver);
 // TODO implement
 
+/**
+ * Calibarte the sensors, aka set 0 point. make sure that the device is standing still and is level for 400ms.
+ */
+void control_calibrate_sensors();
+
+/**
+ * test whenever the sensors are connected, sensor should be horizontal and facing up.
+ * @return 1 if all is well; 0 if not.
+ */
+uint8_t control_test_sensor();
 #endif //ARUNA_CONTROL_H

@@ -13,7 +13,7 @@ public:
     control_err_t stop() override;
     control_mode_t get_control_mode() override;
 
-    control_err_t set_X_speed(uint32_t speed, control_direction_t direction) override;
+    control_err_t set_X_speed(float speed, control_direction_t direction) override;
 private:
 };
 

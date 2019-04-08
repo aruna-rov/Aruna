@@ -54,7 +54,7 @@ extern "C" void app_main(void) {
     start_COM();
 
     control_start();
-    control_set_X_velocity(0);
+    control_set_X_velocity(100);
 
 //    test application
 
