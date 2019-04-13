@@ -15,8 +15,11 @@ typedef enum {
     CONTROL_Z = (1 << 2),
     CONTROL_ROLL = (1 << 3),
     CONTROL_YAW = (1 << 4),
-    CONTROL_PITCH = (1 << 5)
-} control_mode_mask_t;
+    CONTROL_PITCH = (1 << 5),
+
+    CONTROL_AXIS_MAX = 6,
+
+} control_axis_mask_t;
 
 typedef enum {
     CONTROL_OK,
@@ -34,25 +37,21 @@ typedef enum {
 } control_err_t;
 
 typedef enum {
-    DAMP_ALLOW,
-    DAMP_STAY_AT_POSITION,
-    DAMP_STAND_STILL
+    DAMP_ALLOW = 0,
+    DAMP_STAY_AT_POSITION = 1,
+    DAMP_STAND_STILL = 2
 } control_damping_t;
 
 // status of control
 typedef enum  {
-    CONTROL_RUNNING,
-    CONTROL_STOPPED,
+    CONTROL_RUNNING = 0,
+    CONTROL_STOPPED = 1,
 } control_status_t;
 
 typedef enum {
-    CONTROL_FORWARD = 0,
-    CONTROL_BACKWARD = 1
+    CONTROL_DIRECTION_PLUS = 0,
+    CONTROL_DIRECTION_MIN = 1
 } control_direction_t;
-
-
-
-typedef uint8_t control_mode_t;
 
 // variables
 
@@ -61,182 +60,10 @@ typedef uint8_t control_mode_t;
 
 
 /**
- * Set the speed of X is cm per second.
- * @param cm_per_second set new speed.
- * @return control_err_t
- *  * `CONTROL_OK` if is was a success.
- *  * `CONTROL_ERR_NOT_STARTED` control not started yet. Use `control_start()`.
- *  * `CONTROL_ERR_MODE_NOT_ACTIVE` mode is not active! Check `control_get_active_modes()`.
- *  * `CONTROL_ERR_HARDWARE_FAILURE` the hardware failed you :(.
- */
-control_err_t control_set_X_velocity(float cm_per_second);
-
-
-
-/**
- * get velocity of X
- * @return current cm/s
- */
-float control_get_X_velocity();
-
-/**
- * Set the speed of Y is cm per second.
- * @param cm_per_second set new speed.
- * @return control_err_t
- *  * `CONTROL_OK` if is was a success.
- *  * `CONTROL_ERR_NOT_STARTED` control not started yet. Use `control_start()`.
- *  * `CONTROL_ERR_MODE_NOT_ACTIVE` mode is not active! Check `control_get_active_modes()`.
- *  * `CONTROL_ERR_HARDWARE_FAILURE` the hardware failed you :(.
- */
-control_err_t control_set_Y_velocity(float cm_per_second);
-
-/**
- * Set the speed of the engine/moter etc. directly
- * @param speed, how fast the motor must spin (min-max must be defined by the motor hardware interface)
- * @return control_err_t
- *  * `CONTROL_OK` if is was a success.
- *  * `CONTROL_ERR_NOT_STARTED` control not started yet. Use `control_start()`.
- *  * `CONTROL_ERR_MODE_NOT_ACTIVE` mode is not active! Check `control_get_active_modes()`.
- *  * `CONTROL_ERR_HARDWARE_FAILURE` the hardware failed you :(.
- *  * `CONTROL_ERR_OVERFLOW` speed overflow.
- *  * `CONTROL_ERR_UNDERFLOW` speed underflow.
- */
-static control_err_t set_Y_speed(int speed);
-
-/**
- * get velocity of Y
- * @return current cm/s
- */
-float control_get_Y_velocity();
-
-/**
- * Set the speed of Z is cm per second.
- * @param cm_per_second set new speed.
- * @return control_err_t
- *  * `CONTROL_OK` if is was a success.
- *  * `CONTROL_ERR_NOT_STARTED` control not started yet. Use `control_start()`.
- *  * `CONTROL_ERR_MODE_NOT_ACTIVE` mode is not active! Check `control_get_active_modes()`.
- *  * `CONTROL_ERR_HARDWARE_FAILURE` the hardware failed you :(.
- */
-control_err_t control_set_Z_velocity(float cm_per_second);
-
-/**
- * Set the speed of the engine/moter etc. directly
- * @param speed, how fast the motor must spin (min-max must be defined by the motor hardware interface)
- * @return control_err_t
- *  * `CONTROL_OK` if is was a success.
- *  * `CONTROL_ERR_NOT_STARTED` control not started yet. Use `control_start()`.
- *  * `CONTROL_ERR_MODE_NOT_ACTIVE` mode is not active! Check `control_get_active_modes()`.
- *  * `CONTROL_ERR_HARDWARE_FAILURE` the hardware failed you :(.
- *  * `CONTROL_ERR_OVERFLOW` speed overflow.
- *  * `CONTROL_ERR_UNDERFLOW` speed underflow.
- */
-static control_err_t set_Z_speed(int speed);
-
-/**
- * get velocity of Z
- * @return current cm/s
- */
-float control_get_Z_velocity();
-
-/**
- * Set the roll degree
- * @param deg (0-360)
- * @return control_err_t
- *  * `CONTROL_OK` if is was a success.
- *  * `CONTROL_ERR_NOT_STARTED` control not started yet. Use `control_start()`.
- *  * `CONTROL_ERR_MODE_NOT_ACTIVE` mode is not active! Check `control_get_active_modes()`.
- *  * `CONTROL_ERR_HARDWARE_FAILURE` the hardware failed you :(.
- *  * `CONTROL_ERR_OVERFLOW` if deg > 360.
- */
-control_err_t control_set_roll_deg(unsigned short deg);
-
-/**
- * Set the speed of the engine/moter etc. directly
- * @param speed, how fast the motor must spin (min-max must be defined by the motor hardware interface)
- * @return control_err_t
- *  * `CONTROL_OK` if is was a success.
- *  * `CONTROL_ERR_NOT_STARTED` control not started yet. Use `control_start()`.
- *  * `CONTROL_ERR_MODE_NOT_ACTIVE` mode is not active! Check `control_get_active_modes()`.
- *  * `CONTROL_ERR_HARDWARE_FAILURE` the hardware failed you :(.
- *  * `CONTROL_ERR_OVERFLOW` speed overflow.
- *  * `CONTROL_ERR_UNDERFLOW` speed underflow.
- */
-static control_err_t set_roll_speed(int speed);
-
-/**
- * get current deg of roll (could be different than desired)
- * @return 0-360
- */
-unsigned short control_get_roll_deg();
-
-/**
- * Set the yaw degree
- * @param deg (0-360)
- * @return control_err_t
- *  * `CONTROL_OK` if is was a success.
- *  * `CONTROL_ERR_NOT_STARTED` control not started yet. Use `control_start()`.
- *  * `CONTROL_ERR_MODE_NOT_ACTIVE` mode is not active! Check `control_get_active_modes()`.
- *  * `CONTROL_ERR_HARDWARE_FAILURE` the hardware failed you :(.
- *  * `CONTROL_ERR_OVERFLOW` if deg > 360.
- */
-control_err_t control_set_yaw_deg(unsigned short deg);
-
-/**
- * Set the speed of the engine/moter etc. directly
- * @param speed, how fast the motor must spin (min-max must be defined by the motor hardware interface)
- * @return control_err_t
- *  * `CONTROL_OK` if is was a success.
- *  * `CONTROL_ERR_NOT_STARTED` control not started yet. Use `control_start()`.
- *  * `CONTROL_ERR_MODE_NOT_ACTIVE` mode is not active! Check `control_get_active_modes()`.
- *  * `CONTROL_ERR_HARDWARE_FAILURE` the hardware failed you :(.
- *  * `CONTROL_ERR_OVERFLOW` speed overflow.
- *  * `CONTROL_ERR_UNDERFLOW` speed underflow.
- */
-static control_err_t set_yaw_speed(int speed);
-
-/**
- * get current deg of yaw (could be different that desired)
- * @return 0-360
- */
-unsigned short control_get_yaw_deg();
-
-/**
- * Set the pitch degree
- * @param deg (0-360)
- * @return control_err_t
- *  * `CONTROL_OK` if is was a success.
- *  * `CONTROL_ERR_NOT_STARTED` control not started yet. Use `control_start()`.
- *  * `CONTROL_ERR_MODE_NOT_ACTIVE` mode is not active! Check `control_get_active_modes()`.
- *  * `CONTROL_ERR_HARDWARE_FAILURE` the hardware failed you :(.
- *  * `CONTROL_ERR_OVERFLOW` if deg > 360.
- */
-control_err_t control_set_pitch_deg(unsigned short deg);
-
-/**
- * Set the speed of the engine/moter etc. directly
- * @param speed, how fast the motor must spin (min-max must be defined by the motor hardware interface)
- * @return control_err_t
- *  * `CONTROL_OK` if is was a success.
- *  * `CONTROL_ERR_NOT_STARTED` control not started yet. Use `control_start()`.
- *  * `CONTROL_ERR_MODE_NOT_ACTIVE` mode is not active! Check `control_get_active_modes()`.
- *  * `CONTROL_ERR_HARDWARE_FAILURE` the hardware failed you :(.
- *  * `CONTROL_ERR_OVERFLOW` speed overflow.
- *  * `CONTROL_ERR_UNDERFLOW` speed underflow.
- */
-static control_err_t set_pitch_speed(int speed);
-
-/**
- * get current deg of pitch (could be different that desired)
- * @return 0-360
- */
-unsigned short control_get_pitch_deg();
-
-/**
  * Get active modus (X,Y,Z,yawn,pitch,roll)
  * @return `control_mode_t` with a bit high on enabled modus. Use `control_mode_mask_t` to decipher.
  */
-control_mode_t control_get_active_modes();
+control_axis_mask_t control_get_active_axis();
 
 /**
  * initialise control and communicate with hardware for active modes.
@@ -281,8 +108,15 @@ void control_damping_task(void* arg);
  * * `DAMP_STAND_STILL` dont move
  * @param damp control_damping_t, mode to set damping to.
  */
-void control_set_damping(control_damping_t damp);
+// TODO documentatie bijwerken
+void control_set_damping(control_axis_mask_t axisMask, control_damping_t damp);
 
+/**
+ * get the damping of a single mode.
+ * @param single_axis only 1 bit to high.
+ * @return damping of that mode.
+ */
+control_damping_t control_get_damping(control_axis_mask_t single_axis);
 /**
  * register a accelerator driver for use.
  * @param driver pointer to the driver
@@ -310,4 +144,25 @@ void control_calibrate_sensors();
  * @return 1 if all is well; 0 if not.
  */
 uint8_t control_test_sensor();
+
+
+/**
+ * Set the speed of X is cm per second.
+ * @param mm_per_second set new speed.
+ * @return control_err_t
+ *  * `CONTROL_OK` if is was a success.
+ *  * `CONTROL_ERR_NOT_STARTED` control not started yet. Use `control_start()`.
+ *  * `CONTROL_ERR_MODE_NOT_ACTIVE` mode is not active! Check `control_get_active_modes()`.
+ *  * `CONTROL_ERR_HARDWARE_FAILURE` the hardware failed you :(.
+ */
+// TODO documentatie
+void control_set_speed(control_axis_mask_t axisMask, uint16_t speed, control_direction_t direction = CONTROL_DIRECTION_PLUS);
+void control_set_velocity(control_axis_mask_t axisMask, uint16_t mm_per_second, control_direction_t direction = CONTROL_DIRECTION_PLUS);
+void control_set_degree(control_axis_mask_t axisMask, uint16_t degree, control_direction_t direction = CONTROL_DIRECTION_PLUS);
+
+uint16_t control_get_speed(control_axis_mask_t single_axis);
+uint16_t control_get_velocity(control_axis_mask_t single_axis);
+uint16_t control_get_degree(control_axis_mask_t single_axis);
+control_direction_t control_get_direction(control_axis_mask_t single_axis);
+
 #endif //ARUNA_CONTROL_H

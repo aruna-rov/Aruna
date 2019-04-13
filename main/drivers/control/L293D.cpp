@@ -3,6 +3,7 @@
 //
 
 #include <driver/mcpwm.h>
+#include <esp_log.h>
 #include "drivers/control/L293D.h"
 
 namespace {
@@ -13,24 +14,8 @@ namespace {
     const mcpwm_timer_t PWM_TIMER = MCPWM_TIMER_0;
 }
 
-control_mode_t L293D::get_control_mode() {
+control_axis_mask_t L293D::get_axis() {
     return CONTROL_X;
-}
-
-control_err_t L293D::set_X_speed(float speed, control_direction_t direction) {
-    mcpwm_operator_t low = direction ? MCPWM_OPR_A : MCPWM_OPR_B;
-    mcpwm_operator_t high = direction ? MCPWM_OPR_B : MCPWM_OPR_A ;
-
-	mcpwm_set_signal_low(PWM_UNIT_A, PWM_TIMER, low);
-	mcpwm_set_signal_low(PWM_UNIT_B, PWM_TIMER, low);
-
-    mcpwm_set_duty(PWM_UNIT_A, PWM_TIMER, high, speed);
-    mcpwm_set_duty(PWM_UNIT_B, PWM_TIMER, high, speed);
-
-    mcpwm_set_duty_type(PWM_UNIT_A, PWM_TIMER, high, MCPWM_DUTY_MODE_0);
-    mcpwm_set_duty_type(PWM_UNIT_B, PWM_TIMER, high, MCPWM_DUTY_MODE_0);
-
-    return CONTROL_OK;
 }
 
 control_err_t L293D::start() {
@@ -55,6 +40,26 @@ control_err_t L293D::start() {
 }
 
 control_err_t L293D::stop() {
-    set_X_speed(0, CONTROL_FORWARD);
+//	TODO stop all motors0
     return ControlAcceleratorDriver::stop();
+}
+
+void L293D::set(control_axis_mask_t modes, uint16_t speed, control_direction_t direction) {
+	ESP_LOGD("L293D", "mode:%X, speed:%d, dir:%d", modes, speed, direction);
+	if (modes & CONTROL_X) {
+//		direction = (control_direction_t) 1;
+		ESP_LOGD("Dnog wat", "control x");
+		float per_up = convert_range(speed);
+		mcpwm_operator_t low = direction ? MCPWM_OPR_A : MCPWM_OPR_B;
+		mcpwm_operator_t high = direction ? MCPWM_OPR_B : MCPWM_OPR_A ;
+
+		mcpwm_set_signal_low(PWM_UNIT_A, PWM_TIMER, low);
+		mcpwm_set_signal_low(PWM_UNIT_B, PWM_TIMER, low);
+
+		mcpwm_set_duty(PWM_UNIT_A, PWM_TIMER, high, per_up);
+		mcpwm_set_duty(PWM_UNIT_B, PWM_TIMER, high, per_up);
+
+		mcpwm_set_duty_type(PWM_UNIT_A, PWM_TIMER, high, MCPWM_DUTY_MODE_0);
+		mcpwm_set_duty_type(PWM_UNIT_B, PWM_TIMER, high, MCPWM_DUTY_MODE_0);
+	}
 }

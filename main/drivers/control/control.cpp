@@ -9,6 +9,7 @@
 #include <drivers/control.h>
 #include <set>
 #include <esp_log.h>
+#include <app/Com.h>
 #include "drivers/control/ControlAcceleratorDriver.h"
 #include "MPU.hpp"
 #include "mpu/math.hpp"   // math helper for dealing with MPU data
@@ -47,32 +48,6 @@ namespace {
 
 //    functions
 
-	/**
-	 * Set the speed of the engine/moter etc. directly
-	 * @param speed, how fast the motor must spin (min-max must be defined by the motor hardware interface)
-	 * @return control_err_t
-	 *  * `CONTROL_OK` if is was a success.
-	 *  * `CONTROL_ERR_NOT_STARTED` control not started yet. Use `control_start()`.
-	 *  * `CONTROL_ERR_MODE_NOT_ACTIVE` mode is not active! Check `control_get_active_modes()`.
-	 *  * `CONTROL_ERR_HARDWARE_FAILURE` the hardware failed you :(.
-	 *  * `CONTROL_ERR_OVERFLOW` speed overflow.
-	 *  * `CONTROL_ERR_UNDERFLOW` speed underflow.
-	 */
-	control_err_t set_X_speed(float speed, control_direction_t direction) {
-//    if()
-		for (ControlAcceleratorDriver *d: drivers) {
-			if ((d->get_control_mode() & CONTROL_X) > 0) {
-				d->set_X_speed(speed, direction);
-			}
-		}
-		return CONTROL_OK;
-	}
-
-	control_err_t set_X_speed(float speed) {
-		control_direction_t dir = speed >= 0 ? CONTROL_FORWARD : CONTROL_BACKWARD;
-		speed = speed < 0 ? -speed : speed;
-		return set_X_speed(speed, dir);
-	};
 
 }
 
@@ -139,7 +114,7 @@ control_status_t control_start() {
 	}
 
 //    start threads.
-//    xTaskCreate(control_com_handler_task, "control_com_handler", 2048, NULL, 12, &control_com_handler);
+	xTaskCreate(control_com_handler_task, "control_com_handler", 2048, NULL, 12, &control_com_handler);
 	control_status = CONTROL_RUNNING;
 	return control_status;
 }
@@ -149,8 +124,203 @@ control_status_t control_get_status() {
 }
 
 void control_com_handler_task(void *arg) {
-	while (1) {
+	enum com_commands_t {
+		NO_COMMAND = 0x00,
 
+//		basic functionality
+		SET_SPEED = 0x01,
+		GET_SPEED = 0x02,
+		SET_VELOCITY = 0x03,
+		GET_VELOCITY = 0x04,
+		SET_DEGREE = 0x05,
+		GET_DEGREE = 0x06,
+		GET_DIRECTION = 0x07,
+
+//		closed loop configuration
+		GET_DAMPING = 0x10,
+		SET_DAMPING = 0x11,
+
+//		debugging
+		GET_RUNNING_STATE = 0x20,
+		SET_RUNNING_STATE = 0x21,
+		TEST_SENSORS = 0x22,
+		CALIBRATE_SENSORS = 0x23,
+		GET_SUPPORTED_AXIS = 0x24,
+
+//		advanched automated control
+		RETURN_HOME = 0x30,
+		SET_HOME = 0x31,
+		GOTO_CORDINATES = 0x32,
+	};
+//	initialize coms
+	com_transmitpackage_t request;
+	uint8_t mask;
+	uint8_t flags;
+	uint16_t data;
+	uint8_t buffer[6];
+	QueueHandle_t control_com;
+	com_channel_t control_channel = {
+			.port = 3,
+			.priority = 1,
+			.handeler = &control_com,
+	};
+	uint16_t (*get_value)(control_axis_mask_t mode);
+	void 	(*set_value)(control_axis_mask_t mode, uint16_t speed, control_direction_t direction);
+	com_commands_t command;
+	COM.register_channel(&control_channel);
+	while (1) {
+		if (xQueueReceive(control_com, &request, (portTickType) portMAX_DELAY)) {
+			if (request.data_lenght < 2)
+				continue;
+			flags = request.data[1];
+			data = ((uint16_t) request.data[2] << 8) | request.data[3];
+			get_value = nullptr;
+			set_value = nullptr;
+			command = NO_COMMAND;
+//			ESP_LOGD(LOG_TAG, "com command:%X, flag:%X, data:%d", request.data[0], request.data[1], data);
+			switch (request.data[0]) {
+//				basic functionality
+
+				case GET_DEGREE:
+					if (flags & (CONTROL_X | CONTROL_Y | CONTROL_Z))
+						break;
+					get_value = control_get_degree;
+					command = GET_DEGREE;
+				case GET_VELOCITY:
+					if (command == NO_COMMAND) {
+						get_value = control_get_velocity;
+						command = GET_VELOCITY;
+					}
+				case GET_SPEED:
+					if (command == NO_COMMAND) {
+						command = GET_SPEED;
+						get_value = control_get_speed;
+					}
+					mask = 1;
+					uint16_t speed;
+					for (int i = 0; i < CONTROL_AXIS_MAX; ++i) {
+						mask = 0b1 << i;
+						if (mask & flags) {
+							buffer[0] = command;
+							buffer[1] = mask;
+							speed = get_value((control_axis_mask_t) mask);
+							buffer[2] = (speed >> 8);
+							buffer[3] = speed & 0xff;
+							buffer[4] = 0x00;
+//							ESP_LOGD(LOG_TAG, "mask: %X flag: %X", mask, flags);
+//							ESP_LOGD(LOG_TAG, "GET_COMMAND: %X, value: %d",command,  speed);
+							COM.send(&control_channel, request.from_port, (char *) buffer, 5);
+						}
+					}
+					break;
+				case GET_DIRECTION:
+					buffer[0] = GET_DIRECTION;
+					mask = 1;
+					for (int i = 0; i < CONTROL_AXIS_MAX; ++i) {
+						mask = 1 << i;
+						if (mask & flags) {
+							buffer[1] = mask;
+							buffer[2] = control_get_direction((control_axis_mask_t) mask);
+							buffer[3] = 0x00;
+							COM.send(&control_channel, request.from_port, (char *) buffer, 4);
+						}
+					}
+					break;
+//				set target velocity yaw, roll, pitch, x, y, z
+				case SET_DEGREE:
+					if (flags & (CONTROL_X | CONTROL_Y | CONTROL_Z))
+						break;
+					set_value = control_set_degree;
+					command = SET_DEGREE;
+				case SET_SPEED:
+					if (command == NO_COMMAND) {
+						set_value = control_set_speed;
+						command = SET_SPEED;
+					}
+				case SET_VELOCITY:
+					if (command == NO_COMMAND) {
+						set_value = control_set_velocity;
+						command = SET_VELOCITY;
+					}
+					control_direction_t dir;
+					dir = ((request.data[1] >> 6) & 0b1) ? CONTROL_DIRECTION_MIN : CONTROL_DIRECTION_PLUS;
+					ESP_LOGV(LOG_TAG, "set: %X value: %d, dir: %d", command, data, dir);
+					set_value((control_axis_mask_t) flags, data, dir);
+					break;
+//				control
+
+//				get damping
+				case GET_DAMPING:
+					mask = 1;
+					for (int j = 0; j < CONTROL_AXIS_MAX; ++j) {
+						mask = 1 << j;
+						if (mask & flags) {
+							buffer[0] = GET_DAMPING;
+							buffer[1] = mask;
+							buffer[2] = (uint8_t) control_get_damping((control_axis_mask_t) mask);
+							COM.send(&control_channel, request.from_port, (char*) buffer, 3);
+						}
+					}
+					break;
+//				set damping
+				case SET_DAMPING:
+					control_set_damping((control_axis_mask_t)flags, (control_damping_t) data);
+					break;
+
+//				debugging
+
+//				get running state
+				case GET_RUNNING_STATE:
+					buffer[0] = GET_RUNNING_STATE;
+					buffer[1] = control_get_status();
+					COM.send(&control_channel, request.from_port, (char*) buffer, 2);
+					break;
+//				set running state
+				case SET_RUNNING_STATE:
+//					TODO return success?
+					switch (data) {
+						case CONTROL_RUNNING :
+							control_start();
+							break;
+						case CONTROL_STOPPED:
+							control_stop();
+							break;
+						default:
+							break;
+					}
+					break;
+//				test sensors
+				case TEST_SENSORS:
+					uint8_t t;
+					t = control_test_sensor();
+					buffer[0] = TEST_SENSORS;
+					buffer[1] = t;
+					COM.send(&control_channel, request.from_port, (char*) buffer, 2);
+					break;
+//				calibrate sensors
+				case CALIBRATE_SENSORS:
+					control_calibrate_sensors();
+					break;
+//				get supported modes
+				case GET_SUPPORTED_AXIS:
+					buffer[0] = GET_SUPPORTED_AXIS;
+					buffer[1] = control_get_active_axis();
+					COM.send(&control_channel, request.from_port, (char*) buffer, 2);
+					break;
+
+//				advanced automated control
+
+//				return home
+				case RETURN_HOME:
+//				set home
+				case SET_HOME:
+//				goto cordinates
+				case GOTO_CORDINATES:
+//				protocol error
+				default:
+					break;
+			}
+		}
 	}
 	vTaskDelete(NULL);
 }
@@ -228,8 +398,8 @@ void control_damping_task(void *arg) {
 //		accelG.y *= g;
 //		accelG.z *= g;
 
-		printf("Pitch: %+6.1f \t Roll: %+6.1f \t Yaw: %+6.1f \n", pitch, roll, yaw);
-		printf("accel:\t\t %+.2f\t\t %+.2f\t\t %+.2f\n", accel.x, accel.y, accel.z);
+//		printf("Pitch: %+6.1f \t Roll: %+6.1f \t Yaw: %+6.1f \n", pitch, roll, yaw);
+//		printf("accel:\t\t %+.2f\t\t %+.2f\t\t %+.2f\n", accel.x, accel.y, accel.z);
 
 	}
 	vTaskDelete(NULL);
@@ -266,12 +436,13 @@ control_err_t control_register_driver(ControlAcceleratorDriver *driver) {
 
 // X
 
-float control_get_X_velocity() {
+uint16_t control_get_X_velocity() {
 	return 0;
 }
 
-control_err_t control_set_X_velocity(float cm_per_second) {
-	return set_X_speed(cm_per_second);
+control_err_t control_set_X_velocity(uint16_t mm_per_second, control_direction_t direction) {
+//	return control_set_X_speed(cm_per_second);
+	return CONTROL_OK;
 }
 
 void control_calibrate_sensors() {
@@ -303,4 +474,46 @@ static IRAM_ATTR void mpuISR(TaskHandle_t taskHandle) {
 	BaseType_t HPTaskWoken = pdFALSE;
 	vTaskNotifyGiveFromISR(taskHandle, &HPTaskWoken);
 	if (HPTaskWoken == pdTRUE) portYIELD_FROM_ISR();
+}
+
+void control_set_speed(control_axis_mask_t axisMask, uint16_t speed, control_direction_t direction) {
+	for (ControlAcceleratorDriver *d: drivers) {
+		if (d->get_axis() & axisMask) {
+			d->set(axisMask, speed, direction);
+		}
+	}
+}
+
+uint16_t control_get_speed(control_axis_mask_t single_axis) {
+	return 0x327a;
+}
+uint16_t control_get_velocity(control_axis_mask_t single_axis) {
+	return 0xe3f1;
+}
+uint16_t control_get_degree(control_axis_mask_t single_axis) {
+	return 0xff90;
+}
+control_direction_t control_get_direction(control_axis_mask_t single_axis) {
+	return CONTROL_DIRECTION_PLUS;
+}
+void control_set_degree(control_axis_mask_t axisMask, uint16_t degree, control_direction_t direction) {
+
+}
+void control_set_velocity(control_axis_mask_t axisMask, uint16_t mm_per_second, control_direction_t direction) {
+
+}
+control_axis_mask_t control_get_active_axis() {
+	uint8_t modes = 0;
+	for (ControlAcceleratorDriver *d: drivers) {
+		modes |= d->get_axis();
+	}
+	return(control_axis_mask_t) modes;
+}
+
+control_damping_t control_get_damping(control_axis_mask_t single_axis) {
+	return DAMP_STAND_STILL;
+}
+
+void control_set_damping(control_axis_mask_t axisMask, control_damping_t damp) {
+
 }
