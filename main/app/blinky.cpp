@@ -16,7 +16,7 @@ void start_blinky_task(void* arg) {
     QueueHandle_t handler;
     com_transmitpackage_t tp;
     com_channel_t blinky_com_channel = {
-            .port = 2,
+            .port = 4,
             .priority = 2,
             .handeler = &handler
     };

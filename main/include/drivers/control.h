@@ -17,6 +17,7 @@ typedef enum {
     CONTROL_YAW = (1 << 4),
     CONTROL_PITCH = (1 << 5),
 
+	CONTROL_AXIS_ALL = 63,
     CONTROL_AXIS_MAX = 6,
 
 } control_axis_mask_t;

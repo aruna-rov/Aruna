@@ -53,7 +53,7 @@ extern "C" void app_main(void) {
     register_drivers();
     start_COM();
 
-    control_start();
+//    control_start();
 //	control_set_X_velocity(100, CONTROL_DIRECTION_PLUS);
 
 //    test application
@@ -67,12 +67,14 @@ void register_drivers() {
 //    TODO if there are more drivers, then this needs his own .cpp file
 
 //  COM
+// TODO error check
     uart_driver = new UART;
     COM.register_candidate_driver(uart_driver);
 
 //  Control
-    l293d_driver = new L293D;
-    control_register_driver(l293d_driver);
+// TODO error check
+//    l293d_driver = new L293D;
+//    control_register_driver(l293d_driver);
 }
 
 void start_COM() {

@@ -40,14 +40,13 @@ control_err_t L293D::start() {
 }
 
 control_err_t L293D::stop() {
-//	TODO stop all motors0
+	set(CONTROL_AXIS_ALL, 0, CONTROL_DIRECTION_PLUS);
     return ControlAcceleratorDriver::stop();
 }
 
 void L293D::set(control_axis_mask_t modes, uint16_t speed, control_direction_t direction) {
 	ESP_LOGD("L293D", "mode:%X, speed:%d, dir:%d", modes, speed, direction);
 	if (modes & CONTROL_X) {
-//		direction = (control_direction_t) 1;
 		ESP_LOGD("Dnog wat", "control x");
 		float per_up = convert_range(speed);
 		mcpwm_operator_t low = direction ? MCPWM_OPR_A : MCPWM_OPR_B;

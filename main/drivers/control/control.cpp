@@ -65,21 +65,21 @@ control_status_t control_start() {
 	}
 
 //	MPU6050 max i2c clock is 400khz
-	i2c0.begin(I2C_SDA_PIN, I2C_CLK_PIN, I2C_CLK_SPEED);  // initialize the I2C bus
+	ESP_ERROR_CHECK(i2c0.begin(I2C_SDA_PIN, I2C_CLK_PIN, I2C_CLK_SPEED));  // initialize the I2C bus
 	MPU.setBus(i2c0);  // set communication bus, for SPI -> pass 'hspi'
 	MPU.setAddr(MPU_12C_address);  // set address or handle, for SPI -> pass 'mpu_spi_handle'
-	MPU.initialize();  // this will initialize the chip and set default configurations
-//	if (!control_test_sensor()) {
-//		return CONTROL_STOPPED;
-//	}
+	ESP_ERROR_CHECK(MPU.initialize());  // this will initialize the chip and set default configurations
+	if (!control_test_sensor()) {
+		return CONTROL_STOPPED;
+	}
 
 	control_calibrate_sensors();
 
-	MPU.setSampleRate(MPU_samplerate);  // in (Hz)
-	MPU.setAccelFullScale(MPU_AccelFS);
-	MPU.setGyroFullScale(MPU_GyroFS);
-	MPU.setDigitalLowPassFilter(MPU_DLPF);  // smoother data
-	MPU.setInterruptEnabled(mpud::INT_EN_RAWDATA_READY);  // enable INT pin
+	ESP_ERROR_CHECK(MPU.setSampleRate(MPU_samplerate));  // in (Hz)
+	ESP_ERROR_CHECK(MPU.setAccelFullScale(MPU_AccelFS));
+	ESP_ERROR_CHECK(MPU.setGyroFullScale(MPU_GyroFS));
+	ESP_ERROR_CHECK(MPU.setDigitalLowPassFilter(MPU_DLPF));  // smoother data
+	ESP_ERROR_CHECK(MPU.setInterruptEnabled(mpud::INT_EN_RAWDATA_READY));  // enable INT pin
 
 
 //	setup fifo
@@ -96,21 +96,20 @@ control_status_t control_start() {
 	};
 	xTaskCreate(control_damping_task, "control_damping", 2048, NULL, 12, &control_damping);
 
-	gpio_config(&kGPIOConfig);
-	gpio_install_isr_service(ESP_INTR_FLAG_IRAM);
-	gpio_isr_handler_add(MPU_interrupt_pin, mpuISR, control_damping);
+	ESP_ERROR_CHECK(gpio_config(&kGPIOConfig));
+	ESP_ERROR_CHECK(gpio_install_isr_service(ESP_INTR_FLAG_IRAM));
+	ESP_ERROR_CHECK(gpio_isr_handler_add(MPU_interrupt_pin, mpuISR, control_damping));
 	ESP_ERROR_CHECK(MPU.setInterruptConfig(MPU_InterruptConfig));
 	ESP_ERROR_CHECK(MPU.setInterruptEnabled(mpud::INT_EN_RAWDATA_READY));
-	xTaskGetCurrentTaskHandle();
 	// Ready to start reading
 	ESP_ERROR_CHECK(MPU.resetFIFO());  // start clean
 
 //    start all drivers
 	for (ControlAcceleratorDriver *d: drivers) {
-		control_err_t stat = d->start();
-		if (stat != CONTROL_OK)
-//            TODO print driver name?
-			ESP_LOGW(LOG_TAG, "Driver failed to start:%d", stat);
+//		control_err_t stat = d->start();
+//		if (stat != CONTROL_OK)
+////            TODO print driver name?
+//			ESP_LOGW(LOG_TAG, "Driver failed to start:%d", stat);
 	}
 
 //    start threads.
@@ -447,9 +446,9 @@ control_err_t control_set_X_velocity(uint16_t mm_per_second, control_direction_t
 
 void control_calibrate_sensors() {
 	mpud::raw_axes_t g, a;
-	MPU.computeOffsets(&a, &g);
-	MPU.setAccelOffset(a);
-	MPU.setGyroOffset(g);
+	ESP_ERROR_CHECK(MPU.computeOffsets(&a, &g));
+	ESP_ERROR_CHECK(MPU.setAccelOffset(a));
+	ESP_ERROR_CHECK(MPU.setGyroOffset(g));
 }
 
 uint8_t control_test_sensor() {
@@ -460,7 +459,7 @@ uint8_t control_test_sensor() {
 		ESP_LOGE(LOG_TAG, "MPU connection failed:%s", esp_err_to_name(tc));
 		return 0;
 	}
-	MPU.selfTest(&retSelfTest);
+	ESP_ERROR_CHECK(MPU.selfTest(&retSelfTest));
 	if (retSelfTest & (mpud::SELF_TEST_GYRO_FAIL | mpud::SELF_TEST_ACCEL_FAIL)) {
 		ESP_LOGE(LOG_TAG, "MPU selftest failed Gyro=%s Accel=%s",  //
 				 (retSelfTest & mpud::SELF_TEST_GYRO_FAIL ? "FAIL" : "OK"),
