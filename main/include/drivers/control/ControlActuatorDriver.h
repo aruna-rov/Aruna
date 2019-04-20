@@ -2,14 +2,14 @@
 // Created by noeel on 27-3-19.
 //
 
-#ifndef ARUNA_CONTROLACCELERATORDRIVER_H
-#define ARUNA_CONTROLACCELERATORDRIVER_H
+#ifndef ARUNA_CONTROLACTUATORDRIVER_H
+#define ARUNA_CONTROLACTUATORDRIVER_H
 
 
 #include "drivers/control.h"
 #include "../control.h"
 
-class ControlAcceleratorDriver {
+class ControlActuatorDriver {
 public:
 	/**
 	 * start the driver
@@ -47,4 +47,4 @@ public:
 };
 
 
-#endif //ARUNA_CONTROLACCELERATORDRIVER_H
+#endif //ARUNA_CONTROLACTUATORDRIVER_H

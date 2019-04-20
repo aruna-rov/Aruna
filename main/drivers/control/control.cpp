@@ -10,7 +10,7 @@
 #include <set>
 #include <esp_log.h>
 #include <app/Com.h>
-#include "drivers/control/ControlAcceleratorDriver.h"
+#include "drivers/control/ControlActuatorDriver.h"
 #include "MPU.hpp"
 #include "mpu/math.hpp"   // math helper for dealing with MPU data
 #include "mpu/types.hpp"  // MPU data types and definitions
@@ -23,7 +23,7 @@ namespace {
 	control_status_t control_status = CONTROL_STOPPED;
 	TaskHandle_t control_com_handler;
 	TaskHandle_t control_damping;
-	std::set<ControlAcceleratorDriver *> drivers;
+	std::set<ControlActuatorDriver *> drivers;
 	const gpio_num_t I2C_SDA_PIN = GPIO_NUM_26;
 	const gpio_num_t I2C_CLK_PIN = GPIO_NUM_25;
 	constexpr uint I2C_CLK_SPEED = 400;
@@ -106,7 +106,7 @@ control_status_t control_start() {
 	ESP_ERROR_CHECK(MPU.resetFIFO());  // start clean
 
 //    start all drivers
-	for (ControlAcceleratorDriver *d: drivers) {
+	for (ControlActuatorDriver *d: drivers) {
 		control_err_t stat = d->start();
 		if (stat != CONTROL_OK)
 //            TODO print driver name?
@@ -419,7 +419,7 @@ control_status_t control_stop() {
 		return control_status;
 
 	//    stop all drivers
-	for (ControlAcceleratorDriver *d: drivers) {
+	for (ControlActuatorDriver *d: drivers) {
 		control_err_t stat = d->stop();
 		if (stat != CONTROL_OK)
 //            TODO print driver name?
@@ -433,7 +433,7 @@ control_status_t control_stop() {
 	return control_status;
 }
 
-control_err_t control_register_driver(ControlAcceleratorDriver *driver) {
+control_err_t control_register_driver(ControlActuatorDriver *driver) {
 	if (drivers.find(driver) != drivers.end()) {
 		return CONTROL_ERR_DRIVER_EXISTS;
 	}
@@ -476,7 +476,7 @@ static IRAM_ATTR void mpuISR(TaskHandle_t taskHandle) {
 void control_set_speed(control_axis_mask_t axisMask, uint16_t speed, control_direction_t direction) {
 	uint8_t j = 1;
 	control_axis_mask_t active_axis = control_get_active_axis();
-	for (ControlAcceleratorDriver *d: drivers) {
+	for (ControlActuatorDriver *d: drivers) {
 		d->set(axisMask, speed, direction);
 	}
 	for (uint i = 0; i < CONTROL_AXIS_MASK_MAX; i++) {
@@ -516,7 +516,7 @@ void control_set_velocity(control_axis_mask_t axisMask, uint16_t mm_per_second, 
 
 control_axis_mask_t control_get_active_axis() {
 	uint8_t modes = 0;
-	for (ControlAcceleratorDriver *d: drivers) {
+	for (ControlActuatorDriver *d: drivers) {
 		modes |= d->get_axis();
 	}
 	return (control_axis_mask_t) modes;

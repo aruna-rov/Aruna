@@ -7,7 +7,7 @@
 
 #include <stdint.h>
 
-class ControlAcceleratorDriver;
+class ControlActuatorDriver;
 
 typedef enum {
     CONTROL_AXIS_MASK_X = (1 << 0),
@@ -160,7 +160,7 @@ control_damping_t control_get_damping(control_axis_mask_t single_axis);
  * @return `CONTROL_OK` if it went well.
  * `CONTROL_FAIL` if not.
  */
-control_err_t control_register_driver(ControlAcceleratorDriver *driver);
+control_err_t control_register_driver(ControlActuatorDriver *driver);
 
 /**
  * unregister a accelerator driver for use.
@@ -168,7 +168,7 @@ control_err_t control_register_driver(ControlAcceleratorDriver *driver);
  * @return `CONTROL_OK` if it went well.
  * `CONTROL_FAIL` if not.
  */
-control_err_t control_unregister_driver(ControlAcceleratorDriver *driver);
+control_err_t control_unregister_driver(ControlActuatorDriver *driver);
 // TODO implement
 
 /**

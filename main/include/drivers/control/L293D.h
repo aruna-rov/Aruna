@@ -5,9 +5,9 @@
 #ifndef ARUNA_L293D_H
 #define ARUNA_L293D_H
 
-#include "drivers/control/ControlAcceleratorDriver.h"
+#include "drivers/control/ControlActuatorDriver.h"
 
-class L293D: public ControlAcceleratorDriver  {
+class L293D: public ControlActuatorDriver  {
 public:
     control_err_t start() override;
     control_err_t stop() override;

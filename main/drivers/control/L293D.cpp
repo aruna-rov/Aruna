@@ -36,12 +36,12 @@ control_err_t L293D::start() {
 
     mcpwm_init(PWM_UNIT_A, PWM_TIMER, &pwm_config);
     mcpwm_init(PWM_UNIT_B, PWM_TIMER, &pwm_config);
-    return ControlAcceleratorDriver::start();
+    return ControlActuatorDriver::start();
 }
 
 control_err_t L293D::stop() {
 	set(CONTROL_AXIS_MASK_ALL, 0, CONTROL_DIRECTION_PLUS);
-    return ControlAcceleratorDriver::stop();
+    return ControlActuatorDriver::stop();
 }
 
 void L293D::set(control_axis_mask_t modes, uint16_t speed, control_direction_t direction) {

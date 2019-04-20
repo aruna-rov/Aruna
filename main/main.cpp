@@ -14,7 +14,7 @@
 
 Com COM;
 ComDriver *uart_driver;
-ControlAcceleratorDriver* l293d_driver;
+ControlActuatorDriver* l293d_driver;
 
 const static char* LOG_TAG = "MAIN";
 
