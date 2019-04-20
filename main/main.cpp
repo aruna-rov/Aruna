@@ -53,7 +53,7 @@ extern "C" void app_main(void) {
     register_drivers();
     start_COM();
 
-//    control_start();
+    control_start();
 //	control_set_X_velocity(100, CONTROL_DIRECTION_PLUS);
 
 //    test application
@@ -73,8 +73,8 @@ void register_drivers() {
 
 //  Control
 // TODO error check
-//    l293d_driver = new L293D;
-//    control_register_driver(l293d_driver);
+    l293d_driver = new L293D;
+    control_register_driver(l293d_driver);
 }
 
 void start_COM() {

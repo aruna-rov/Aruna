@@ -15,7 +15,7 @@ namespace {
 }
 
 control_axis_mask_t L293D::get_axis() {
-    return CONTROL_X;
+    return CONTROL_AXIS_MASK_X;
 }
 
 control_err_t L293D::start() {
@@ -40,14 +40,13 @@ control_err_t L293D::start() {
 }
 
 control_err_t L293D::stop() {
-	set(CONTROL_AXIS_ALL, 0, CONTROL_DIRECTION_PLUS);
+	set(CONTROL_AXIS_MASK_ALL, 0, CONTROL_DIRECTION_PLUS);
     return ControlAcceleratorDriver::stop();
 }
 
 void L293D::set(control_axis_mask_t modes, uint16_t speed, control_direction_t direction) {
 	ESP_LOGD("L293D", "mode:%X, speed:%d, dir:%d", modes, speed, direction);
-	if (modes & CONTROL_X) {
-		ESP_LOGD("Dnog wat", "control x");
+	if (modes & CONTROL_AXIS_MASK_X) {
 		float per_up = convert_range(speed);
 		mcpwm_operator_t low = direction ? MCPWM_OPR_A : MCPWM_OPR_B;
 		mcpwm_operator_t high = direction ? MCPWM_OPR_B : MCPWM_OPR_A ;

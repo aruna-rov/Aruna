@@ -31,12 +31,12 @@ from port | to port | command | data
 below are the avaliable axis. if a bit is `1` its means that that mode is enabled.
 if direction bit is `0` the axis will go plus (forward for X axis).
 ``` 
-    CONTROL_X = (1 << 0),
-    CONTROL_Y = (1 << 1),
-    CONTROL_Z = (1 << 2),
-    CONTROL_ROLL = (1 << 3),
-    CONTROL_YAW = (1 << 4),
-    CONTROL_PITCH = (1 << 5),
+    CONTROL_AXIS_MASK_X = (1 << 0),
+    CONTROL_AXIS_MASK_Y = (1 << 1),
+    CONTROL_AXIS_MASK_Z = (1 << 2),
+    CONTROL_AXIS_MASK_ROLL = (1 << 3),
+    CONTROL_AXIS_MASK_YAW = (1 << 4),
+    CONTROL_AXIS_MASK_PITCH = (1 << 5),
     CONTROL_DIRECTION = (1 << 6),
 ```
 
@@ -119,7 +119,7 @@ Get the degree of an axis. Note that only roll, yaw and pitch are supported.
 * data: none
 
 *response*
-* command: `0x07`
+* command: `0x06`
 * axis: `0x08` - `0x20` axis that corresponds with the data.
 * data: `0x00` - `0xFFFF` degree from 0 to 360 degrees.
 
@@ -140,26 +140,50 @@ get the direction of a given axis.
 
 foreach axis in request a seperate response will be send.
 
-#### Get damping
-get the damping rules for a given axis
-
-*request*
-* command: `0x10`
-* axis: `0x01` - `0x3F` desired multiple axis
-* data: none
-
-*response*
-* command: `0x10`
-* axis: `0x01` - `0x20` one axis at a time
-* data: TBD
-
 #### Set damping
 set damping rules
 
 *request*
+* command: `0x10`
+* axis: `0x01` - `0x3F` desired multiple axis
+* data: `0` - `0x02` damping configuration
+
+*response*
+* none...
+
+*data damping configuration:*
+```
+	CONTROL_DAMP_DISABLE = 0,
+	CONTROL_DAMP_KEEP_VELOCITY = 0x01,
+	CONTROL_DAMP_KEEP_DEGREE = 0x02,
+```
+* `CONTROL_DAMP_DISABLE` will disable all damping for that axis
+* `CONTROL_DAMP_KEEP_VELOCITY` ROV will try to keep the current velocity
+* `CONTROL_DAMP_KEEP_DEGREE` ROV will try to keep the current degree (only row, yaw and pitch)
+
+#### Get damping
+get the damping rules for a given axis
+
+*request*
 * command: `0x11`
 * axis: `0x01` - `0x3F` desired multiple axis
-* data: TBD
+* data: none
+
+*response*
+* command: `0x11`
+* axis: `0x01` - `0x20` one axis at a time
+* data: `0` - `0x02` damping configuration
+
+foreach axis in request a seperate response will be send.
+
+#### Set running state
+Set the state of the control tasks.
+
+**This command uses the simple com package**
+
+*request*
+* command: `0x20`
+* data: `0x01` if set to on, `0` to turn off.
 
 *response*
 * none...
@@ -170,24 +194,12 @@ get the state of the control tasks.
 **This command uses the simple com package**
 
 *request*
-* command: `0x20`
+* command: `0x21`
 * data: none
 
 *response*
-* command: `0x20`
-* data: if running return `0x01`, else `0`
-
-#### Set running state
-Set the state of the control tasks.
-
-**This command uses the simple com package**
-
-*request*
 * command: `0x21`
-* data: `0x01` if set to on, `0` to turn off.
-
-*response*
-* none...
+* data: if running return `0x01`, else `0`
 
 #### Test sensors
 Test the MPU sensor for closedloop feedback
@@ -224,5 +236,5 @@ Get a axis mask of all the axis that are supported by this ROV.
 
 *response*
 * command: `0x24`
-* axis: `0x00` - `0x7F` axis mask of supported axis
+* axis: `0x00` - `0x3F` axis mask of supported axis
 * data: none
