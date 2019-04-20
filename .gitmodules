@@ -7,3 +7,6 @@
 	url = https://github.com/natanaeljr/esp32-MPU-driver.git
 	ignore = dirty
 
+[submodule "libs/MiniPID"]
+	path = libs/MiniPID
+	url = https://github.com/tekdemo/MiniPID.git
