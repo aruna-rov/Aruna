@@ -475,9 +475,13 @@ static IRAM_ATTR void mpuISR(TaskHandle_t taskHandle) {
 
 void control_set_speed(control_axis_mask_t axisMask, uint16_t speed, control_direction_t direction) {
 	uint8_t j = 1;
+	control_err_t ret;
 	control_axis_mask_t active_axis = control_get_active_axis();
 	for (ControlActuatorDriver *d: drivers) {
-		d->set(axisMask, speed, direction);
+		ret = d->set(axisMask, speed, direction);
+		if (ret != CONTROL_OK) {
+			ESP_LOGW(LOG_TAG, "setting speed of driver failed: %X", ret);
+		}
 	}
 	for (uint i = 0; i < CONTROL_AXIS_MASK_MAX; i++) {
 		j= 1 << i;

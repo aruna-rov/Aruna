@@ -15,16 +15,16 @@ namespace {
 }
 
 control_axis_mask_t L293D::get_axis() {
-    return CONTROL_AXIS_MASK_X;
+    return (control_axis_mask_t) (CONTROL_AXIS_MASK_X | CONTROL_AXIS_MASK_YAW);
 }
 
 control_err_t L293D::start() {
 //	A
-    mcpwm_gpio_init(PWM_UNIT_A, MCPWM0A, PIN_A[0]);
-    mcpwm_gpio_init(PWM_UNIT_A, MCPWM0B, PIN_A[1]);
+    ESP_ERROR_CHECK(mcpwm_gpio_init(PWM_UNIT_A, MCPWM0A, PIN_A[0]));
+	ESP_ERROR_CHECK(mcpwm_gpio_init(PWM_UNIT_A, MCPWM0B, PIN_A[1]));
 //    B
-    mcpwm_gpio_init(PWM_UNIT_B, MCPWM0A, PIN_B[0]);
-    mcpwm_gpio_init(PWM_UNIT_B, MCPWM0B, PIN_B[1]);
+	ESP_ERROR_CHECK(mcpwm_gpio_init(PWM_UNIT_B, MCPWM0A, PIN_B[0]));
+	ESP_ERROR_CHECK(mcpwm_gpio_init(PWM_UNIT_B, MCPWM0B, PIN_B[1]));
 
     mcpwm_config_t pwm_config = {
             100,
@@ -34,30 +34,45 @@ control_err_t L293D::start() {
             MCPWM_UP_COUNTER,
     };
 
-    mcpwm_init(PWM_UNIT_A, PWM_TIMER, &pwm_config);
-    mcpwm_init(PWM_UNIT_B, PWM_TIMER, &pwm_config);
-    return ControlActuatorDriver::start();
+    ESP_ERROR_CHECK(mcpwm_init(PWM_UNIT_A, PWM_TIMER, &pwm_config));
+    ESP_ERROR_CHECK(mcpwm_init(PWM_UNIT_B, PWM_TIMER, &pwm_config));
+    return CONTROL_OK;
 }
 
 control_err_t L293D::stop() {
 	set(CONTROL_AXIS_MASK_ALL, 0, CONTROL_DIRECTION_PLUS);
-    return ControlActuatorDriver::stop();
+    return CONTROL_OK;
 }
 
-void L293D::set(control_axis_mask_t modes, uint16_t speed, control_direction_t direction) {
-	ESP_LOGD("L293D", "mode:%X, speed:%d, dir:%d", modes, speed, direction);
-	if (modes & CONTROL_AXIS_MASK_X) {
+control_err_t L293D::set(control_axis_mask_t axisMask, uint16_t speed, control_direction_t direction) {
+	ESP_LOGD("L293D", "axis:%X, speed:%d, dir:%d", axisMask, speed, direction);
+	if (axisMask & CONTROL_AXIS_MASK_X) {
 		float per_up = convert_range(speed);
 		mcpwm_operator_t low = direction ? MCPWM_OPR_A : MCPWM_OPR_B;
-		mcpwm_operator_t high = direction ? MCPWM_OPR_B : MCPWM_OPR_A ;
+		mcpwm_operator_t high = direction ? MCPWM_OPR_B : MCPWM_OPR_A;
 
-		mcpwm_set_signal_low(PWM_UNIT_A, PWM_TIMER, low);
-		mcpwm_set_signal_low(PWM_UNIT_B, PWM_TIMER, low);
+		ESP_ERROR_CHECK(mcpwm_set_signal_low(PWM_UNIT_A, PWM_TIMER, low));
+		ESP_ERROR_CHECK(mcpwm_set_signal_low(PWM_UNIT_B, PWM_TIMER, low));
 
-		mcpwm_set_duty(PWM_UNIT_A, PWM_TIMER, high, per_up);
-		mcpwm_set_duty(PWM_UNIT_B, PWM_TIMER, high, per_up);
+		ESP_ERROR_CHECK(mcpwm_set_duty(PWM_UNIT_A, PWM_TIMER, high, per_up));
+		ESP_ERROR_CHECK(mcpwm_set_duty(PWM_UNIT_B, PWM_TIMER, high, per_up));
 
-		mcpwm_set_duty_type(PWM_UNIT_A, PWM_TIMER, high, MCPWM_DUTY_MODE_0);
-		mcpwm_set_duty_type(PWM_UNIT_B, PWM_TIMER, high, MCPWM_DUTY_MODE_0);
+		ESP_ERROR_CHECK(mcpwm_set_duty_type(PWM_UNIT_A, PWM_TIMER, high, MCPWM_DUTY_MODE_0));
+		ESP_ERROR_CHECK(mcpwm_set_duty_type(PWM_UNIT_B, PWM_TIMER, high, MCPWM_DUTY_MODE_0));
 	}
+	else if (axisMask & CONTROL_AXIS_MASK_YAW) {
+		float per_up = convert_range(speed);
+		mcpwm_operator_t low = direction ? MCPWM_OPR_A : MCPWM_OPR_B;
+		mcpwm_operator_t high = direction ? MCPWM_OPR_B : MCPWM_OPR_A;
+
+		ESP_ERROR_CHECK(mcpwm_set_signal_low(PWM_UNIT_A, PWM_TIMER, low));
+		ESP_ERROR_CHECK(mcpwm_set_signal_low(PWM_UNIT_B, PWM_TIMER, high));
+
+		ESP_ERROR_CHECK(mcpwm_set_duty(PWM_UNIT_A, PWM_TIMER, high, per_up));
+		ESP_ERROR_CHECK(mcpwm_set_duty(PWM_UNIT_B, PWM_TIMER, low, per_up));
+
+		ESP_ERROR_CHECK(mcpwm_set_duty_type(PWM_UNIT_A, PWM_TIMER, high, MCPWM_DUTY_MODE_0));
+		ESP_ERROR_CHECK(mcpwm_set_duty_type(PWM_UNIT_B, PWM_TIMER, low, MCPWM_DUTY_MODE_0));
+	}
+	return CONTROL_OK;
 }

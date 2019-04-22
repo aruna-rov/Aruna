@@ -13,7 +13,7 @@ public:
     control_err_t stop() override;
 	control_axis_mask_t get_axis() override;
 
-	void set(control_axis_mask_t modes, uint16_t speed, control_direction_t direction) override;
+	control_err_t set(control_axis_mask_t axisMask, uint16_t speed, control_direction_t direction) override;
 private:
 };
 

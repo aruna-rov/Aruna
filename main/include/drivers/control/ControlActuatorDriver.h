@@ -31,8 +31,14 @@ public:
 	 */
 	virtual control_axis_mask_t get_axis() = 0;
 
-//	TODO documentation
-	virtual	void set(control_axis_mask_t axisMask, uint16_t speed, control_direction_t direction) = 0;
+	/**
+	 * Set the speed of the motors directly
+	 * @param axisMask, multiple axis to apply speed to.
+	 * @param speed, speed of the motors
+	 * @param direction, direction to go to.
+	 * @return CONTROL_OK if the command was succesfull, others when it fails.
+	 */
+	virtual control_err_t set(control_axis_mask_t axisMask, uint16_t speed, control_direction_t direction) = 0;
 
 	/**
 	 * Convert uint16 to a new range
