@@ -48,11 +48,14 @@ namespace {
 	control_axis_t<uint16_t> currentDegree = {0, 0, 0, 0, 0, 0};
 	control_axis_t<control_direction_t> currentDirection;
 	control_axis_t<control_damping_t> currentDamping;
+	bool MPU_active = false;
 
 
 }
 
 static IRAM_ATTR void mpuISR(TaskHandle_t taskHandle);
+
+bool start_MPU();
 
 control_status_t control_start() {
 //    check control status.
@@ -64,47 +67,13 @@ control_status_t control_start() {
 		ESP_LOGW(LOG_TAG, "Start failed: No drivers found!");
 		return control_status;
 	}
-
-//	MPU6050 max i2c clock is 400khz
-	ESP_ERROR_CHECK(i2c0.begin(I2C_SDA_PIN, I2C_CLK_PIN, I2C_CLK_SPEED));  // initialize the I2C bus
-	MPU.setBus(i2c0);  // set communication bus, for SPI -> pass 'hspi'
-	MPU.setAddr(MPU_12C_address);  // set address or handle, for SPI -> pass 'mpu_spi_handle'
-	ESP_ERROR_CHECK(MPU.initialize());  // this will initialize the chip and set default configurations
-	if (!control_test_sensor()) {
-		return CONTROL_STOPPED;
-	}
-
-	control_calibrate_sensors();
-
-	ESP_ERROR_CHECK(MPU.setSampleRate(MPU_samplerate));  // in (Hz)
-	ESP_ERROR_CHECK(MPU.setAccelFullScale(MPU_AccelFS));
-	ESP_ERROR_CHECK(MPU.setGyroFullScale(MPU_GyroFS));
-	ESP_ERROR_CHECK(MPU.setDigitalLowPassFilter(MPU_DLPF));  // smoother data
-	ESP_ERROR_CHECK(MPU.setInterruptEnabled(mpud::INT_EN_RAWDATA_READY));  // enable INT pin
+	//	MPU6050 max i2c clock is 400khz
+	i2c0.begin(I2C_SDA_PIN, I2C_CLK_PIN, I2C_CLK_SPEED);  // initialize the I2C bus
 
 
-//	setup fifo
-	ESP_ERROR_CHECK(MPU.setFIFOConfig(mpud::FIFO_CFG_ACCEL | mpud::FIFO_CFG_GYRO));
-	ESP_ERROR_CHECK(MPU.setFIFOEnabled(true));
-
-	// Setup Interrupt
-	constexpr gpio_config_t kGPIOConfig{
-			.pin_bit_mask = (uint64_t) 0x1 << MPU_interrupt_pin,
-			.mode         = GPIO_MODE_INPUT,
-			.pull_up_en   = GPIO_PULLUP_DISABLE,
-			.pull_down_en = GPIO_PULLDOWN_ENABLE,
-			.intr_type    = GPIO_INTR_POSEDGE  //rising edge
-	};
-	xTaskCreate(control_damping_task, "control_damping", 2048, NULL, 12, &control_damping);
-
-	ESP_ERROR_CHECK(gpio_config(&kGPIOConfig));
-	ESP_ERROR_CHECK(gpio_install_isr_service(ESP_INTR_FLAG_IRAM));
-	ESP_ERROR_CHECK(gpio_isr_handler_add(MPU_interrupt_pin, mpuISR, control_damping));
-	ESP_ERROR_CHECK(MPU.setInterruptConfig(MPU_InterruptConfig));
-	ESP_ERROR_CHECK(MPU.setInterruptEnabled(mpud::INT_EN_RAWDATA_READY));
-	// Ready to start reading
-	ESP_ERROR_CHECK(MPU.resetFIFO());  // start clean
-
+	MPU_active = start_MPU();
+	if (!MPU_active)
+		ESP_LOGI(LOG_TAG, "MPU functionality disabled.");
 //    start all drivers
 	for (ControlActuatorDriver *d: drivers) {
 		control_err_t stat = d->start();
@@ -148,6 +117,8 @@ void control_com_handler_task(void *arg) {
 		GET_SUPPORTED_AXIS = 0x24,
 		SET_SENSOR_OFFSET = 0x25,
 		GET_SENSOR_OFFSET = 0x26,
+		ACTIVATE_MPU = 0x27,
+		GET_MPU_STATUS = 0x28,
 
 //		advanched automated control
 		RETURN_HOME = 0x30,
@@ -173,8 +144,8 @@ void control_com_handler_task(void *arg) {
 	COM.register_channel(&control_channel);
 	while (1) {
 		if (xQueueReceive(control_com, &request, (portTickType) portMAX_DELAY)) {
-			if (request.data_lenght < 2)
-				continue;
+//			if (request.data_lenght < 2)
+//				continue;
 			flags = request.data[1];
 			data = ((uint16_t) request.data[2] << 8) | request.data[3];
 			get_value = nullptr;
@@ -185,11 +156,13 @@ void control_com_handler_task(void *arg) {
 //				basic functionality
 
 				case GET_DEGREE:
-					if (flags & (CONTROL_AXIS_MASK_X | CONTROL_AXIS_MASK_Y | CONTROL_AXIS_MASK_Z))
+					if ((flags & (CONTROL_AXIS_MASK_X | CONTROL_AXIS_MASK_Y | CONTROL_AXIS_MASK_Z)) || !MPU_active)
 						break;
 					get_value = control_get_degree;
 					command = GET_DEGREE;
 				case GET_VELOCITY:
+					if (!MPU_active)
+						break;
 					if (command == NO_COMMAND) {
 						get_value = control_get_velocity;
 						command = GET_VELOCITY;
@@ -234,7 +207,7 @@ void control_com_handler_task(void *arg) {
 					break;
 //				set target velocity yaw, roll, pitch, x, y, z
 				case SET_DEGREE:
-					if (flags & (CONTROL_AXIS_MASK_X | CONTROL_AXIS_MASK_Y | CONTROL_AXIS_MASK_Z))
+					if ((flags & (CONTROL_AXIS_MASK_X | CONTROL_AXIS_MASK_Y | CONTROL_AXIS_MASK_Z)) || !MPU_active)
 						break;
 					set_value = control_set_degree;
 					command = SET_DEGREE;
@@ -244,6 +217,8 @@ void control_com_handler_task(void *arg) {
 						command = SET_SPEED;
 					}
 				case SET_VELOCITY:
+					if (!MPU_active)
+						break;
 					if (command == NO_COMMAND) {
 						set_value = control_set_velocity;
 						command = SET_VELOCITY;
@@ -306,7 +281,9 @@ void control_com_handler_task(void *arg) {
 					break;
 //				calibrate sensors
 				case CALIBRATE_SENSORS:
-					control_calibrate_sensors();
+					MPU_active = start_MPU();
+					if(MPU_active)
+						control_calibrate_sensors();
 					break;
 //				get supported modes
 				case GET_SUPPORTED_AXIS:
@@ -316,7 +293,17 @@ void control_com_handler_task(void *arg) {
 					break;
 				case SET_SENSOR_OFFSET:
 				case GET_SENSOR_OFFSET:
-
+					break;
+				case ACTIVATE_MPU:
+//					TODO write documentation
+					MPU_active = start_MPU();
+//					TODO disable support also?
+					break;
+				case GET_MPU_STATUS:
+					buffer[0] = GET_MPU_STATUS;
+					buffer[1] = MPU_active;
+					COM.send(&control_channel, request.from_port, (char*) buffer, 2);
+					break;
 //				advanced automated control
 
 //				return home
@@ -337,7 +324,7 @@ void control_com_handler_task(void *arg) {
 void control_damping_task(void *arg) {
 	static constexpr double kRadToDeg = 57.2957795131;
 	static constexpr float kDeltaTime = 1.f / MPU_samplerate;
-	static constexpr double g = 9.80665;
+//	static constexpr double g = 9.80665;
 	constexpr uint16_t kFIFOPacketSize = 12;
 	uint16_t fifocount;
 	uint8_t buffer[kFIFOPacketSize];
@@ -349,6 +336,7 @@ void control_damping_task(void *arg) {
 	float accelPitch;
 	while (true) {
 		uint32_t notificationValue = ulTaskNotifyTake(pdTRUE, portMAX_DELAY);
+//		TODO MPU unplug while running should be handled better.
 		if (notificationValue > 1) {
 			ESP_LOGW(LOG_TAG, "Task Notification higher than 1, value: %d", notificationValue);
 			MPU.resetFIFO();
@@ -454,7 +442,7 @@ uint8_t control_test_sensor() {
 	esp_err_t tc;
 	tc = MPU.testConnection();  // test connection with the chip, return is a error code
 	if (tc != ESP_OK) {
-		ESP_LOGE(LOG_TAG, "MPU connection failed:%s", esp_err_to_name(tc));
+		ESP_LOGE(LOG_TAG, "MPU connection failed: %s", esp_err_to_name(tc));
 		return 0;
 	}
 	ESP_ERROR_CHECK(MPU.selfTest(&retSelfTest));
@@ -471,6 +459,57 @@ static IRAM_ATTR void mpuISR(TaskHandle_t taskHandle) {
 	BaseType_t HPTaskWoken = pdFALSE;
 	vTaskNotifyGiveFromISR(taskHandle, &HPTaskWoken);
 	if (HPTaskWoken == pdTRUE) portYIELD_FROM_ISR();
+}
+
+bool start_MPU() {
+
+	if(MPU_active)
+		return true;
+	MPU.setBus(i2c0);  // set communication bus, for SPI -> pass 'hspi'
+	MPU.setAddr(MPU_12C_address);  // set address or handle, for SPI -> pass 'mpu_spi_handle'
+	if(MPU.testConnection() != ESP_OK) {
+		ESP_LOGW(LOG_TAG, "MPU not connected.");
+		return false;
+	}
+	ESP_ERROR_CHECK(MPU.initialize());  // this will initialize the chip and set default configurations
+
+	if (!control_test_sensor()) {
+		ESP_LOGE(LOG_TAG, "MPU test failed.");
+		return false;
+	}
+
+	control_calibrate_sensors();
+
+	ESP_ERROR_CHECK(MPU.setSampleRate(MPU_samplerate));  // in (Hz)
+	ESP_ERROR_CHECK(MPU.setAccelFullScale(MPU_AccelFS));
+	ESP_ERROR_CHECK(MPU.setGyroFullScale(MPU_GyroFS));
+	ESP_ERROR_CHECK(MPU.setDigitalLowPassFilter(MPU_DLPF));  // smoother data
+	ESP_ERROR_CHECK(MPU.setInterruptEnabled(mpud::INT_EN_RAWDATA_READY));  // enable INT pin
+
+
+//	setup fifo
+	ESP_ERROR_CHECK(MPU.setFIFOConfig(mpud::FIFO_CFG_ACCEL | mpud::FIFO_CFG_GYRO));
+	ESP_ERROR_CHECK(MPU.setFIFOEnabled(true));
+
+	// Setup Interrupt
+	constexpr gpio_config_t kGPIOConfig{
+			.pin_bit_mask = (uint64_t) 0x1 << MPU_interrupt_pin,
+			.mode         = GPIO_MODE_INPUT,
+			.pull_up_en   = GPIO_PULLUP_DISABLE,
+			.pull_down_en = GPIO_PULLDOWN_ENABLE,
+			.intr_type    = GPIO_INTR_POSEDGE  //rising edge
+	};
+	xTaskCreate(control_damping_task, "control_damping", 2048, NULL, 12, &control_damping);
+
+	ESP_ERROR_CHECK(gpio_config(&kGPIOConfig));
+	ESP_ERROR_CHECK(gpio_install_isr_service(ESP_INTR_FLAG_IRAM));
+	ESP_ERROR_CHECK(gpio_isr_handler_add(MPU_interrupt_pin, mpuISR, control_damping));
+	ESP_ERROR_CHECK(MPU.setInterruptConfig(MPU_InterruptConfig));
+	ESP_ERROR_CHECK(MPU.setInterruptEnabled(mpud::INT_EN_RAWDATA_READY));
+	// Ready to start reading
+	ESP_ERROR_CHECK(MPU.resetFIFO());  // start clean
+
+	return true;
 }
 
 void control_set_speed(control_axis_mask_t axisMask, uint16_t speed, control_direction_t direction) {
