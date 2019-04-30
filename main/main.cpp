@@ -9,9 +9,13 @@
 #include <freertos/task.h>
 #include <soc/uart_struct.h>
 #include <app/blinky.h>
+#include <drivers/control/L293D.h>
+#include "drivers/control.h"
 
 Com COM;
 ComDriver *uart_driver;
+ControlActuatorDriver* l293d_driver;
+
 const static char* LOG_TAG = "MAIN";
 
 
@@ -49,6 +53,9 @@ extern "C" void app_main(void) {
     register_drivers();
     start_COM();
 
+    control_start();
+//	control_set_X_velocity(100, CONTROL_DIRECTION_PLUS);
+
 //    test application
 
 //    xTaskCreate(com_test_task, "COM test task", 2048, NULL, 0, NULL);
@@ -60,8 +67,14 @@ void register_drivers() {
 //    TODO if there are more drivers, then this needs his own .cpp file
 
 //  COM
+// TODO error check
     uart_driver = new UART;
     COM.register_candidate_driver(uart_driver);
+
+//  Control
+// TODO error check
+    l293d_driver = new L293D;
+    control_register_driver(l293d_driver);
 }
 
 void start_COM() {
