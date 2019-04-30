@@ -1,6 +1,42 @@
 # Control
 
+## Acceleration and gyroscope
 The sensor for the closed looped system can be (almost) any MPU controller. Please see [esp-mpu-driver repo](https://github.com/natanaeljr/esp32-MPU-driver) for more information.
+
+The sensor is not required. The control module will try to find an attached MPU controller and print "MPU functionality disabled." if the controller is not working propely. The following functionality is then disabled:
+* Closed loop control (damping, keep velocity or degree etc.)
+* get/set velocity or degree
+
+See the com command "activate MPU" and "get MPU status" for more information.
+
+**MPU pinout:**
+
+PIN 	| ESP	| MPU
+--- 	| ---	| ---
+I²C SDA	| 26	| SDA
+I²C CLK	| 25	| CLK
+INTR	| 15	| INR
+GRND	| GND	| GND
+v3.3	| -		| VCC
+
+## Drivers
+The control module can have multiple drivers at the same time for diffrent axis.
+
+### L293D
+The L293D is a low cost motor driver. Any motors (5v-30v) can be attached.
+The control module does not check if the L293D is attached, so it wil always asume it is on.
+
+**L293D pinout:**
+
+PIN		| ESP	| L293D
+---		| ---	| ---
+IN1		| 13	| 1
+IN2		| 12	| 7
+IN3		| 14	| 10
+IN4		| 27	| 15
+motorV (4.5-36)	| -		| 8
+interV 5v	| -		| 16
+GRND	| GND	| 4, 5, 13 or 12	|
 
 ## Com
 
@@ -238,3 +274,28 @@ Get a axis mask of all the axis that are supported by this ROV.
 * command: `0x24`
 * axis: `0x00` - `0x3F` axis mask of supported axis
 * data: none
+
+#### Activate MPU
+Try to activate the MPU if it was disabled on boot.
+
+**This command uses the simple com package**
+
+*request*
+* command: `0x27`
+* data: none
+
+*response*
+* none...
+
+#### Get MPU status
+See if the MPU is enabled and working.
+
+**This command uses the simple com package**
+
+*request*
+* command: `0x28`
+* data: none
+
+*response*
+* command: `0x28`
+* data: `0x01` of on, `0` if off.
