@@ -53,8 +53,16 @@ namespace {
 
 }
 
+/**
+ * MPU interrupt serivce routine.
+ * @param taskHandle
+ */
 static IRAM_ATTR void mpuISR(TaskHandle_t taskHandle);
 
+/**
+ * Start the MPU. Bind output to `MPU_active`
+ * @return return 0 if MPU fails. And 1 if its successfully turned on
+ */
 bool start_MPU();
 
 control_status_t control_start() {
@@ -295,7 +303,6 @@ void control_com_handler_task(void *arg) {
 				case GET_SENSOR_OFFSET:
 					break;
 				case ACTIVATE_MPU:
-//					TODO write documentation
 					MPU_active = start_MPU();
 //					TODO disable support also?
 					break;
