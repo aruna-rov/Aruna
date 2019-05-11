@@ -79,6 +79,9 @@ struct com_transmitpackage_t {
     */
     com_port_t to_port;
 
+    uint8_t n;
+	uint8_t priority;
+
     /**
      * @brief  Data to be transmitted.
      */
@@ -89,6 +92,8 @@ struct com_transmitpackage_t {
      * size of the data
      */
     size_t data_lenght;
+
+    size_t size;
 
     /**
      * Get binary array of transmitpackage, for sending over a link.
@@ -119,7 +124,7 @@ struct com_transmitpackage_t {
         transp.data_lenght = dataLength;
         return 1;
     }
-};
+} __attribute__((packed));
 
 /**
  * endpoint type of a com channel
@@ -151,6 +156,12 @@ struct com_channel_t {
     bool operator==(const uint8_t port) const {
         return this->port == port;
     }
+};
+
+
+struct com_ack_handel_t {
+	void *_this;
+	com_transmitpackage_t transmitpackage;
 };
 
 #include "drivers/com/ComDriver.h"
@@ -435,6 +446,8 @@ private:
     void selectDriverTask();
 
 
+	void acknowledge_handler_task(com_transmitpackage_t transmitpackage_to_watch);
+	static void _acknowledge_handler_task(void *handle);
 };
 
 extern Com COM;

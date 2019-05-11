@@ -33,6 +33,7 @@ com_err UART::transmit(com_transmitpackage_t package) {
 unsigned int UART::getSpeed() {
     uint32_t br = 0;
     uart_get_baudrate(UART_NUM, &br);
+//    TODO speed should be in bits not in bytes
     return (unsigned int) (br / 8);
 }
 

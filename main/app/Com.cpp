@@ -8,113 +8,123 @@
 Com::Com() {
 }
 
+
+static constexpr uint8_t N_COUNT_MAX = 255;
+//QueueHandle_t uacked[N_COUNT_MAX];
+TaskHandle_t ack_tasks[N_COUNT_MAX];
+constexpr portTickType ACK_TIMEOUT = 500 / portTICK_PERIOD_MS;
+uint8_t times_tried[N_COUNT_MAX + 1];
+
+constexpr uint8_t MAX_TRIES = 3;
+uint8_t n_count = 1;
+
 com_err Com::start() {
 //    pick a driver
-    auto dr = pickDriver();
-    if (std::get<1>(dr) == COM_OK) {
+	auto dr = pickDriver();
+	if (std::get<1>(dr) == COM_OK) {
 //        if driver is found start COM with driver as paramter
-        return this->start(std::get<0>(dr));
-    }
+		return this->start(std::get<0>(dr));
+	}
 //    return pickDriver error.
-    return std::get<1>(dr);
+	return std::get<1>(dr);
 }
 
 com_err Com::start(ComDriver *driver) {
-    switch (get_status()) {
-        case COM_RUNNING:
-            return COM_ERR_NOT_STOPPED;
-        case COM_PAUSED:
+	switch (get_status()) {
+		case COM_RUNNING:
+			return COM_ERR_NOT_STOPPED;
+		case COM_PAUSED:
 //            TODO is dit slim? kan ongwenst gedrag vertonen als je van driver wilt wisselen.
-            return resume();
-        default:
-            break;
-    }
+			return resume();
+		default:
+			break;
+	}
 //    set the driver
-    com_err driver_err;
-    setDriver(*driver);
-    driver_err = getDriver()->start();
-    if (driver_err != COM_OK)
-        return driver_err;
-
+	com_err driver_err;
+	setDriver(*driver);
+	driver_err = getDriver()->start();
+	if (driver_err != COM_OK)
+		return driver_err;
+	bzero(&times_tried, N_COUNT_MAX + 1);
+	transmission_queue_set = xQueueCreateSet(TRANSMIT_QUEUE_BUFFER_SIZE + sizeof(com_transmitpackage_t) *
+																		  (sizeof(transmission_queue) /
+																		   sizeof(*transmission_queue)));
+	for (int i = 0; i < (sizeof(transmission_queue) / sizeof(*transmission_queue)); ++i) {
+		transmission_queue[i] = xQueueCreate(TRANSMIT_QUEUE_BUFFER_SIZE, sizeof(com_transmitpackage_t));
+		if (xQueueAddToSet(transmission_queue[i], transmission_queue_set) != pdPASS)
+			ESP_LOGW(LOG_TAG, "failed to add queue[%d] to set", i);
+	}
 //    TODO priority goed zetten.
 //      Gaat zoiezo mis als je meerdere Com objecten probeerd aan temaken.
 //      Misschien kunnen we beter de hele class static maken?
-    if (xTaskCreate(transmissionQueueHandeler,
-                    "COM_transmissionQueueHandeler",
-                    (2048),
-                    this,
-                    tskIDLE_PRIORITY,
-                    &this->transmissionQueueHandeler_task) != pdPASS) {
+	if (xTaskCreate(transmissionQueueHandeler,
+					"COM_transmissionQueueHandeler",
+					(4096),
+					this,
+					20,
+					&this->transmissionQueueHandeler_task) != pdPASS) {
 //        stop when task failes
-        driver_err = getDriver()->stop();
-        if (driver_err != COM_OK)
-            ESP_LOGE(LOG_TAG, "Driver failed to stop: %d", driver_err);
+		driver_err = getDriver()->stop();
+		if (driver_err != COM_OK)
+			ESP_LOGE(LOG_TAG, "Driver failed to stop: %d", driver_err);
 //        TODO driver unsetten en destroyen.
-        return COM_ERR_TASK_FAILED;
-    }
+		return COM_ERR_TASK_FAILED;
+	}
 //    set status to running if all succeeded
 
-    transmission_queue_set = xQueueCreateSet(TRANSMIT_QUEUE_BUFFER_SIZE + sizeof(com_transmitpackage_t) *
-                                                                          (sizeof(transmission_queue) /
-                                                                           sizeof(*transmission_queue)));
-    for (int i = 0; i < (sizeof(transmission_queue) / sizeof(*transmission_queue)); ++i) {
-        transmission_queue[i] = xQueueCreate(TRANSMIT_QUEUE_BUFFER_SIZE, sizeof(com_transmitpackage_t));
-        if(xQueueAddToSet(transmission_queue[i], transmission_queue_set) != pdPASS)
-            ESP_LOGW(LOG_TAG, "failed to add queue[%d] to set", i);
-    }
-    this->set_status(COM_RUNNING);
+	this->set_status(COM_RUNNING);
 
-    return COM_OK;
+	return COM_OK;
 }
 
 com_err Com::stop() {
-    switch (get_status()) {
-        case COM_STOPPED:
-            return COM_ERR_NOT_STARTED;
-        default:
-            break;
-    }
+	switch (get_status()) {
+		case COM_STOPPED:
+			return COM_ERR_NOT_STARTED;
+		default:
+			break;
+	}
 //    stop all
-    com_err driver_err;
-    driver_err = getDriver()->stop();
-    vTaskDelete(transmissionQueueHandeler_task);
-    this->set_status(COM_STOPPED);
+	com_err driver_err;
+	driver_err = getDriver()->stop();
+	vTaskDelete(transmissionQueueHandeler_task);
+	this->set_status(COM_STOPPED);
 
-    for (int i = 0; i < (sizeof(transmission_queue) / sizeof(*transmission_queue)); ++i) {
-        xQueueReset(transmission_queue[i]);
-        if (xQueueRemoveFromSet(transmission_queue[i], transmission_queue_set) != pdPASS)
-            ESP_LOGW(LOG_TAG, "failed to remove queue[%d] from set", i);
-    }
-    if (driver_err != COM_OK)
-        return driver_err;
-    return COM_OK;
+	for (int i = 0; i < (sizeof(transmission_queue) / sizeof(*transmission_queue)); ++i) {
+		xQueueReset(transmission_queue[i]);
+		if (xQueueRemoveFromSet(transmission_queue[i], transmission_queue_set) != pdPASS)
+			ESP_LOGW(LOG_TAG, "failed to remove queue[%d] from set", i);
+	}
+	if (driver_err != COM_OK)
+		return driver_err;
+	return COM_OK;
 }
 
 com_err Com::pause() {
-    switch (get_status()) {
-        case COM_STOPPED:
-        case COM_PAUSED:
-            return COM_ERR_NOT_STARTED;
-        default:
-            break;
-    }
-    vTaskSuspend(transmissionQueueHandeler_task);
-    this->set_status(COM_PAUSED);
-    return COM_OK;
+	switch (get_status()) {
+		case COM_STOPPED:
+		case COM_PAUSED:
+			return COM_ERR_NOT_STARTED;
+		default:
+			break;
+	}
+	vTaskSuspend(transmissionQueueHandeler_task);
+	this->set_status(COM_PAUSED);
+	return COM_OK;
 }
 
 com_err Com::resume() {
-    switch (get_status()) {
-        case COM_STOPPED:
-            return COM_ERR_NOT_STARTED;
-        case COM_RUNNING:
-            return COM_ERR_NOT_PAUSED;
-        default:
-            break;
-    }
-    vTaskResume(transmissionQueueHandeler_task);
-    this->set_status(COM_RUNNING);
-    return COM_OK;
+	switch (get_status()) {
+		case COM_STOPPED:
+			return COM_ERR_NOT_STARTED;
+		case COM_RUNNING:
+			return COM_ERR_NOT_PAUSED;
+		default:
+			break;
+	}
+	vTaskResume(transmissionQueueHandeler_task);
+	this->set_status(COM_RUNNING);
+	return COM_OK;
 }
 
 com_err Com::register_channel(com_channel_t *channel) {
@@ -124,193 +134,256 @@ com_err Com::register_channel(com_channel_t *channel) {
  */
 
 //    TODO testen of deze check wel werkt.
-    if (channels.find(*channel) != channels.end())
-        return COM_ERR_CHANNEL_EXISTS;
-    if (channels.insert(*channel).second) {
-        *channel->handeler = xQueueCreate(TRANSMIT_QUEUE_BUFFER_SIZE, sizeof(com_transmitpackage_t));
-        return COM_OK;
-    } else
-        return COM_ERR_BUFFER_OVERFLOW;
+	if (channels.find(*channel) != channels.end())
+		return COM_ERR_CHANNEL_EXISTS;
+	if (channels.insert(*channel).second) {
+		*channel->handeler = xQueueCreate(TRANSMIT_QUEUE_BUFFER_SIZE, sizeof(com_transmitpackage_t));
+		return COM_OK;
+	} else
+		return COM_ERR_BUFFER_OVERFLOW;
 //    TODO handeler fixen.
 }
 
 com_err Com::unregister_channel(com_channel_t &channel) {
-    if (channels.erase(channel))
-        return COM_OK;
-    else
-        return COM_ERR_NO_CHANNEL;
+	if (channels.erase(channel))
+		return COM_OK;
+	else
+		return COM_ERR_NO_CHANNEL;
 }
 
 com_err Com::send(com_channel_t *channel, com_port_t to_port, com_data_t data, size_t data_size) {
-    if (get_status() != COM_RUNNING) return COM_ERR_NOT_STARTED;
-    if (channels.find(*channel) == channels.end()) {
-        return COM_ERR_NO_CHANNEL;
-    }
-    //        datasize length
-    size_t ds_l;
-    //        datasize pointer
-    size_t ds_p = 0;
+	if (get_status() != COM_RUNNING) return COM_ERR_NOT_STARTED;
+	if (channels.find(*channel) == channels.end()) {
+		return COM_ERR_NO_CHANNEL;
+	}
+	//        datasize length
+	size_t ds_l;
+	//        datasize pointer
+	size_t ds_p = 0;
 
-    com_transmitpackage_t tp;
-    tp.to_port = to_port;
-    tp.from_port = channel->port;
+	com_transmitpackage_t tp;
+	tp.to_port = to_port;
+	tp.from_port = channel->port;
+	tp.priority = channel->priority;
+	tp.n = 0;
 
-    if (channel->priority >= sizeof(transmission_queue) / sizeof(*transmission_queue) ||
-        channel->priority < 0)
-        return COM_ERR_INVALID_PARAMETERS;
+	if (channel->priority >= sizeof(transmission_queue) / sizeof(*transmission_queue) ||
+		channel->priority < 0)
+		return COM_ERR_INVALID_PARAMETERS;
 
 //    loop until all data in send
-    while (data_size > 0) {
-        ds_l = (data_size >= COM_DATA_SIZE) ? COM_DATA_SIZE : data_size;
+	while (data_size > 0) {
+		ds_l = (data_size >= COM_DATA_SIZE) ? COM_DATA_SIZE : data_size;
 
-        memcpy(tp.data, &data[ds_p], ds_l);
-        tp.data_lenght = ds_l;
+		memcpy(tp.data, &data[ds_p], ds_l);
+		tp.data_lenght = ds_l;
 
-        ds_p += ds_l;
-        data_size -= ds_l;
+		ds_p += ds_l;
+		data_size -= ds_l;
 
-        if (xQueueSend(transmission_queue[channel->priority], &tp, 0) != pdPASS)
-            return COM_ERR_BUFFER_OVERFLOW;
+		if (xQueueSend(transmission_queue[channel->priority], &tp, 0) != pdPASS)
+			return COM_ERR_BUFFER_OVERFLOW;
 
 //        clear any left over data
-        bzero(tp.data, tp.data_lenght);
-    }
-    return COM_OK;
+		bzero(tp.data, tp.data_lenght);
+	}
+	return COM_OK;
 }
 
 bool Com::is_connected() {
-    return this->getDriver()->isEndpointConnected();
+	return this->getDriver()->isEndpointConnected();
 }
 
 com_status Com::get_status() {
-    return this->status;
+	return this->status;
 }
 
 void Com::set_status(com_status status) {
-    this->status = status;
+	this->status = status;
 }
 
 com_link_t Com::get_link_type() {
-    return this->getDriver()->getLinkType();
+	return this->getDriver()->getLinkType();
 }
 
 void Com::getName(char *buffer) {
-    this->getDriver()->getName(buffer);
+	this->getDriver()->getName(buffer);
 }
 
 char *Com::getName() {
-    return this->getDriver()->getName();
+	return this->getDriver()->getName();
 }
 
 com_err Com::get_channels(char *buffer) {
 // TODO
-    return COM_OK;
+	return COM_OK;
 }
 
 unsigned int Com::get_speed() {
-    return this->getDriver()->getSpeed();
+	return this->getDriver()->getSpeed();
 }
 
 ComDriver *Com::getDriver() {
-    return this->driver;
+	return this->driver;
 }
 
 void Com::setDriver(ComDriver &driver) {
-    this->driver = &driver;
+	this->driver = &driver;
 }
 
 std::tuple<ComDriver *, com_err> Com::pickDriver() {
 //    bestpick initalisren omdat hij anders een lege terug kan geven.
-    ComDriver *bestPick = nullptr;
-    unsigned int bestPickScore = 0;
-    unsigned int s = 0;
-    if (driverCandidates.empty())
-        return std::make_tuple(bestPick, COM_ERR_NO_DRIVER);
-    for (auto driverCandidate : driverCandidates) {
-        s = rateDriver(*driverCandidate);
-        if (s > bestPickScore) {
-            bestPick = driverCandidate;
-            bestPickScore = s;
-        }
+	ComDriver *bestPick = nullptr;
+	unsigned int bestPickScore = 0;
+	unsigned int s = 0;
+	if (driverCandidates.empty())
+		return std::make_tuple(bestPick, COM_ERR_NO_DRIVER);
+	for (auto driverCandidate : driverCandidates) {
+		s = rateDriver(*driverCandidate);
+		if (s > bestPickScore) {
+			bestPick = driverCandidate;
+			bestPickScore = s;
+		}
 //        TODO drivers die het niet zijn geworden moeten worden gedeleted.
-    }
-    return std::make_tuple(bestPick, COM_OK);
+	}
+	return std::make_tuple(bestPick, COM_OK);
 }
 
 unsigned int Com::rateDriver(ComDriver &driver) {
-    unsigned int score = 0;
-    com_err drivstrt = driver.start();
-    if (drivstrt != COM_OK) {
-        ESP_LOGW(LOG_TAG, "driver:%s, failed to start: %d", driver.getName(), drivstrt);
-        return score;
-    }
-    if (!driver.isHardwareConnected())
-        return score;
-    else
-        score += 10;
-    if (!driver.isEndpointConnected())
-        return score;
-    else
-        score += 15;
+	unsigned int score = 0;
+	com_err drivstrt = driver.start();
+	if (drivstrt != COM_OK) {
+		ESP_LOGW(LOG_TAG, "driver:%s, failed to start: %d", driver.getName(), drivstrt);
+		return score;
+	}
+	if (!driver.isHardwareConnected())
+		return score;
+	else
+		score += 10;
+	if (!driver.isEndpointConnected())
+		return score;
+	else
+		score += 15;
 
-    switch (driver.getLinkType()) {
-        case COM_WIRED:
-            score *= 3;
-            break;
-        case COM_RADIO:
-            score *= 2;
-            break;
-        case COM_NONE:
+	switch (driver.getLinkType()) {
+		case COM_WIRED:
+			score *= 3;
+			break;
+		case COM_RADIO:
+			score *= 2;
+			break;
+		case COM_NONE:
 //            TODO is COM_NONE even posible?
-            return score;
-    }
-    score *= (int) driver.getSpeed() / 100;
+			return score;
+	}
+	score *= (int) driver.getSpeed() / 100;
 
-    if (driver.isRealTime())
-        score *= 6;
+	if (driver.isRealTime())
+		score *= 6;
 
-    com_err drivstp = driver.stop();
-    if (drivstp != COM_OK) {
-        ESP_LOGW(LOG_TAG, "driver: %s, failed to stop: %d", driver.getName(), drivstp);
-        return score / 1000;
-    }
-    return score;
+	com_err drivstp = driver.stop();
+	if (drivstp != COM_OK) {
+		ESP_LOGW(LOG_TAG, "driver: %s, failed to stop: %d", driver.getName(), drivstp);
+		return score / 1000;
+	}
+	return score;
 }
 
 void Com::transmissionQueueHandeler() {
-    int schedularCount = 0;
-    QueueSetMemberHandle_t xActivatedMember;
-    com_transmitpackage_t transpack;
-    com_err transmit_msg = COM_FAIL;
-    while (1) {
-        xActivatedMember = xQueueSelectFromSet(transmission_queue_set, (portTickType) portMAX_DELAY);
-        if (xActivatedMember == transmission_queue[0]) {
-            xQueueReceive(transmission_queue[0], &transpack, 0);
-            transmit_msg = this->getDriver()->transmit(transpack, 0);
-        } else {
-            if (schedularCount < 2 && xActivatedMember == transmission_queue[1]) {
-                xQueueReceive(transmission_queue[1], &transpack, 0);
-                transmit_msg = this->getDriver()->transmit(transpack, 1);
+	int schedularCount = 0;
+	QueueSetMemberHandle_t xActivatedMember;
+	com_transmitpackage_t transpack;
+	com_err transmit_msg = COM_FAIL;
+	bool resend = false;
+	while (1) {
+		xActivatedMember = xQueueSelectFromSet(transmission_queue_set, (portTickType) portMAX_DELAY);
+		if (xActivatedMember == transmission_queue[0]) {
+			xQueueReceive(transmission_queue[0], &transpack, 0);
+			resend = transpack.n != 0;
+			if (!resend) {
+				transpack.n = n_count;
+			}
+//			TODO taskdelay must be replaced by something like xmessageReceive
+			while (times_tried[n_count] > 0)
+				vTaskDelay(ACK_TIMEOUT);
+			transmit_msg = this->getDriver()->transmit(transpack, 0);
 
-                schedularCount++;
-            } else if (xActivatedMember == transmission_queue[2]) {
-                xQueueReceive(transmission_queue[2], &transpack, 0);
-                transmit_msg = this->getDriver()->transmit(transpack, 2);
+			if (!resend) {
+				com_ack_handel_t p = {
+						this,
+						transpack
+				};
 
-                schedularCount = 0;
-            }
-        }
-        if (transmit_msg != COM_OK) {
-            ESP_LOGW(LOG_TAG, "transmit of:%d, to:%d, failed: %d", transpack.from_port, transpack.to_port,
-                     transmit_msg);
-            ESP_LOG_BUFFER_HEXDUMP(LOG_TAG, transpack.data, sizeof(transpack.data), ESP_LOG_WARN);
-        }
-    }
+//			TODO set priority streigth
+//			TODO dynamic name with N
+
+				xTaskCreate(_acknowledge_handler_task, "ack_handler_", 2024, (void *) &p, 15, &ack_tasks[transpack.n]);
+				n_count = n_count >= N_COUNT_MAX ? 1 : n_count + 1;
+			}
+		} else {
+			if (schedularCount < 2 && xActivatedMember == transmission_queue[1]) {
+				xQueueReceive(transmission_queue[1], &transpack, 0);
+				transmit_msg = this->getDriver()->transmit(transpack, 1);
+
+				schedularCount++;
+			} else if (xActivatedMember == transmission_queue[2]) {
+				xQueueReceive(transmission_queue[2], &transpack, 0);
+				transmit_msg = this->getDriver()->transmit(transpack, 2);
+
+				schedularCount = 0;
+			}
+		}
+		if (transmit_msg != COM_OK) {
+			ESP_LOGW(LOG_TAG, "transmit of:%d, to:%d, failed: %d", transpack.from_port, transpack.to_port,
+					 transmit_msg);
+			ESP_LOG_BUFFER_HEXDUMP(LOG_TAG, transpack.data, sizeof(transpack.data), ESP_LOG_WARN);
+		}
+		resend = false;
+	}
+	vTaskDelete(NULL);
+}
+
+void Com::acknowledge_handler_task(com_transmitpackage_t transmitpackage_to_watch) {
+
+	times_tried[transmitpackage_to_watch.n] = 1;
+	while (1) {
+
+		if (ulTaskNotifyTake(pdTRUE, (portTickType) ACK_TIMEOUT)) {
+//			TODO check if correct ack is already in queue, before resending.
+			break;
+		}
+
+
+		if (times_tried[transmitpackage_to_watch.n] >= MAX_TRIES) {
+			ESP_LOGE(LOG_TAG, "ack[%d] permanently failed. From: %d to: %d", transmitpackage_to_watch.n,
+					 transmitpackage_to_watch.from_port, transmitpackage_to_watch.to_port);
+			ESP_LOG_BUFFER_HEXDUMP(LOG_TAG, transmitpackage_to_watch.data, transmitpackage_to_watch.data_lenght,
+								   ESP_LOG_VERBOSE);
+			break;
+		} else {
+			ESP_LOGV("COM", "ack[%d] timeout %d. From: %d to: %d", transmitpackage_to_watch.n,
+					 times_tried[transmitpackage_to_watch.n], transmitpackage_to_watch.from_port,
+					 transmitpackage_to_watch.to_port);
+			xQueueSend(transmission_queue[transmitpackage_to_watch.priority], &transmitpackage_to_watch, 0);
+			times_tried[transmitpackage_to_watch.n]++;
+		}
+	}
+
+	times_tried[transmitpackage_to_watch.n] = 0;
+	vTaskDelete(NULL);
+	return;
+}
+
+
+void Com::_acknowledge_handler_task(void *handle) {
+//    static overload to enable RTOS task of an object
+	com_ack_handel_t *ack = (com_ack_handel_t *) handle;
+	static_cast<Com *>(ack->_this)->acknowledge_handler_task(ack->transmitpackage);
 }
 
 void Com::transmissionQueueHandeler(void *_this) {
 //    static overload to enable RTOS task of an object
-    static_cast<Com *>(_this)->transmissionQueueHandeler();
+	static_cast<Com *>(_this)->transmissionQueueHandeler();
 }
 
 
@@ -321,71 +394,76 @@ com_err Com::incoming_connection(com_transmitpackage_t package) {
  *    Als we het meteen kunnen opzoeken door ook nog een set te maken (of hashing table) van de namen
  *    scheelt dat ons heel veel tijd want dan is het O(1)!
  */
-    if (get_status() != COM_RUNNING) return COM_ERR_NOT_STARTED;
-    ESP_LOGV(LOG_TAG, "incoming connection");
-
-    for (const auto &channel : channels) {
-        if (channel.port == package.to_port) {
-            xQueueSend(*channel.handeler, &package, 1000);
-            return COM_OK;
-        }
-    }
-    return COM_ERR_NO_CHANNEL;
+	if (get_status() != COM_RUNNING) return COM_ERR_NOT_STARTED;
+	ESP_LOGV(LOG_TAG, "incoming connection");
+	if (package.size == 2) {
+//		ack
+		xTaskNotifyGive(ack_tasks[package.n]);
+		return COM_OK;
+	}
+//	send ack. TODO
+	for (const auto &channel : channels) {
+		if (channel.port == package.to_port) {
+			xQueueSend(*channel.handeler, &package, 0);
+			return COM_OK;
+		}
+	}
+	return COM_ERR_NO_CHANNEL;
 
 }
 
 com_err Com::register_candidate_driver(ComDriver *driver) {
 //    comdriver moet eigenlijk een referentie zijn en niet een levend object.
 
-    ESP_LOGD(LOG_TAG, "registering driver: %s", driver->getName());
-    if (driverCandidates.find(driver) != driverCandidates.end()) {
-        return COM_ERR_DRIVER_EXISTS;
-    }
-    if (!driverCandidates.insert(driver).second)
-        return COM_ERR_BUFFER_OVERFLOW;
+	ESP_LOGD(LOG_TAG, "registering driver: %s", driver->getName());
+	if (driverCandidates.find(driver) != driverCandidates.end()) {
+		return COM_ERR_DRIVER_EXISTS;
+	}
+	if (!driverCandidates.insert(driver).second)
+		return COM_ERR_BUFFER_OVERFLOW;
 //    select new driver if com is running
-    if (get_status() == COM_RUNNING) {
+	if (get_status() == COM_RUNNING) {
 //        TODO its better to rate this new driver and compare its score to the current driver.
-        selectDriverTask();
-    }
-    return COM_OK;
+		selectDriverTask();
+	}
+	return COM_OK;
 }
 
 
 com_err Com::unregister_candidate_driver(ComDriver *driver) {
-    if (driverCandidates.erase(driver)) {
+	if (driverCandidates.erase(driver)) {
 //        if we delete our own driver, search for a new one
-        if (this->driver == driver)
-            selectDriverTask();
-        return COM_OK;
-    } else
-        return COM_ERR_NO_DRIVER;
+		if (this->driver == driver)
+			selectDriverTask();
+		return COM_OK;
+	} else
+		return COM_ERR_NO_DRIVER;
 }
 
 void Com::_selectDriverTask() {
-    auto dr = pickDriver();
-    if (std::get<1>(dr) == COM_OK) {
-        setDriver(*std::get<0>(dr));
-    } else {
-        ESP_LOGE(LOG_TAG, "Failed to pick new driver: %d", std::get<1>(dr));
-        COM.stop();
-    }
+	auto dr = pickDriver();
+	if (std::get<1>(dr) == COM_OK) {
+		setDriver(*std::get<0>(dr));
+	} else {
+		ESP_LOGE(LOG_TAG, "Failed to pick new driver: %d", std::get<1>(dr));
+		COM.stop();
+	}
 
-    vTaskDelete(NULL);
+	vTaskDelete(NULL);
 }
 
 void Com::_selectDriverTask(void *_this) {
 //    static overload, for RTOS to work,
-    static_cast<Com *>(_this)->_selectDriverTask();
+	static_cast<Com *>(_this)->_selectDriverTask();
 
 }
 
 void Com::selectDriverTask() {
 //    TODO priority hoger zetten en misschien nog een timeout ofzo toevoegen.
-    xTaskCreate(_selectDriverTask,
-                "COM_selectDriverTask",
-                configMINIMAL_STACK_SIZE,
-                this,
-                tskIDLE_PRIORITY,
-                NULL);
+	xTaskCreate(_selectDriverTask,
+				"COM_selectDriverTask",
+				configMINIMAL_STACK_SIZE,
+				this,
+				tskIDLE_PRIORITY,
+				NULL);
 }
