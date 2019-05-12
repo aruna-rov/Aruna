@@ -13,21 +13,21 @@ public:
     /**
      * @brief  directly transmit a package on the link.
      * @param  package: package to be send
+     * @param  package_size: size of the package
      * @retval  `COM_OK` if all went well.
      *          `COM_ERR_HARDWARE` if the hardware failes
      */
-    virtual com_err transmit(com_transmitpackage_t package) = 0;
-//    TODO use com_bin as transmit parameter
-
+    virtual com_err transmit(uint8_t *package, uint8_t package_size) = 0;
     /**
      * @brief  directly transmit a package on the link.
      * @param  package: package to be send
+     * @param  package_size: size of the package
      * @param  priority: (0 hightest to 2 lowest) only supported if link is realtime.
      * @retval  `COM_OK` if all went well.
      *          `COM_ERR_HARDWARE` if the hardware failes
      */
-    virtual com_err transmit(com_transmitpackage_t package, unsigned short priority) {
-        return transmit(package);
+    virtual com_err transmit(uint8_t *package, uint8_t package_size, unsigned short priority) {
+        return transmit(package, package_size);
     };
 
     /**

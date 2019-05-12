@@ -11,7 +11,7 @@
 
 class UART: public ComDriver {
 
-    com_err transmit(com_transmitpackage_t package) override;
+    com_err transmit(uint8_t *package, uint8_t package_size) override;
     char* getName() override;
     unsigned int getSpeed() override;
     com_link_t getLinkType() override;

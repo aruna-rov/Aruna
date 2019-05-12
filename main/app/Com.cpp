@@ -9,14 +9,6 @@ Com::Com() {
 }
 
 
-static constexpr uint8_t N_COUNT_MAX = 255;
-//QueueHandle_t uacked[N_COUNT_MAX];
-TaskHandle_t ack_tasks[N_COUNT_MAX];
-constexpr portTickType ACK_TIMEOUT = 500 / portTICK_PERIOD_MS;
-uint8_t times_tried[N_COUNT_MAX + 1];
-
-constexpr uint8_t MAX_TRIES = 3;
-uint8_t n_count = 1;
 
 com_err Com::start() {
 //    pick a driver
@@ -57,12 +49,14 @@ com_err Com::start(ComDriver *driver) {
 //    TODO priority goed zetten.
 //      Gaat zoiezo mis als je meerdere Com objecten probeerd aan temaken.
 //      Misschien kunnen we beter de hele class static maken?
-	if (xTaskCreate(transmissionQueueHandeler,
+	if (xTaskCreatePinnedToCore(transmissionQueueHandeler,
 					"COM_transmissionQueueHandeler",
 					(4096),
 					this,
 					20,
-					&this->transmissionQueueHandeler_task) != pdPASS) {
+					&this->transmissionQueueHandeler_task,
+					TRANSMISSION_CORE
+					) != pdPASS) {
 //        stop when task failes
 		driver_err = getDriver()->stop();
 		if (driver_err != COM_OK)
@@ -151,7 +145,7 @@ com_err Com::unregister_channel(com_channel_t &channel) {
 		return COM_ERR_NO_CHANNEL;
 }
 
-com_err Com::send(com_channel_t *channel, com_port_t to_port, com_data_t data, size_t data_size) {
+com_err Com::send(com_channel_t *channel, com_port_t to_port, uint8_t *data, size_t data_size) {
 	if (get_status() != COM_RUNNING) return COM_ERR_NOT_STARTED;
 	if (channels.find(*channel) == channels.end()) {
 		return COM_ERR_NO_CHANNEL;
@@ -173,10 +167,11 @@ com_err Com::send(com_channel_t *channel, com_port_t to_port, com_data_t data, s
 
 //    loop until all data in send
 	while (data_size > 0) {
-		ds_l = (data_size >= COM_DATA_SIZE) ? COM_DATA_SIZE : data_size;
+		ds_l = (data_size >= COM_MAX_DATA_SIZE) ? COM_MAX_DATA_SIZE : data_size;
 
 		memcpy(tp.data, &data[ds_p], ds_l);
 		tp.data_lenght = ds_l;
+		tp.size = ds_l + com_transmitpackage_t::HEADER_SIZE;
 
 		ds_p += ds_l;
 		data_size -= ds_l;
@@ -290,55 +285,37 @@ unsigned int Com::rateDriver(ComDriver &driver) {
 }
 
 void Com::transmissionQueueHandeler() {
-	int schedularCount = 0;
+//	int schedularCount = 0;
 	QueueSetMemberHandle_t xActivatedMember;
 	com_transmitpackage_t transpack;
 	com_err transmit_msg = COM_FAIL;
-	bool resend = false;
+
 	while (1) {
 		xActivatedMember = xQueueSelectFromSet(transmission_queue_set, (portTickType) portMAX_DELAY);
 		if (xActivatedMember == transmission_queue[0]) {
 			xQueueReceive(transmission_queue[0], &transpack, 0);
-			resend = transpack.n != 0;
-			if (!resend) {
-				transpack.n = n_count;
-			}
-//			TODO taskdelay must be replaced by something like xmessageReceive
-			while (times_tried[n_count] > 0)
-				vTaskDelay(ACK_TIMEOUT);
-			transmit_msg = this->getDriver()->transmit(transpack, 0);
-
-			if (!resend) {
-				com_ack_handel_t p = {
-						this,
-						transpack
-				};
-
-//			TODO set priority streigth
-//			TODO dynamic name with N
-
-				xTaskCreate(_acknowledge_handler_task, "ack_handler_", 2024, (void *) &p, 15, &ack_tasks[transpack.n]);
-				n_count = n_count >= N_COUNT_MAX ? 1 : n_count + 1;
-			}
+			transmit_msg = transmit(transpack);
 		} else {
-			if (schedularCount < 2 && xActivatedMember == transmission_queue[1]) {
-				xQueueReceive(transmission_queue[1], &transpack, 0);
-				transmit_msg = this->getDriver()->transmit(transpack, 1);
+				if (
+//						TODO fix schedular
+//						schedularCount < 2 &&
+				xActivatedMember == transmission_queue[1]) {
+					xQueueReceive(transmission_queue[1], &transpack, 0);
+					transmit_msg = transmit(transpack);
 
-				schedularCount++;
-			} else if (xActivatedMember == transmission_queue[2]) {
-				xQueueReceive(transmission_queue[2], &transpack, 0);
-				transmit_msg = this->getDriver()->transmit(transpack, 2);
+//					schedularCount++;
+				} else if (xActivatedMember == transmission_queue[2]) {
+					xQueueReceive(transmission_queue[2], &transpack, 0);
+					transmit_msg = transmit(transpack);
 
-				schedularCount = 0;
-			}
+//					schedularCount = 0;
+				}
 		}
 		if (transmit_msg != COM_OK) {
-			ESP_LOGW(LOG_TAG, "transmit of:%d, to:%d, failed: %d", transpack.from_port, transpack.to_port,
+			ESP_LOGW(LOG_TAG, "transmit of: %d, to: %d, failed: 0x%X", transpack.from_port, transpack.to_port,
 					 transmit_msg);
 			ESP_LOG_BUFFER_HEXDUMP(LOG_TAG, transpack.data, sizeof(transpack.data), ESP_LOG_WARN);
 		}
-		resend = false;
 	}
 	vTaskDelete(NULL);
 }
@@ -349,7 +326,6 @@ void Com::acknowledge_handler_task(com_transmitpackage_t transmitpackage_to_watc
 	while (1) {
 
 		if (ulTaskNotifyTake(pdTRUE, (portTickType) ACK_TIMEOUT)) {
-//			TODO check if correct ack is already in queue, before resending.
 			break;
 		}
 
@@ -370,6 +346,8 @@ void Com::acknowledge_handler_task(com_transmitpackage_t transmitpackage_to_watc
 	}
 
 	times_tried[transmitpackage_to_watch.n] = 0;
+//	notify queue handeler that we are done.
+	xTaskNotify(transmissionQueueHandeler_task, transmitpackage_to_watch.n, eSetValueWithOverwrite);
 	vTaskDelete(NULL);
 	return;
 }
@@ -387,24 +365,34 @@ void Com::transmissionQueueHandeler(void *_this) {
 }
 
 
-com_err Com::incoming_connection(com_transmitpackage_t package) {
-// TODO use com_bin_t as parameter instead if com_transmitpackage
+com_err Com::incoming_connection(uint8_t *package, uint8_t package_size) {
 /*
  *    TODO O(N) is eigenlijk te langzaam.
  *    Als we het meteen kunnen opzoeken door ook nog een set te maken (of hashing table) van de namen
  *    scheelt dat ons heel veel tijd want dan is het O(1)!
  */
+	uint8_t ack[2] = {0x02};
+	com_transmitpackage_t tp;
 	if (get_status() != COM_RUNNING) return COM_ERR_NOT_STARTED;
 	ESP_LOGV(LOG_TAG, "incoming connection");
-	if (package.size == 2) {
-//		ack
-		xTaskNotifyGive(ack_tasks[package.n]);
+	if (package[0] == 2 && package_size == 2) {
+//		recieved ack
+		if(times_tried[package[1]] > 0)
+			xTaskNotifyGive(ack_tasks[package[1]]);
 		return COM_OK;
 	}
-//	send ack. TODO
+
+	if (!com_transmitpackage_t::binary_to_transmitpackage(package, tp))
+		return COM_ERR_INVALID_PARAMETERS;
+	if(package[1] > 0) {
+//		send ack
+		ack[1] = package[1];
+
+		this->getDriver()->transmit(ack, 2);
+	}
 	for (const auto &channel : channels) {
-		if (channel.port == package.to_port) {
-			xQueueSend(*channel.handeler, &package, 0);
+		if (channel.port == tp.to_port) {
+			xQueueSend(*channel.handeler, &tp, 0);
 			return COM_OK;
 		}
 	}
@@ -466,4 +454,42 @@ void Com::selectDriverTask() {
 				this,
 				tskIDLE_PRIORITY,
 				NULL);
+}
+
+com_err Com::transmit(com_transmitpackage_t transmitpackage) {
+	com_err return_msg;
+//	TODO use malloc for data size
+	uint8_t data[N_COUNT_MAX];
+	char task_name_buf[15];
+	bool resend = false;
+	resend = transmitpackage.n != 0;
+	com_transmitpackage_t::transmitpackage_to_binary(transmitpackage, data);
+	if (!resend && transmitpackage.priority < 2) {
+//	get N count if message has high priority and is not already set.
+		transmitpackage.n = n_count;
+//		if N count package from the prev loop is still in transit
+		if (times_tried[n_count] > 0) {
+//			wait for it to be done, before sending
+			if (ulTaskNotifyTake(pdTRUE, ACK_TIMEOUT * MAX_TRIES) != n_count) {
+//					TODO set timer to allow for ack from other N pack in between instead of force quiting
+				vTaskDelete(ack_tasks[n_count]);
+				times_tried[n_count] = 0;
+			}
+		}
+	}
+
+	return_msg = this->getDriver()->transmit(data, transmitpackage.size, transmitpackage.priority);
+//	start ack task if there is not already one and priority is high
+	if (!resend && transmitpackage.priority < 2) {
+		com_ack_handel_t p = {
+				this,
+				transmitpackage
+		};
+
+		sprintf(task_name_buf, "ack_handler_%d", transmitpackage.n);
+//			TODO set correct priority
+		xTaskCreate(_acknowledge_handler_task, task_name_buf, 2024, (void *) &p, 15, &ack_tasks[transmitpackage.n]);
+		n_count = n_count >= N_COUNT_MAX ? 1 : n_count + 1;
+	}
+	return return_msg;
 }
