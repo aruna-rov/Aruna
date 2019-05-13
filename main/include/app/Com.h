@@ -61,7 +61,7 @@ typedef uint8_t com_port_t;
 
 // com data size minus the header
 // TODO increasing this causes an overflow
-static const size_t COM_MAX_DATA_SIZE = 200;
+static constexpr size_t COM_MAX_DATA_SIZE = 150;
 
 /**
  * transmit ready package.
@@ -96,6 +96,17 @@ struct com_transmitpackage_t {
 	 * total size of package (+ the size of the size variable)
 	 */
 	uint8_t size;
+
+	/**
+	 * Task that is sending the message
+	 */
+	TaskHandle_t sending_task;
+
+	/**
+	 * notify the task on ack/no ack
+	 */
+	bool notify_on_ack = false;
+
 
 	/**
 	 * Get binary array of transmitpackage, for sending over a link.
@@ -252,15 +263,22 @@ public:
 	/**
 	 * @brief  Send data.
 	 * @note
-	 * @param  data: com_datapackage_t to be placed in the queue.
+	 * @param channel: channel handler that is sending the data
+	 * @param to_port: to which port to send de data to.
+	 * @param  data: Data to send.
+	 * @param data_size: length of the data
+	 * @param wait_for_ack: if set to thrue, thread will block until ack is received or until timeout is reached
 	 * @retval com_err
 	 *  * `COM_ERR_INVALID_PARAMETERS` if parameters are invalid
 	 *  * `COM_OK` if it was succesfully send.
-	 *  * `COM_ERR_NO_CONNECTION` if there is no connection, (not implimented)
+	 *  * `COM_ERR_NO_CONNECTION` if there is no connection,
 	 *  * `COM_ERR_BUFFER_OVERFLOW` if the data was not added to the bugger due an overflow,
 	 *  * `COM_ERR_NO_CHANNEL` if the channel does'nt exist.
+	 *  * `COM_ERR_NO_RESPONSE` if there was no response (only if `wait_for_ack` is true)
 	 */
-	com_err send(com_channel_t *channel, com_port_t to_port, uint8_t *data, size_t data_size);
+//	 TODO documentation
+	com_err
+	send(com_channel_t *channel, com_port_t to_port, uint8_t *data, size_t data_size, bool wait_for_ack = false);
 
 	/**
 	 * pause all communication. buffers, channels and queue's will be saved

@@ -145,11 +145,14 @@ com_err Com::unregister_channel(com_channel_t &channel) {
 		return COM_ERR_NO_CHANNEL;
 }
 
-com_err Com::send(com_channel_t *channel, com_port_t to_port, uint8_t *data, size_t data_size) {
+com_err
+Com::send(com_channel_t *channel, com_port_t to_port, uint8_t *data, size_t data_size, bool wait_for_ack) {
 	if (get_status() != COM_RUNNING) return COM_ERR_NOT_STARTED;
 	if (channels.find(*channel) == channels.end()) {
 		return COM_ERR_NO_CHANNEL;
 	}
+//	how many packages are we waiting for?
+	uint8_t n_to_wait_for = 0;
 	//        datasize length
 	size_t ds_l;
 	//        datasize pointer
@@ -160,10 +163,15 @@ com_err Com::send(com_channel_t *channel, com_port_t to_port, uint8_t *data, siz
 	tp.from_port = channel->port;
 	tp.priority = channel->priority;
 	tp.n = 0;
+	tp.sending_task = xTaskGetCurrentTaskHandle();
+	tp.notify_on_ack = wait_for_ack;
 
 	if (channel->priority >= sizeof(transmission_queue) / sizeof(*transmission_queue) ||
 		channel->priority < 0)
 		return COM_ERR_INVALID_PARAMETERS;
+
+	if (!getDriver()->isEndpointConnected())
+		return COM_ERR_NO_CONNECTION;
 
 //    loop until all data in send
 	while (data_size > 0) {
@@ -176,11 +184,21 @@ com_err Com::send(com_channel_t *channel, com_port_t to_port, uint8_t *data, siz
 		ds_p += ds_l;
 		data_size -= ds_l;
 
+		n_to_wait_for++;
 		if (xQueueSend(transmission_queue[channel->priority], &tp, 0) != pdPASS)
 			return COM_ERR_BUFFER_OVERFLOW;
 
 //        clear any left over data
 		bzero(tp.data, tp.data_lenght);
+	}
+	if(wait_for_ack) {
+		while(n_to_wait_for > 0) {
+			if (ulTaskNotifyTake(pdTRUE, ACK_TIMEOUT * MAX_TRIES ))
+				n_to_wait_for--;
+			else
+				return COM_ERR_NO_RESPONSE;
+		}
+
 	}
 	return COM_OK;
 }
@@ -321,11 +339,12 @@ void Com::transmissionQueueHandeler() {
 }
 
 void Com::acknowledge_handler_task(com_transmitpackage_t transmitpackage_to_watch) {
-
+	bool success = false;
 	times_tried[transmitpackage_to_watch.n] = 1;
 	while (1) {
 
 		if (ulTaskNotifyTake(pdTRUE, (portTickType) ACK_TIMEOUT)) {
+			success = true;
 			break;
 		}
 
@@ -346,6 +365,8 @@ void Com::acknowledge_handler_task(com_transmitpackage_t transmitpackage_to_watc
 	}
 
 	times_tried[transmitpackage_to_watch.n] = 0;
+	if(success && transmitpackage_to_watch.notify_on_ack)
+		xTaskNotifyGive(transmitpackage_to_watch.sending_task);
 //	notify queue handeler that we are done.
 	xTaskNotify(transmissionQueueHandeler_task, transmitpackage_to_watch.n, eSetValueWithOverwrite);
 	vTaskDelete(NULL);
