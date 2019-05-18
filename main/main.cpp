@@ -26,12 +26,12 @@ void com_test_task(void * arg) {
     };
     //    TODO register channel needs redesign, all endpoint data as paramter. handeler should be used.
     ESP_LOGI("com_test_task", "register: %d", COM.register_channel(&testapp));
-    ESP_LOGI("com_test_task", "send: %X", COM.send(&testapp, 0xDE, (uint8_t *) "My man!\n", 8, true));
     ESP_LOGI("com_test_task", "send: %X", COM.send(&testapp, 0xAA, (uint8_t *) "precies 32 bytes aan data size!\n", 32,
-												   true));
+												   0));
     ESP_LOGI("com_test_task", "send: %X", COM.send(&testapp, 0xAE,
 												   (uint8_t *) "een overflow van data! ohh nee, wat gebeurt er nu?\n",
-												   51, 0));
+												   51, true));
+	ESP_LOGI("com_test_task", "send: %X", COM.send(&testapp, 0xDE, (uint8_t *) "My man!\n", 8, true));
 
     while (1) {
         if (xQueueReceive(handler,(void *) &d, (portTickType) portMAX_DELAY)) {

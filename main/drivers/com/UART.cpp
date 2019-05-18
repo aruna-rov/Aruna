@@ -78,8 +78,7 @@ com_err UART::start() {
     }
 //    task to handle incomming messages.
     if (uart_rx_handle == nullptr)
-		xTaskCreatePinnedToCore(UART::handle_rx_task, "handle_rx_uart", 2048, NULL, 12, &uart_rx_handle, Com::TRANSMISSION_CORE);
-//		xTaskCreate(UART::handle_rx_task, "handle_rx_uart", 2048, NULL, 12, &uart_rx_handle);
+		xTaskCreate(UART::handle_rx_task, "handle_rx_uart", 2048, NULL, 12, &uart_rx_handle);
     return COM_OK;
 }
 

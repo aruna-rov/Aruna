@@ -78,14 +78,20 @@ struct com_transmitpackage_t {
 	*/
 	com_port_t to_port;
 
+	/*
+	 * Number of the package (used for ack.)
+	 */
 	uint8_t n;
+
+	/*
+	 * Priority of the package
+	 */
 	uint8_t priority;
 
 	/**
 	 * @brief  Data to be transmitted.
 	 */
-//     TODO moet eigenlijk malloc gebruiken anders kan je nu in iemand anders z'n ram schrijven als je lenght groter dan COM_MAX_DATA_SIZE
-	uint8_t data[COM_MAX_DATA_SIZE];
+	uint8_t *data;
 
 	/**
 	 * size of the data
@@ -107,6 +113,11 @@ struct com_transmitpackage_t {
 	 */
 	bool notify_on_ack = false;
 
+	/**
+	 * is the package being resend?
+	 */
+	bool resend = false;
+
 
 	/**
 	 * Get binary array of transmitpackage, for sending over a link.
@@ -116,20 +127,25 @@ struct com_transmitpackage_t {
 	 */
 	static void transmitpackage_to_binary(com_transmitpackage_t transp, uint8_t *bin) {
 
+//		bit 0: size
 		memcpy(&bin[0],
 				&transp.size,
 				(sizeof(transp.size)));
+//		bit 1: N
 		memcpy(&bin[sizeof(transp.size)],
 				&transp.n,
 				(sizeof(transp.n)));
+//		bit 2: from port
 		memcpy(&bin[sizeof(transp.size) + sizeof(transp.n)],
 				&transp.from_port,
 				(sizeof(transp.from_port)));
+//		bit 3: to port
 		memcpy(&bin[sizeof(transp.size) + sizeof(transp.n) + sizeof(transp.from_port)],
 				&transp.to_port,
 				sizeof(transp.to_port));
+//		bit 4: data
 		memcpy(&bin[sizeof(transp.size) + sizeof(transp.n) + sizeof(transp.from_port) + sizeof(transp.to_port)],
-			   &transp.data,
+			   transp.data,
 			   transp.data_lenght);
 	}
 
@@ -190,7 +206,7 @@ struct com_channel_t {
 
 struct com_ack_handel_t {
 	void *_this;
-	com_transmitpackage_t transmitpackage;
+	com_transmitpackage_t *transmitpackage;
 };
 
 #include "drivers/com/ComDriver.h"
@@ -397,7 +413,7 @@ private:
 
 	static constexpr char *LOG_TAG = (char *) "COM";
 	TaskHandle_t ack_tasks[N_COUNT_MAX];
-
+	com_transmitpackage_t watched_packages[N_COUNT_MAX];
 	uint8_t times_tried[N_COUNT_MAX + 1];
 	uint8_t n_count = 1;
 
