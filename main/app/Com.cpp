@@ -179,7 +179,7 @@ Com::send(com_channel_t *channel, com_port_t to_port, uint8_t *data, size_t data
 		tp[n_to_wait_for].sending_task = xTaskGetCurrentTaskHandle();
 		tp[n_to_wait_for].notify_on_ack = wait_for_ack;
 
-		tp[n_to_wait_for].data = &data[ds_p];
+		tp[n_to_wait_for].data_transmitting = &data[ds_p];
 
 		ds_l = (data_size >= COM_MAX_DATA_SIZE) ? COM_MAX_DATA_SIZE : data_size;
 
@@ -188,7 +188,7 @@ Com::send(com_channel_t *channel, com_port_t to_port, uint8_t *data, size_t data
 
 		ds_p += ds_l;
 		data_size -= ds_l;
-		ESP_LOGV(LOG_TAG, "sending from: %d to: %d, data: %s", tp[n_to_wait_for].from_port, tp[n_to_wait_for].to_port, tp[n_to_wait_for].data);
+		ESP_LOGV(LOG_TAG, "sending from: %d to: %d, data: %s", tp[n_to_wait_for].from_port, tp[n_to_wait_for].to_port, tp[n_to_wait_for].data_transmitting);
 		n_to_wait_for++;
 		if (xQueueSend(transmission_queue[channel->priority], tp, 0) != pdPASS) {
 			free(tp);
@@ -341,7 +341,7 @@ void Com::transmissionQueueHandeler() {
 		if (transmit_msg != COM_OK) {
 			ESP_LOGW(LOG_TAG, "transmit of: %d, to: %d, failed: 0x%X", transpack.from_port, transpack.to_port,
 					 transmit_msg);
-			ESP_LOG_BUFFER_HEXDUMP(LOG_TAG, &transpack.data, transpack.data_lenght, ESP_LOG_WARN);
+			ESP_LOG_BUFFER_HEXDUMP(LOG_TAG, &transpack.data_transmitting, transpack.data_lenght, ESP_LOG_WARN);
 		}
 	}
 	vTaskDelete(NULL);
@@ -362,7 +362,7 @@ void Com::acknowledge_handler_task(com_transmitpackage_t transmitpackage_to_watc
 		if (times_tried[transmitpackage_to_watch.n] >= MAX_TRIES) {
 			ESP_LOGE(LOG_TAG, "ack[%d] permanently failed. From: %d to: %d", transmitpackage_to_watch.n,
 					 transmitpackage_to_watch.from_port, transmitpackage_to_watch.to_port);
-			ESP_LOG_BUFFER_HEXDUMP(LOG_TAG, transmitpackage_to_watch.data, transmitpackage_to_watch.data_lenght,
+			ESP_LOG_BUFFER_HEXDUMP(LOG_TAG, transmitpackage_to_watch.data_transmitting, transmitpackage_to_watch.data_lenght,
 								   ESP_LOG_VERBOSE);
 			break;
 		} else {

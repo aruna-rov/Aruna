@@ -91,7 +91,12 @@ struct com_transmitpackage_t {
 	/**
 	 * @brief  Data to be transmitted.
 	 */
-	uint8_t *data;
+	uint8_t *data_transmitting;
+
+	/**
+	 * pointer to where incoming data must be stored.
+	 */
+	uint8_t data_received[COM_MAX_DATA_SIZE];
 
 	/**
 	 * size of the data
@@ -145,7 +150,7 @@ struct com_transmitpackage_t {
 				sizeof(transp.to_port));
 //		bit 4: data
 		memcpy(&bin[sizeof(transp.size) + sizeof(transp.n) + sizeof(transp.from_port) + sizeof(transp.to_port)],
-			   transp.data,
+			   transp.data_transmitting,
 			   transp.data_lenght);
 	}
 
@@ -166,7 +171,7 @@ struct com_transmitpackage_t {
 		memcpy(&transp.n, &bin[sizeof(transp.size)], (sizeof(transp.n)));
 		memcpy(&transp.from_port, &bin[sizeof(transp.size) + sizeof(transp.n)], (sizeof(transp.from_port)));
 		memcpy(&transp.to_port, &bin[sizeof(transp.size) + sizeof(transp.n) + sizeof(transp.from_port)], (sizeof(transp.to_port)));
-		memcpy(transp.data, &bin[sizeof(transp.size) + sizeof(transp.n) + sizeof(transp.from_port) + sizeof(transp.to_port)], dataLength);
+		memcpy(transp.data_received, &bin[sizeof(transp.size) + sizeof(transp.n) + sizeof(transp.from_port) + sizeof(transp.to_port)], dataLength);
 		transp.data_lenght = dataLength;
 		return 1;
 	}

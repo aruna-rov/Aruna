@@ -36,7 +36,7 @@ void com_test_task(void * arg) {
     while (1) {
         if (xQueueReceive(handler,(void *) &d, (portTickType) portMAX_DELAY)) {
             ESP_LOGI("com_test_task", "howdy, partner!");
-            ESP_LOGI("com_test_task", "data: '%s'", d.data);
+            ESP_LOGI("com_test_task", "data: '%s'", d.data_received);
             ESP_LOGI("com_test_task", "data_length: '%d'", d.data_lenght);
             ESP_LOGI("com_test_task", "from: '%d'", d.from_port);
             ESP_LOGI("com_test_task", "me: '%d'", d.to_port);
