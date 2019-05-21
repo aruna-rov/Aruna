@@ -30,7 +30,7 @@ void start_blinky_task(void* arg) {
     while (1) {
         if (xQueueReceive(handler, (void *) &tp, (portTickType) portMAX_DELAY)) {
             if (tp.data_lenght > 3) break;
-            switch (tp.data[0]) {
+            switch (tp.data_received[0]) {
                 case 0x00:
                     set_led(LED_OFF);
                     break;
@@ -42,8 +42,8 @@ void start_blinky_task(void* arg) {
                     break;
                 case 0x03:
                     int t;
-                    t = tp.data[1] * 100;
-                    for (int i = 0; i < tp.data[2]; ++i) {
+                    t = tp.data_received[1] * 100;
+                    for (int i = 0; i < tp.data_received[2]; ++i) {
                         set_led(LED_TOGGLE);
                         vTaskDelay(t / portTICK_PERIOD_MS);
                         set_led(LED_TOGGLE);

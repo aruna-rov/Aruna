@@ -13,26 +13,28 @@ const static char TAG[] = "UART";
 static xTaskHandle uart_rx_handle = nullptr;
 
 
-com_err UART::transmit(com_transmitpackage_t package) {
+com_err UART::transmit(uint8_t *package, uint8_t package_size) {
     ESP_LOGV(TAG, "sending...");
-    com_bin_t bin_data;
-    // make binary of the package
-    com_transmitpackage_t::transmitpackage_to_binary(package, bin_data);
-    ESP_LOG_BUFFER_HEXDUMP(TAG, bin_data, sizeof(bin_data), ESP_LOG_VERBOSE);
-    size_t package_size = strlen((char*) bin_data);
+    ESP_LOG_BUFFER_HEXDUMP(TAG, package, package_size, ESP_LOG_VERBOSE);
 //    transmit
+
+//	TODO transmit() is not thread safe, it should work with a xqueue where data get pushed thru from Com to ComDriver
     if (uart_write_bytes(UART_NUM,
-                         (const char *) bin_data,
+                         (const char *) package,
                          package_size)
-        == (package_size))
-        return COM_OK;
-    else
-        return COM_ERR_HARDWARE;
+        == (package_size)) {
+		return COM_OK;
+	}
+
+    else {
+		return COM_ERR_HARDWARE;
+	}
 }
 
 unsigned int UART::getSpeed() {
     uint32_t br = 0;
     uart_get_baudrate(UART_NUM, &br);
+//    TODO speed should be in bits not in bytes
     return (unsigned int) (br / 8);
 }
 
@@ -76,7 +78,7 @@ com_err UART::start() {
     }
 //    task to handle incomming messages.
     if (uart_rx_handle == nullptr)
-        xTaskCreate(UART::handle_rx_task, "handle_rx_uart", 2048, NULL, 12, &uart_rx_handle);
+		xTaskCreate(UART::handle_rx_task, "handle_rx_uart", 2048, NULL, 12, &uart_rx_handle);
     return COM_OK;
 }
 
@@ -108,7 +110,6 @@ void UART::handle_rx_task(void *arg) {
 //    smaller size for dtmp results in an stack overflow.
     uint8_t *dtmp = (uint8_t *) malloc(RX_BUF_SIZE);
     int read;
-    com_transmitpackage_t incoming_info;
     for (;;) {
         //Waiting for UART event.
         if (xQueueReceive(uart_queue, (void *) &event, (portTickType) portMAX_DELAY)) {
@@ -121,21 +122,21 @@ void UART::handle_rx_task(void *arg) {
                 be full.*/
                 case UART_DATA:
 //                    TODO UART_DATA event gets triggerd without any data being avaliable
-                    read = uart_read_bytes(UART_NUM, dtmp, COM_DATA_SIZE, 4);
+                    read = uart_read_bytes(UART_NUM, dtmp, 1, 4);
+					if (read <= 0) break;
+					read = uart_read_bytes(UART_NUM, &dtmp[1], (dtmp[0] -1 ), 10);
 //                    stop if read fails
-                    if (read <= 0) break;
-                    ESP_LOGV(TAG, "incoming data[%d]:", read);
-//                    TODO first byte should be a the size of the array so that packages bigger then COM_DATA_SIZE can be send.
+					if (read != (dtmp[0] -1)) {
+						ESP_LOGV(TAG, "could not read all bytes");
+						break;
+					}
+					ESP_LOGV(TAG, "incoming data[%d]:", read);
 //                    if the data now contains a 0x0 then datalength will be set at that byte.
-                    ESP_LOG_BUFFER_HEXDUMP(TAG, dtmp, COM_DATA_SIZE, ESP_LOG_VERBOSE);
+                    ESP_LOG_BUFFER_HEXDUMP(TAG, dtmp, dtmp[0], ESP_LOG_VERBOSE);
 //                    convert binary to transmitpackage and alert COM of an incomming connection.
-                    if (!com_transmitpackage_t::binary_to_transmitpackage(dtmp, incoming_info, strlen((char *) dtmp)))
-                        break;
-                    if (COM.incoming_connection(incoming_info) != COM_OK) {
+                    if (COM.incoming_connection(dtmp, dtmp[0]) != COM_OK) {
                         ESP_LOGV(TAG, "protocol error");
                     }
-//                    delete incoming_info to prefent old data being present once a new package arrives.
-                    bzero(&incoming_info, sizeof(incoming_info));
                     break;
                     //Event of HW FIFO overflow detected
                 case UART_FIFO_OVF:
