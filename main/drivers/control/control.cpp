@@ -152,15 +152,15 @@ void control_com_handler_task(void *arg) {
 	COM.register_channel(&control_channel);
 	while (1) {
 		if (xQueueReceive(control_com, &request, (portTickType) portMAX_DELAY)) {
-//			if (request.data_lenght < 2)
+//			if (request.data_received_lenght < 2)
 //				continue;
-			flags = request.data[1];
-			data = ((uint16_t) request.data[2] << 8) | request.data[3];
+			flags = request.data_received[1];
+			data = ((uint16_t) request.data_received[2] << 8) | request.data_received[3];
 			get_value = nullptr;
 			set_value = nullptr;
 			command = NO_COMMAND;
-//			ESP_LOGD(LOG_TAG, "com command:%X, flag:%X, data:%d", request.data[0], request.data[1], data);
-			switch (request.data[0]) {
+			ESP_LOGD(LOG_TAG, "com command:%X, flag:%X, data:%d", request.data_received[0], request.data_received[1], data);
+			switch (request.data_received[0]) {
 //				basic functionality
 
 				case GET_DEGREE:
@@ -191,11 +191,10 @@ void control_com_handler_task(void *arg) {
 							speed = get_value((control_axis_mask_t) mask);
 							buffer[2] = (speed >> 8);
 							buffer[3] = speed & 0xff;
-							buffer[4] = 0x00;
 //							ESP_LOGD(LOG_TAG, "mask: %X flag: %X", mask, flags);
 //							ESP_LOGD(LOG_TAG, "GET_COMMAND: %X, value: %d",command,  speed);
 //							TODO error check com.send return value
-							COM.send(&control_channel, request.from_port, (char *) buffer, 5);
+							COM.send(&control_channel, request.from_port, buffer, 4);
 						}
 					}
 					break;
@@ -208,8 +207,7 @@ void control_com_handler_task(void *arg) {
 						if (mask & flags & active_axis) {
 							buffer[1] = mask;
 							buffer[2] = control_get_direction((control_axis_mask_t) mask);
-							buffer[3] = 0x00;
-							COM.send(&control_channel, request.from_port, (char *) buffer, 4);
+							COM.send(&control_channel, request.from_port, buffer, 3);
 						}
 					}
 					break;
@@ -232,7 +230,7 @@ void control_com_handler_task(void *arg) {
 						command = SET_VELOCITY;
 					}
 					control_direction_t dir;
-					dir = ((request.data[1] >> 6) & 0b1) ? CONTROL_DIRECTION_MIN : CONTROL_DIRECTION_PLUS;
+					dir = ((request.data_received[1] >> 6) & 0b1) ? CONTROL_DIRECTION_MIN : CONTROL_DIRECTION_PLUS;
 					ESP_LOGV(LOG_TAG, "set: %X value: %d, dir: %d", command, data, dir);
 					set_value((control_axis_mask_t) flags, data, dir);
 					break;
@@ -248,7 +246,7 @@ void control_com_handler_task(void *arg) {
 							buffer[0] = GET_DAMPING;
 							buffer[1] = mask;
 							buffer[2] = (uint8_t) control_get_damping((control_axis_mask_t) mask);
-							COM.send(&control_channel, request.from_port, (char *) buffer, 3);
+							COM.send(&control_channel, request.from_port, buffer, 3);
 						}
 					}
 					break;
@@ -263,7 +261,7 @@ void control_com_handler_task(void *arg) {
 				case GET_RUNNING_STATE:
 					buffer[0] = GET_RUNNING_STATE;
 					buffer[1] = control_get_status();
-					COM.send(&control_channel, request.from_port, (char *) buffer, 2);
+					COM.send(&control_channel, request.from_port, buffer, 2);
 					break;
 //				set running state
 				case SET_RUNNING_STATE:
@@ -285,7 +283,7 @@ void control_com_handler_task(void *arg) {
 					t = control_test_sensor();
 					buffer[0] = TEST_SENSORS;
 					buffer[1] = t;
-					COM.send(&control_channel, request.from_port, (char *) buffer, 2);
+					COM.send(&control_channel, request.from_port, buffer, 2);
 					break;
 //				calibrate sensors
 				case CALIBRATE_SENSORS:
@@ -297,7 +295,7 @@ void control_com_handler_task(void *arg) {
 				case GET_SUPPORTED_AXIS:
 					buffer[0] = GET_SUPPORTED_AXIS;
 					buffer[1] = control_get_active_axis();
-					COM.send(&control_channel, request.from_port, (char *) buffer, 2);
+					COM.send(&control_channel, request.from_port, buffer, 2);
 					break;
 				case SET_SENSOR_OFFSET:
 				case GET_SENSOR_OFFSET:
@@ -309,7 +307,7 @@ void control_com_handler_task(void *arg) {
 				case GET_MPU_STATUS:
 					buffer[0] = GET_MPU_STATUS;
 					buffer[1] = MPU_active;
-					COM.send(&control_channel, request.from_port, (char*) buffer, 2);
+					COM.send(&control_channel, request.from_port, buffer, 2);
 					break;
 //				advanced automated control
 

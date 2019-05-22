@@ -63,7 +63,8 @@ extern "C" void app_main(void) {
 
 //    test application
 
-    xTaskCreate(com_test_task, "COM test task", 2048, NULL, 0, NULL);
+//		TODO task overflow?!
+//    xTaskCreate(com_test_task, "COM test task", 2048, NULL, 0, NULL);
     xTaskCreate(start_blinky_task, "blinky_app", 2048, NULL, 0, NULL);
 
 }
