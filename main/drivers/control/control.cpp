@@ -217,17 +217,17 @@ void control_com_handler_task(void *arg) {
 						break;
 					set_value = control_set_degree;
 					command = SET_DEGREE;
-				case SET_SPEED:
-					if (command == NO_COMMAND) {
-						set_value = control_set_speed;
-						command = SET_SPEED;
-					}
 				case SET_VELOCITY:
 					if (!MPU_active)
 						break;
 					if (command == NO_COMMAND) {
 						set_value = control_set_velocity;
 						command = SET_VELOCITY;
+					}
+				case SET_SPEED:
+					if (command == NO_COMMAND) {
+						set_value = control_set_speed;
+						command = SET_SPEED;
 					}
 					control_direction_t dir;
 					dir = ((request.data_received[1] >> 6) & 0b1) ? CONTROL_DIRECTION_MIN : CONTROL_DIRECTION_PLUS;
