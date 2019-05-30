@@ -12,6 +12,7 @@
 
 Com COM;
 ComDriver *uart_driver;
+ComDriver *rs485_driver;
 const static char* LOG_TAG = "MAIN";
 
 
@@ -67,6 +68,27 @@ void register_drivers() {
 //  COM
     uart_driver = new UART;
     COM.register_candidate_driver(uart_driver);
+
+    uart_config_t rs485_config = {
+        .baud_rate = 5000000,
+        .data_bits = UART_DATA_8_BITS,
+        .parity = UART_PARITY_DISABLE,
+        .stop_bits = UART_STOP_BITS_1,
+        .flow_ctrl = UART_HW_FLOWCTRL_DISABLE,
+        .rx_flow_ctrl_thresh = 122,
+        .use_ref_tick = false
+    };
+    rs485_driver = new UART((char*)"RS485",
+            UART_NUM_1,
+            23,
+            22,
+            18,
+            UART_PIN_NO_CHANGE,
+            rs485_config,
+            UART_MODE_RS485_HALF_DUPLEX,
+            256,
+            512);
+    COM.register_candidate_driver(rs485_driver);
 }
 
 void start_COM() {

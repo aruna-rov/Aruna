@@ -7,11 +7,27 @@
 #include "app/Com.h"
 #include "esp_log.h"
 
-static QueueHandle_t uart_queue;
-static bool installed = false;
-const static char TAG[] = "UART";
-static xTaskHandle uart_rx_handle = nullptr;
-
+UART::UART(){}
+UART::UART(char *TAG,
+           uart_port_t UART_NUM,
+           int TXD_PIN,
+           int RXD_PIN,
+           int RTS_PIN,
+           int CTS_PIN,
+           uart_config_t UART_CONFIG,
+           uart_mode_t UART_MODE,
+           unsigned int TX_BUF_SIZE,
+           unsigned int RX_BUF_SIZE):
+        TAG(TAG),
+        UART_NUM(UART_NUM),
+        TXD_PIN(TXD_PIN),
+        RXD_PIN(RXD_PIN),
+        RTS_PIN(RTS_PIN),
+        CTS_PIN(CTS_PIN),
+        UART_CONFIG(UART_CONFIG),
+        UART_MODE(UART_MODE),
+        TX_BUF_SIZE(TX_BUF_SIZE),
+        RX_BUF_SIZE(RX_BUF_SIZE){}
 
 com_err UART::transmit(uint8_t *package, uint8_t package_size) {
     ESP_LOGV(TAG, "sending...");
@@ -58,27 +74,20 @@ com_err UART::start() {
     /* Configure parameters of an UART driver,
      * communication pins and install the driver */
     if (!installed) {
-
-        uart_config_t uart_config = {
-                .baud_rate = BROAD_RATE,
-                .data_bits = UART_DATA_8_BITS,
-                .parity    = UART_PARITY_EVEN,
-                .stop_bits = UART_STOP_BITS_1,
-                .flow_ctrl = UART_HW_FLOWCTRL_DISABLE,
-                .rx_flow_ctrl_thresh = 122,
-                .use_ref_tick = false
-        };
 //        set config
-        ESP_ERROR_CHECK(uart_param_config(UART_NUM, &uart_config));
+        ESP_ERROR_CHECK(uart_param_config(UART_NUM, &UART_CONFIG));
 //        set pins
         ESP_ERROR_CHECK(uart_set_pin(UART_NUM, TXD_PIN, RXD_PIN, RTS_PIN, CTS_PIN));
 //        install driver (driver can only be installed once, even if you uart_driver_delete is used)
         ESP_ERROR_CHECK(uart_driver_install(UART_NUM, RX_BUF_SIZE, TX_BUF_SIZE, 20, &uart_queue, 0));
+//        Set correct mode
+        ESP_ERROR_CHECK(uart_set_mode(UART_NUM, UART_MODE));
         installed = true;
     }
 //    task to handle incomming messages.
     if (uart_rx_handle == nullptr)
-		xTaskCreate(UART::handle_rx_task, "handle_rx_uart", 2048, NULL, 12, &uart_rx_handle);
+//        TODO set name acording to TAG
+		xTaskCreate(UART::handle_rx_task, "handle_rx_uart", 2048, this, 12, &uart_rx_handle);
     return COM_OK;
 }
 
@@ -105,16 +114,18 @@ com_err UART::stop() {
     return (ufi) != ESP_OK ? COM_ERR_HARDWARE : COM_OK;
 }
 
-void UART::handle_rx_task(void *arg) {
+void UART::handle_rx_task(void *__this) {
     uart_event_t event;
+
+    UART *_this = static_cast<UART*>(__this);
 //    smaller size for dtmp results in an stack overflow.
-    uint8_t *dtmp = (uint8_t *) malloc(RX_BUF_SIZE);
+    uint8_t *dtmp = (uint8_t *) malloc(_this->RX_BUF_SIZE);
     int read;
     for (;;) {
         //Waiting for UART event.
-        if (xQueueReceive(uart_queue, (void *) &event, (portTickType) portMAX_DELAY)) {
-            bzero(dtmp, RX_BUF_SIZE);
-            ESP_LOGV(TAG, "uart[%d] event:", UART_NUM);
+        if (xQueueReceive(_this->uart_queue, (void *) &event, (portTickType) portMAX_DELAY)) {
+            bzero(dtmp, _this->RX_BUF_SIZE);
+            ESP_LOGV(_this->TAG, "uart[%d] event:", _this->UART_NUM);
             switch (event.type) {
                 //Event of UART receving data
                 /*We'd better handler data event fast, there would be much more data events than
@@ -122,56 +133,56 @@ void UART::handle_rx_task(void *arg) {
                 be full.*/
                 case UART_DATA:
 //                    TODO UART_DATA event gets triggerd without any data being avaliable
-                    read = uart_read_bytes(UART_NUM, dtmp, 1, 4);
+                    read = uart_read_bytes(_this->UART_NUM, dtmp, 1, 4);
 					if (read <= 0) break;
-					read = uart_read_bytes(UART_NUM, &dtmp[1], (dtmp[0] -1 ), 10);
+					read = uart_read_bytes(_this->UART_NUM, &dtmp[1], (dtmp[0] -1 ), 10);
 //                    stop if read fails
 					if (read != (dtmp[0] -1)) {
-						ESP_LOGV(TAG, "could not read all bytes");
+						ESP_LOGV(_this->TAG, "could not read all bytes");
 						break;
 					}
-					ESP_LOGV(TAG, "incoming data[%d]:", read);
+					ESP_LOGV(_this->TAG, "incoming data[%d]:", read);
 //                    if the data now contains a 0x0 then datalength will be set at that byte.
-                    ESP_LOG_BUFFER_HEXDUMP(TAG, dtmp, dtmp[0], ESP_LOG_VERBOSE);
+                    ESP_LOG_BUFFER_HEXDUMP(_this->TAG, dtmp, dtmp[0], ESP_LOG_VERBOSE);
 //                    convert binary to transmitpackage and alert COM of an incomming connection.
                     if (COM.incoming_connection(dtmp, dtmp[0]) != COM_OK) {
-                        ESP_LOGV(TAG, "protocol error");
+                        ESP_LOGV(_this->TAG, "protocol error");
                     }
                     break;
                     //Event of HW FIFO overflow detected
                 case UART_FIFO_OVF:
-                    ESP_LOGW(TAG, "hw fifo overflow");
+                    ESP_LOGW(_this->TAG, "hw fifo overflow");
                     // If fifo overflow happened, you should consider adding flow control for your application.
                     // The ISR has already reset the rx FIFO,
                     // As an example, we directly flush the rx buffer here in order to read more data.
-                    uart_flush_input(UART_NUM);
-                    xQueueReset(uart_queue);
+                    uart_flush_input(_this->UART_NUM);
+                    xQueueReset(_this->uart_queue);
                     break;
                     //Event of UART ring buffer full
                 case UART_BUFFER_FULL:
-                    ESP_LOGE(TAG, "ring buffer full");
+                    ESP_LOGE(_this->TAG, "ring buffer full");
                     // If buffer full happened, you should consider encreasing your buffer size
                     // As an example, we directly flush the rx buffer here in order to read more data.
-                    uart_flush_input(UART_NUM);
-                    xQueueReset(uart_queue);
+                    uart_flush_input(_this->UART_NUM);
+                    xQueueReset(_this->uart_queue);
                     break;
                     //Event of UART RX break detected
                 case UART_BREAK:
-                    ESP_LOGI(TAG, "uart rx break");
+                    ESP_LOGI(_this->TAG, "uart rx break");
                     break;
                     //Event of UART parity check error
                 case UART_PARITY_ERR:
-                    ESP_LOGW(TAG, "uart parity error");
+                    ESP_LOGW(_this->TAG, "uart parity error");
                     break;
                     //Event of UART frame error
                 case UART_FRAME_ERR:
-                    ESP_LOGW(TAG, "uart frame error");
+                    ESP_LOGW(_this->TAG, "uart frame error");
                     break;
                     //UART_PATTERN_DET
                 case UART_PATTERN_DET:
                     //Others
                 default:
-                    ESP_LOGE(TAG, "uart event type: %d", event.type);
+                    ESP_LOGE(_this->TAG, "uart event type: %d", event.type);
                     break;
             }
         }
