@@ -1,4 +1,4 @@
-# Communication
+# ARCOM
 
 This document describes the Aruna Com protocol, further referenced to as ARCOM.
 
