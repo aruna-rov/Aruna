@@ -6,8 +6,7 @@
 #define ARUNA_CONTROLACTUATORDRIVER_H
 
 
-#include "drivers/control.h"
-#include "../control.h"
+#include "control.h"
 
 class ControlActuatorDriver {
 public:

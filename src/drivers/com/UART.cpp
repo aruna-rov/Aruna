@@ -4,7 +4,7 @@
 
 #include <stdio.h>
 #include "drivers/com/UART.h"
-#include "app/Com.h"
+#include "Com.h"
 #include "esp_log.h"
 
 UART::UART(){}

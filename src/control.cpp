@@ -6,10 +6,10 @@
 #include <freertos/FreeRTOS.h>
 #include <freertos/task.h>
 #include <freertos/FreeRTOSConfig.h>
-#include <drivers/control.h>
+#include <control.h>
 #include <set>
 #include <esp_log.h>
-#include <app/Com.h>
+#include <Com.h>
 #include "drivers/control/ControlActuatorDriver.h"
 #include "MPU.hpp"
 #include "mpu/math.hpp"   // math helper for dealing with MPU data

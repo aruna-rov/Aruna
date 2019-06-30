@@ -2,11 +2,11 @@
 // Created by noeel on 23-3-19.
 //
 
-#include "app/blinky.h"
+#include "blinky.h"
 #include <freertos/task.h>
 #include <driver/gpio.h>
-#include <app/Com.h>
-#include <app/blinky.h>
+#include <Com.h>
+#include <blinky.h>
 #include <sdkconfig.h>
 
 #define LED_GPIO_PIN GPIO_NUM_2

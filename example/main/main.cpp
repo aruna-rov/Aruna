@@ -2,15 +2,14 @@
 // Created by noeel on 9-12-18.
 //
 
-#include <main.h>
-#include "app/Com.h"
+#include "Com.h"
 #include "drivers/com/UART.h"
 #include "esp_log.h"
 #include <freertos/task.h>
 #include <soc/uart_struct.h>
-#include <app/blinky.h>
+#include <blinky.h>
 #include <drivers/control/L293D.h>
-#include "drivers/control.h"
+#include "control.h"
 
 Com COM;
 ComDriver *uart_driver;
@@ -19,6 +18,10 @@ ComDriver *rs485_driver;
 
 const static char* LOG_TAG = "MAIN";
 
+extern "C" void app_main(void);
+void testUART_task(void *param);
+void start_COM();
+void register_drivers();
 
 void com_test_task(void * arg) {
     com_transmitpackage_t d;
