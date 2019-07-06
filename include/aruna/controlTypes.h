@@ -7,54 +7,53 @@
 
 namespace aruna { namespace control {
 
-        typedef enum {
-            CONTROL_AXIS_MASK_X = (1 << 0),
-            CONTROL_AXIS_MASK_Y = (1 << 1),
-            CONTROL_AXIS_MASK_Z = (1 << 2),
-            CONTROL_AXIS_MASK_ROLL = (1 << 3),
-            CONTROL_AXIS_MASK_YAW = (1 << 4),
-            CONTROL_AXIS_MASK_PITCH = (1 << 5),
+        enum class axis_mask_t: uint8_t {
+            X = (1 << 0),
+            Y = (1 << 1),
+            Z = (1 << 2),
+            ROLL = (1 << 3),
+            YAW = (1 << 4),
+            PITCH = (1 << 5),
 
-            CONTROL_AXIS_MASK_ALL = 63,
-            CONTROL_AXIS_MASK_MAX = 6,
+            ALL = 63,
+            MAX = 6,
+        };
 
-        } control_axis_mask_t;
+        enum class err_t {
+            OK,
+            FAIL,
+            NO_HARDWARE_FOUND,
+            NO_DRIVER_FOUND,
+            DRIVER_EXISTS,
+            NO_ACTIVE_MODULES,
+            NOT_STARTED,
+            ALREADY_STARTED,
+            MODE_NOT_ACTIVE,
+            HARDWARE_FAILURE,
+            DRIVER_OVERFLOW,
+            UNDERFLOW
+        };
 
-        typedef enum {
-            CONTROL_OK,
-            CONTROL_FAIL,
-            CONTROL_ERR_NO_HARDWARE_FOUND,
-            CONTROL_ERR_NO_DRIVER_FOUND,
-            CONTROL_ERR_DRIVER_EXISTS,
-            CONTROL_ERR_NO_ACTIVE_MODULES,
-            CONTROL_ERR_NOT_STARTED,
-            CONTROL_ERR_ALREADY_STARTED,
-            CONTROL_ERR_MODE_NOT_ACTIVE,
-            CONTROL_ERR_HARDWARE_FAILURE,
-            CONTROL_ERR_OVERFLOW,
-            CONTROL_ERR_UNDERFLOW
-        } control_err_t;
+        enum class damping_t {
+            DISABLE = 0,
+            KEEP_VELOCITY = 0x01,
+            KEEP_DEGREE = 0x02,
+        };
 
-        typedef enum {
-            CONTROL_DAMP_DISABLE = 0,
-            CONTROL_DAMP_KEEP_VELOCITY = 0x01,
-            CONTROL_DAMP_KEEP_DEGREE = 0x02,
-        } control_damping_t;
+        // status of control
+        enum class status_t {
+            RUNNING = 0,
+            STOPPED = 1,
+        };
 
-// status of control
-        typedef enum {
-            CONTROL_RUNNING = 0,
-            CONTROL_STOPPED = 1,
-        } control_status_t;
-
-        typedef enum {
-            CONTROL_DIRECTION_PLUS = 0,
-            CONTROL_DIRECTION_MIN = 1
-        } control_direction_t;
+        enum class direction_t: bool {
+            PLUS = 0,
+            MIN = 1
+        };
 
 
         template<typename T>
-        struct control_axis_t {
+        struct axis_t {
             T x;
             T y;
             T z;
@@ -66,22 +65,22 @@ namespace aruna { namespace control {
 //		TODO moet dit geen pointer returnen?
                 switch (i) {
                     default:
-                    case CONTROL_AXIS_MASK_X:
+                    case (uint8_t) axis_mask_t::X:
                         return x;
                         break;
-                    case CONTROL_AXIS_MASK_Y:
+                    case (uint8_t) axis_mask_t::Y:
                         return y;
                         break;
-                    case CONTROL_AXIS_MASK_Z:
+                    case (uint8_t) axis_mask_t::Z:
                         return z;
                         break;
-                    case CONTROL_AXIS_MASK_ROLL:
+                    case (uint8_t) axis_mask_t::ROLL:
                         return roll;
                         break;
-                    case CONTROL_AXIS_MASK_YAW:
+                    case (uint8_t) axis_mask_t::YAW:
                         return yaw;
                         break;
-                    case CONTROL_AXIS_MASK_PITCH:
+                    case (uint8_t) axis_mask_t::PITCH:
                         return pitch;
                         break;
                 }

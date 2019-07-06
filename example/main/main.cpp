@@ -62,8 +62,8 @@ extern "C" void app_main(void) {
     register_drivers();
     start_COM();
 
-    aruna::control::control_start();
-//	aruna::control::control_set_X_velocity(100, CONTROL_DIRECTION_PLUS);
+    aruna::control::start();
+//	aruna::control::set_X_velocity(100, direction_t::PLUS);
 
 //    test application
 
@@ -106,7 +106,7 @@ void register_drivers() {
 //  Control
 // TODO error check
     l293d_driver = new aruna::drivers::control::L293D;
-    aruna::control::control_register_driver(l293d_driver);
+    aruna::control::register_driver(l293d_driver);
 }
 
 void start_COM() {
