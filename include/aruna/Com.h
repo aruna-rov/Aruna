@@ -31,37 +31,37 @@ namespace aruna {
             COM_OK = 0x00,
             COM_FAIL = 0x100,
 
-//    COM running status
-                    COM_ERR_NOT_STOPPED = 0x101,
+            //    COM running status
+            COM_ERR_NOT_STOPPED = 0x101,
             COM_ERR_NOT_STARTED = 0x102,
             COM_ERR_NOT_PAUSED = 0x103,
 
-//    hardware
-                    COM_ERR_HARDWARE = 0x110,
+            //    hardware
+            COM_ERR_HARDWARE = 0x110,
             COM_ERR_NO_CONNECTION = 0x112,
             COM_ERR_NO_RESPONSE = 0x113,
             COM_ERR_PROTOCOL = 0x114,
 
-//    config
-                    COM_ERR_BUFFER_OVERFLOW = 0x120,
+            //    config
+            COM_ERR_BUFFER_OVERFLOW = 0x120,
             COM_ERR_INVALID_PARAMETERS = 0x121,
             COM_ERR_TASK_FAILED = 0x122,
 
-//    channel/driver registation
-                    COM_ERR_NO_CHANNEL = 0x130,
+            //    channel/driver registation
+            COM_ERR_NO_CHANNEL = 0x130,
             COM_ERR_CHANNEL_EXISTS = 0x131,
             COM_ERR_NO_DRIVER = 0x132,
             COM_ERR_DRIVER_EXISTS = 0x133,
         };
 
-// kind of link, wired, wireless of non existing
+        // kind of link, wired, wireless of non existing
         enum com_link_t {
             COM_RADIO,
             COM_WIRED,
             COM_NONE
         };
 
-// status of the COM object
+        // status of the COM object
         enum com_status {
             COM_RUNNING,
             COM_STOPPED,
@@ -70,8 +70,8 @@ namespace aruna {
 
         typedef uint8_t com_port_t;
 
-// com data size minus the header
-// TODO increasing this causes an overflow
+        // com data size minus the header
+        // TODO increasing this causes an overflow
         static constexpr size_t COM_MAX_DATA_SIZE = 150;
 
         /**
@@ -143,23 +143,23 @@ namespace aruna {
              */
             static void transmitpackage_to_binary(com_transmitpackage_t transp, uint8_t *bin) {
 
-//		bit 0: size
+                //		bit 0: size
                 memcpy(&bin[0],
                        &transp.size,
                        (sizeof(transp.size)));
-//		bit 1: N
+                //		bit 1: N
                 memcpy(&bin[sizeof(transp.size)],
                        &transp.n,
                        (sizeof(transp.n)));
-//		bit 2: from port
+                //		bit 2: from port
                 memcpy(&bin[sizeof(transp.size) + sizeof(transp.n)],
                        &transp.from_port,
                        (sizeof(transp.from_port)));
-//		bit 3: to port
+                //		bit 3: to port
                 memcpy(&bin[sizeof(transp.size) + sizeof(transp.n) + sizeof(transp.from_port)],
                        &transp.to_port,
                        sizeof(transp.to_port));
-//		bit 4: data
+                //		bit 4: data
                 memcpy(&bin[sizeof(transp.size) + sizeof(transp.n) + sizeof(transp.from_port) + sizeof(transp.to_port)],
                        transp.data_transmitting,
                        transp.data_lenght);
@@ -172,7 +172,7 @@ namespace aruna {
              * @return true if succeeded, false if not (not yet implemented, will always return 1)
              */
             static bool binary_to_transmitpackage(uint8_t *bin, com_transmitpackage_t &transp) {
-//		check for complete header
+                //		check for complete header
                 const static int header_length = (sizeof(transp.size) + sizeof(transp.n) + sizeof(transp.from_port) +
                                                   sizeof(transp.to_port));
                 if (bin[0] < header_length)
@@ -193,9 +193,9 @@ namespace aruna {
         };
 //__attribute__((packed));
 
-/**
- * endpoint type of a com channel
- */
+        /**
+         * endpoint type of a com channel
+         */
         struct com_channel_t {
             /**
              * @brief port nr. of the endpoint
@@ -230,7 +230,7 @@ namespace aruna {
         };
 
 
-// control functions
+        // control functions
 
         /**
          * Constructor
@@ -299,9 +299,8 @@ namespace aruna {
          *  * `COM_ERR_NO_CHANNEL` if the channel does'nt exist.
          *  * `COM_ERR_NO_RESPONSE` if there was no response (only if `wait_for_ack` is true)
          */
-//	 TODO documentation
-        com_err
-        send(com_channel_t *channel, com_port_t to_port, uint8_t *data, size_t data_size, bool wait_for_ack = false);
+        //	 TODO documentation
+        com_err send(com_channel_t *channel, com_port_t to_port, uint8_t *data, size_t data_size, bool wait_for_ack = false);
 
         /**
          * pause all communication. buffers, channels and queue's will be saved
@@ -392,7 +391,7 @@ namespace aruna {
          * get all the com driver candidates
          */
         void get_candidate_drivers(char *buffer[]);
-//     TODO come here and make it!
+        //     TODO come here and make it!
 
         /**
          * @brief  Interrupt incomming connection handeler
