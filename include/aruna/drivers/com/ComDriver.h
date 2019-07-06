@@ -5,8 +5,8 @@
 #ifndef ARUNA_COMDRIVER_H
 #define ARUNA_COMDRIVER_H
 
-#include "Com.h"
-
+#include <aruna/Com.h>
+namespace aruna { namespace drivers { namespace com {
 class ComDriver {
 public:
 
@@ -17,7 +17,7 @@ public:
      * @retval  `COM_OK` if all went well.
      *          `COM_ERR_HARDWARE` if the hardware failes
      */
-    virtual com_err transmit(uint8_t *package, uint8_t package_size) = 0;
+    virtual Com::com_err transmit(uint8_t *package, uint8_t package_size) = 0;
     /**
      * @brief  directly transmit a package on the link.
      * @param  package: package to be send
@@ -26,7 +26,7 @@ public:
      * @retval  `COM_OK` if all went well.
      *          `COM_ERR_HARDWARE` if the hardware failes
      */
-    virtual com_err transmit(uint8_t *package, uint8_t package_size, unsigned short priority) {
+    virtual Com::com_err transmit(uint8_t *package, uint8_t package_size, unsigned short priority) {
         return transmit(package, package_size);
     };
 
@@ -65,8 +65,8 @@ public:
      * Get link type (RADIO, WIRED, NONE)
      * @return com_link_t. COM_NONE if not connected.
      */
-    virtual com_link_t getLinkType() {
-        return COM_NONE;
+    virtual Com::com_link_t getLinkType() {
+        return Com::COM_NONE;
     };
 
     /**
@@ -89,18 +89,18 @@ public:
      * start the driver.
      * @return com_err, `COM_OK` if started succesfully, `COM_ERR_HARDWARE` or other hardware error on failure.
      */
-    virtual com_err start(){
-        return COM_OK;
+    virtual Com::com_err start(){
+        return Com::COM_OK;
     }
 
     /**
      * Stop the driver.
      * @return com_err, `COM_OK` if started succesfully, `COM_ERR_HARDWARE` or other hardware error on failure.
      */
-    virtual com_err stop(){
-        return COM_OK;
+    virtual Com::com_err stop(){
+        return Com::COM_OK;
     }
 };
 
-
+}}}
 #endif //ARUNA_COMDRIVER_H

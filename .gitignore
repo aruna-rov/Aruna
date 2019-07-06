@@ -2,13 +2,13 @@
 .pioenvs
 .piolibdeps
 build
-# willen we sdkconfig pushen?
 sdkconfig*
 
 # Example
 example/build
 example/cmake-build*
 example/sdkconfig
+!example/sdkconfig.defaults
 
 # IDE specific
 # VScode

@@ -8,6 +8,7 @@
 #include "ComDriver.h"
 #include "driver/uart.h"
 
+namespace aruna { namespace drivers { namespace com {
 
 class UART: public ComDriver {
 public:
@@ -38,13 +39,13 @@ public:
      * Default uart constructor. Uses braudrate 921600 over usb, parity even.
      */
     UART();
-    com_err transmit(uint8_t *package, uint8_t package_size) override;
+    Com::com_err transmit(uint8_t *package, uint8_t package_size) override;
     char* getName() override;
     unsigned int getSpeed() override;
-    com_link_t getLinkType() override;
+    Com::com_link_t getLinkType() override;
     bool isEndpointConnected() override;
-    com_err start() override;
-    com_err stop() override;
+    Com::com_err start() override;
+    Com::com_err stop() override;
 
 private:
     /**
@@ -85,5 +86,5 @@ private:
     bool installed = false;
     xTaskHandle uart_rx_handle = nullptr;
 };
-
+}}}
 #endif //ARUNA_UART_H

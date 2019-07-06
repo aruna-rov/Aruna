@@ -6,16 +6,18 @@
 #include <freertos/FreeRTOS.h>
 #include <freertos/task.h>
 #include <freertos/FreeRTOSConfig.h>
-#include <control.h>
+#include <aruna/control.h>
 #include <set>
 #include <esp_log.h>
-#include <Com.h>
-#include "drivers/control/ControlActuatorDriver.h"
+#include <aruna/Com.h>
+#include "aruna/drivers/control/ControlActuatorDriver.h"
 #include "MPU.hpp"
 #include "mpu/math.hpp"   // math helper for dealing with MPU data
 #include "mpu/types.hpp"  // MPU data types and definitions
 #include "I2Cbus.hpp"
 
+namespace aruna { namespace control {
+using namespace drivers::control;
 
 namespace {
 //    variables
@@ -134,14 +136,14 @@ void control_com_handler_task(void *arg) {
 		GOTO_CORDINATES = 0x32,
 	};
 //	initialize coms
-	com_transmitpackage_t request;
+	Com::com_transmitpackage_t request;
 	uint8_t mask;
 	uint8_t flags;
 	uint16_t data;
 	uint8_t buffer[6];
 	control_axis_mask_t active_axis;
 	QueueHandle_t control_com;
-	com_channel_t control_channel = {
+	Com::com_channel_t control_channel = {
 			.port = 3,
 			.priority = 1,
 			.handeler = &control_com,
@@ -584,3 +586,4 @@ void control_set_damping(control_axis_mask_t axisMask, control_damping_t damp) {
 		}
 	}
 }
+}}

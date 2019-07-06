@@ -6,29 +6,31 @@
 #define ARUNA_CONTROLACTUATORDRIVER_H
 
 
-#include "control.h"
+#include "aruna/controlTypes.h"
+
+namespace aruna { namespace drivers { namespace control {
 
 class ControlActuatorDriver {
 public:
 	/**
 	 * start the driver
 	 */
-	virtual control_err_t start() {
-		return CONTROL_OK;
+	virtual aruna::control::control_err_t start() {
+		return aruna::control::CONTROL_OK;
 	};
 
 	/**
 	 * stop the driver
 	 */
-	virtual control_err_t stop() {
-		return CONTROL_OK;
+	virtual aruna::control::control_err_t stop() {
+		return aruna::control::CONTROL_OK;
 	};
 
 	/**
 	 * get the control modes that this driver supports.
 	 * @return control_mode mask ORed.
 	 */
-	virtual control_axis_mask_t get_axis() = 0;
+	virtual aruna::control::control_axis_mask_t get_axis() = 0;
 
 	/**
 	 * Set the speed of the motors directly
@@ -37,7 +39,7 @@ public:
 	 * @param direction, direction to go to.
 	 * @return CONTROL_OK if the command was succesfull, others when it fails.
 	 */
-	virtual control_err_t set(control_axis_mask_t axisMask, uint16_t speed, control_direction_t direction) = 0;
+	virtual aruna::control::control_err_t set(aruna::control::control_axis_mask_t axisMask, uint16_t speed, aruna::control::control_direction_t direction) = 0;
 
 	/**
 	 * Convert uint16 to a new range
@@ -50,6 +52,6 @@ public:
 	}
 
 };
-
+}}}
 
 #endif //ARUNA_CONTROLACTUATORDRIVER_H

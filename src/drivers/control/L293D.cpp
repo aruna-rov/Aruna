@@ -4,8 +4,10 @@
 
 #include <driver/mcpwm.h>
 #include <esp_log.h>
-#include "drivers/control/L293D.h"
-
+#include "aruna/drivers/control/L293D.h"
+#include "aruna/control.h"
+namespace aruna { namespace drivers { namespace control {
+using namespace aruna::control;
 namespace {
     const gpio_num_t PIN_A[2] = {GPIO_NUM_13, GPIO_NUM_12};
     const gpio_num_t PIN_B[2] = {GPIO_NUM_14, GPIO_NUM_27};
@@ -76,3 +78,4 @@ control_err_t L293D::set(control_axis_mask_t axisMask, uint16_t speed, control_d
 	}
 	return CONTROL_OK;
 }
+}}}

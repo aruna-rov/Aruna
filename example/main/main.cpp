@@ -2,19 +2,19 @@
 // Created by noeel on 9-12-18.
 //
 
-#include "Com.h"
-#include "drivers/com/UART.h"
 #include "esp_log.h"
+#include <freertos/FreeRTOS.h>
 #include <freertos/task.h>
 #include <soc/uart_struct.h>
-#include <blinky.h>
-#include <drivers/control/L293D.h>
-#include "control.h"
+#include "aruna.h"
 
-Com COM;
-ComDriver *uart_driver;
-ControlActuatorDriver* l293d_driver;
-ComDriver *rs485_driver;
+using namespace aruna;
+namespace aruna {
+    aruna::Com COM;
+}
+aruna::drivers::com::ComDriver *uart_driver;
+aruna::drivers::control::ControlActuatorDriver* l293d_driver;
+aruna::drivers::com::ComDriver *rs485_driver;
 
 const static char* LOG_TAG = "MAIN";
 
@@ -24,10 +24,10 @@ void start_COM();
 void register_drivers();
 
 void com_test_task(void * arg) {
-    com_transmitpackage_t d;
+    aruna::Com::com_transmitpackage_t d;
     QueueHandle_t handler;
 
-    com_channel_t testapp = {
+    aruna::Com::com_channel_t testapp = {
             .port = 1,
             .priority = 1,
             .handeler = &handler
@@ -62,14 +62,14 @@ extern "C" void app_main(void) {
     register_drivers();
     start_COM();
 
-    control_start();
-//	control_set_X_velocity(100, CONTROL_DIRECTION_PLUS);
+    aruna::control::control_start();
+//	aruna::control::control_set_X_velocity(100, CONTROL_DIRECTION_PLUS);
 
 //    test application
 
 //		TODO task overflow?!
-//    xTaskCreate(com_test_task, "COM test task", 2048, NULL, 0, NULL);
-    xTaskCreate(start_blinky_task, "blinky_app", 2048, NULL, 0, NULL);
+    xTaskCreate(com_test_task, "COM test task", 2048, NULL, 0, NULL);
+    xTaskCreate(aruna::blinky::start_blinky_task, "blinky_app", 2048, NULL, 0, NULL);
 
 }
 
@@ -78,7 +78,7 @@ void register_drivers() {
 
 //  COM
 // TODO error check
-    uart_driver = new UART;
+    uart_driver = new aruna::drivers::com::UART;
     COM.register_candidate_driver(uart_driver);
 
 	uart_config_t rs485_config = {
@@ -90,7 +90,7 @@ void register_drivers() {
 			.rx_flow_ctrl_thresh = 122,
 			.use_ref_tick = false
 	};
-	rs485_driver = new UART((char*)"RS485",
+	rs485_driver = new aruna::drivers::com::UART((char*)"RS485",
 							UART_NUM_1,
 							23,
 							22,
@@ -100,13 +100,13 @@ void register_drivers() {
 							UART_MODE_RS485_HALF_DUPLEX,
 							256,
 							512);
-	COM.register_candidate_driver(rs485_driver);
+//	COM.register_candidate_driver(rs485_driver);
 
 
 //  Control
 // TODO error check
-    l293d_driver = new L293D;
-    control_register_driver(l293d_driver);
+    l293d_driver = new aruna::drivers::control::L293D;
+    aruna::control::control_register_driver(l293d_driver);
 }
 
 void start_COM() {
