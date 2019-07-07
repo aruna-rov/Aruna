@@ -27,67 +27,67 @@ namespace aruna {
         static constexpr uint8_t MAX_TRIES = 3;
 
         // state the status of the executed function, > 0 means no success
-        enum com_err {
-            COM_OK = 0x00,
-            COM_FAIL = 0x100,
+        enum class err_t {
+            OK = 0x00,
+            FAIL = 0x100,
 
             //    COM running status
-            COM_ERR_NOT_STOPPED = 0x101,
-            COM_ERR_NOT_STARTED = 0x102,
-            COM_ERR_NOT_PAUSED = 0x103,
+            NOT_STOPPED = 0x101,
+            NOT_STARTED = 0x102,
+            NOT_PAUSED = 0x103,
 
             //    hardware
-            COM_ERR_HARDWARE = 0x110,
-            COM_ERR_NO_CONNECTION = 0x112,
-            COM_ERR_NO_RESPONSE = 0x113,
-            COM_ERR_PROTOCOL = 0x114,
+            HARDWARE = 0x110,
+            NO_CONNECTION = 0x112,
+            NO_RESPONSE = 0x113,
+            PROTOCOL = 0x114,
 
             //    config
-            COM_ERR_BUFFER_OVERFLOW = 0x120,
-            COM_ERR_INVALID_PARAMETERS = 0x121,
-            COM_ERR_TASK_FAILED = 0x122,
+            BUFFER_OVERFLOW = 0x120,
+            INVALID_PARAMETERS = 0x121,
+            TASK_FAILED = 0x122,
 
             //    channel/driver registation
-            COM_ERR_NO_CHANNEL = 0x130,
-            COM_ERR_CHANNEL_EXISTS = 0x131,
-            COM_ERR_NO_DRIVER = 0x132,
-            COM_ERR_DRIVER_EXISTS = 0x133,
+            NO_CHANNEL = 0x130,
+            CHANNEL_EXISTS = 0x131,
+            NO_DRIVER = 0x132,
+            DRIVER_EXISTS = 0x133,
         };
 
         // kind of link, wired, wireless of non existing
-        enum com_link_t {
-            COM_RADIO,
-            COM_WIRED,
-            COM_NONE
+        enum class link_t {
+            RADIO,
+            WIRED,
+            NONE
         };
 
         // status of the COM object
-        enum com_status {
-            COM_RUNNING,
-            COM_STOPPED,
-            COM_PAUSED
+        enum status_t {
+            RUNNING,
+            STOPPED,
+            PAUSED
         };
 
-        typedef uint8_t com_port_t;
+        typedef uint8_t port_t;
 
         // com data size minus the header
         // TODO increasing this causes an overflow
-        static constexpr size_t COM_MAX_DATA_SIZE = 150;
+        static constexpr size_t MAX_DATA_SIZE = 150;
 
         /**
          * transmit ready package.
          */
-        struct com_transmitpackage_t {
+        struct transmitpackage_t {
             constexpr static uint HEADER_SIZE = 4;
             /**
              * @brief  channel who is sending the data.
              */
-            com_port_t from_port;
+            port_t from_port;
 
             /**
             * to whom to send it to.
             */
-            com_port_t to_port;
+            port_t to_port;
 
             /*
              * Number of the package (used for ack.)
@@ -107,7 +107,7 @@ namespace aruna {
             /**
              * pointer to where incoming data must be stored.
              */
-            uint8_t data_received[COM_MAX_DATA_SIZE];
+            uint8_t data_received[MAX_DATA_SIZE];
 
             /**
              * size of the data
@@ -141,7 +141,7 @@ namespace aruna {
              * @param transp package to make a binary from.
              * @param bin com_bin_t to store the data to.
              */
-            static void transmitpackage_to_binary(com_transmitpackage_t transp, uint8_t *bin) {
+            static void transmitpackage_to_binary(transmitpackage_t transp, uint8_t *bin) {
 
                 //		bit 0: size
                 memcpy(&bin[0],
@@ -171,7 +171,7 @@ namespace aruna {
              * @param transp transmitpackage that the data need to go to.
              * @return true if succeeded, false if not (not yet implemented, will always return 1)
              */
-            static bool binary_to_transmitpackage(uint8_t *bin, com_transmitpackage_t &transp) {
+            static bool binary_to_transmitpackage(uint8_t *bin, transmitpackage_t &transp) {
                 //		check for complete header
                 const static int header_length = (sizeof(transp.size) + sizeof(transp.n) + sizeof(transp.from_port) +
                                                   sizeof(transp.to_port));
@@ -196,11 +196,11 @@ namespace aruna {
         /**
          * endpoint type of a com channel
          */
-        struct com_channel_t {
+        struct channel_t {
             /**
              * @brief port nr. of the endpoint
              */
-            com_port_t port;
+            port_t port;
 
             /**
              * @brief priority 0-2
@@ -214,7 +214,7 @@ namespace aruna {
              */
             QueueHandle_t *handeler;
 
-            bool operator<(const com_channel_t &b) const {
+            bool operator<(const channel_t &b) const {
                 return this->port < b.port;
             }
 
@@ -224,9 +224,9 @@ namespace aruna {
         };
 
 
-        struct com_ack_handel_t {
+        struct ack_handel_t {
             void *_this;
-            com_transmitpackage_t *transmitpackage;
+            transmitpackage_t *transmitpackage;
         };
 
 
@@ -243,7 +243,7 @@ namespace aruna {
          *  * `COM_HARDWARE_ERROR` if the hardware fails.
          *  * `COM_OK` great success!
          */
-        com_err start();
+        err_t start();
 
         /**
          * @brief  Start new communication. Using `COM_LINK_HARDWARE` to define hardware
@@ -252,7 +252,7 @@ namespace aruna {
          *  * `COM_HARDWARE_ERROR` if the hardware fails.
          *  * `COM_OK` great success!
          */
-        com_err start(drivers::com::ComDriver *driver);
+        err_t start(drivers::com::ComDriver *driver);
 
         /**
          * @brief  Stop the communication, free all queue's, channels and buffers
@@ -261,7 +261,7 @@ namespace aruna {
          *  * `COM_OK` great success!
          *  * `COM_ERR_NOT_STARTED` if the com was not started.
          */
-        com_err stop();
+        err_t stop();
 
         /**
          * @brief  Register a new communication endpoint
@@ -272,7 +272,7 @@ namespace aruna {
          *  * `COM_ERR_CHANNEL_EXISTS` if the channel already exists.
          *  * `COM_ERR_BUFFER_OVERFLOW` channel buffer overflow
          */
-        com_err register_channel(com_channel_t *channel);
+        err_t register_channel(channel_t *channel);
 
         /**
          * @brief  unregister an endpoint
@@ -281,7 +281,7 @@ namespace aruna {
          *  * `COM_OK` if it was succesfully removed.
          *  * `COM_ERR_NO_CHANNEL` ain't got no channel, ain't got no knife.
          */
-        com_err unregister_channel(com_channel_t &channel);
+        err_t unregister_channel(channel_t &channel);
 
         /**
          * @brief  Send data.
@@ -300,7 +300,7 @@ namespace aruna {
          *  * `COM_ERR_NO_RESPONSE` if there was no response (only if `wait_for_ack` is true)
          */
         //	 TODO documentation
-        com_err send(com_channel_t *channel, com_port_t to_port, uint8_t *data, size_t data_size, bool wait_for_ack = false);
+        err_t send(channel_t *channel, port_t to_port, uint8_t *data, size_t data_size, bool wait_for_ack = false);
 
         /**
          * pause all communication. buffers, channels and queue's will be saved
@@ -308,7 +308,7 @@ namespace aruna {
          *  * `COM_OK` if it was a success,
          *  * `COM_ERR_NOT_STARTED` if the com was not started.
          */
-        com_err pause();
+        err_t pause();
 
         /**
          * resume all communication.
@@ -317,7 +317,7 @@ namespace aruna {
          *  * `COM_ERR_NOT_STARTED` if the com was not started.
          *  * `COM_ERR_NOT_PAUSED` if it was not paused.
          */
-        com_err resume();
+        err_t resume();
 
         // getters and setters
 
@@ -331,13 +331,13 @@ namespace aruna {
          * Get the running status of com
          * @return `com_status` (RUNNING, PAUSED, STOPPED)
          */
-        com_status get_status();
+        status_t get_status();
 
         /**
          * @brief  Get connection hardware type
          * @retval com_link_type
          */
-        com_link_t get_link_type();
+        link_t get_link_type();
 
         /**
          * get the name of the driver.
@@ -359,7 +359,7 @@ namespace aruna {
          *  * `COM_ERR_BUFFER_OVERFLOW` if the suplied buffer is to small,
          *  * `COM_ERR_INVALID_PARAMETERS if the parameters are incorrect,
          */
-        com_err get_channels(char *buffer);
+        err_t get_channels(char *buffer);
 
         /**
          * @brief  Get the speed of the link to the other hosts in kB/s
@@ -376,7 +376,7 @@ namespace aruna {
          * * `COM_ERR_BUFFER_OVERFLOW` driver buffer overflow
          * * `COM_OK` all is well :).
          */
-        com_err register_candidate_driver(drivers::com::ComDriver *driver);
+        err_t register_candidate_driver(drivers::com::ComDriver *driver);
 
         /**
          * unregister a driver to be a comdiver candidate
@@ -385,7 +385,7 @@ namespace aruna {
          * * `COM_OK` great success!
          * * `COM_ERR_NO_DRIVER` driver does'nt exists.
          */
-        com_err unregister_candidate_driver(drivers::com::ComDriver *driver);
+        err_t unregister_candidate_driver(drivers::com::ComDriver *driver);
 
         /**
          * get all the com driver candidates
@@ -401,7 +401,7 @@ namespace aruna {
          * `COM_OK` handeled
          * `COM_ERR_NO_CHANNEL` there is no channel to handle it
          */
-        com_err incoming_connection(uint8_t *package, uint8_t package_size);
+        err_t incoming_connection(uint8_t *package, uint8_t package_size);
 
     protected:
 
@@ -411,7 +411,7 @@ namespace aruna {
          * @brief set the com status
          * @param status: new status
          */
-        void set_status(com_status status);
+        void set_status(status_t status);
 
     private:
 
@@ -419,7 +419,7 @@ namespace aruna {
 
         static constexpr char *LOG_TAG = (char *) "COM";
         TaskHandle_t ack_tasks[N_COUNT_MAX];
-        com_transmitpackage_t watched_packages[N_COUNT_MAX];
+        transmitpackage_t watched_packages[N_COUNT_MAX];
         uint8_t times_tried[N_COUNT_MAX + 1];
         uint8_t n_count = 1;
 
@@ -438,12 +438,12 @@ namespace aruna {
         /**
          * @brief all endpoints
          */
-        std::set<com_channel_t> channels;
+        std::set<channel_t> channels;
 
         /**
          * @brief stores the com status
          */
-        com_status status = COM_STOPPED;
+        status_t status = status_t::STOPPED;
 
         /**
          * stores the driver.
@@ -462,7 +462,7 @@ namespace aruna {
          * 		-	COM_OK if success
          * 		-	COM_HARDWARE_ERR if the hardware layer failed
          */
-        com_err transmit(com_transmitpackage_t transmitpackage);
+        err_t transmit(transmitpackage_t transmitpackage);
 
         /**
          * @brief  Tramsmission handeler. Do not call directly, blocks CPU.
@@ -490,7 +490,7 @@ namespace aruna {
          * 1: `COM_ERR_NO_DRIVER` if no driver can be found
          * 1: `COM_OK` if all is well
          */
-        std::tuple<drivers::com::ComDriver *, com_err> pickDriver();
+        std::tuple<drivers::com::ComDriver *, err_t> pickDriver();
 
         /**
          * set the driver
@@ -522,7 +522,7 @@ namespace aruna {
         void selectDriverTask();
 
 
-        void acknowledge_handler_task(com_transmitpackage_t transmitpackage_to_watch);
+        void acknowledge_handler_task(transmitpackage_t transmitpackage_to_watch);
 
         static void _acknowledge_handler_task(void *handle);
     };

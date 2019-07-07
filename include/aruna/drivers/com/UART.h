@@ -39,13 +39,13 @@ public:
      * Default uart constructor. Uses braudrate 921600 over usb, parity even.
      */
     UART();
-    Com::com_err transmit(uint8_t *package, uint8_t package_size) override;
+    Com::err_t transmit(uint8_t *package, uint8_t package_size) override;
     char* getName() override;
     unsigned int getSpeed() override;
-    Com::com_link_t getLinkType() override;
+    Com::link_t getLinkType() override;
     bool isEndpointConnected() override;
-    Com::com_err start() override;
-    Com::com_err stop() override;
+    Com::err_t start() override;
+    Com::err_t stop() override;
 
 private:
     /**

@@ -17,7 +17,7 @@ public:
      * @retval  `COM_OK` if all went well.
      *          `COM_ERR_HARDWARE` if the hardware failes
      */
-    virtual Com::com_err transmit(uint8_t *package, uint8_t package_size) = 0;
+    virtual Com::err_t transmit(uint8_t *package, uint8_t package_size) = 0;
     /**
      * @brief  directly transmit a package on the link.
      * @param  package: package to be send
@@ -26,7 +26,7 @@ public:
      * @retval  `COM_OK` if all went well.
      *          `COM_ERR_HARDWARE` if the hardware failes
      */
-    virtual Com::com_err transmit(uint8_t *package, uint8_t package_size, unsigned short priority) {
+    virtual Com::err_t transmit(uint8_t *package, uint8_t package_size, unsigned short priority) {
         return transmit(package, package_size);
     };
 
@@ -65,8 +65,8 @@ public:
      * Get link type (RADIO, WIRED, NONE)
      * @return com_link_t. COM_NONE if not connected.
      */
-    virtual Com::com_link_t getLinkType() {
-        return Com::COM_NONE;
+    virtual Com::link_t getLinkType() {
+        return Com::link_t::NONE;
     };
 
     /**
@@ -89,16 +89,16 @@ public:
      * start the driver.
      * @return com_err, `COM_OK` if started succesfully, `COM_ERR_HARDWARE` or other hardware error on failure.
      */
-    virtual Com::com_err start(){
-        return Com::COM_OK;
+    virtual Com::err_t start(){
+        return Com::err_t::OK;
     }
 
     /**
      * Stop the driver.
      * @return com_err, `COM_OK` if started succesfully, `COM_ERR_HARDWARE` or other hardware error on failure.
      */
-    virtual Com::com_err stop(){
-        return Com::COM_OK;
+    virtual Com::err_t stop(){
+        return Com::err_t::OK;
     }
 };
 

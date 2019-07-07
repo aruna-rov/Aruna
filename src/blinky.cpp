@@ -17,8 +17,8 @@ namespace aruna {
         void start_blinky_task(void *arg) {
             ESP_LOGV("BLINK", "started!");
             QueueHandle_t handler;
-            Com::com_transmitpackage_t tp;
-            Com::com_channel_t blinky_com_channel = {
+            Com::transmitpackage_t tp;
+            Com::channel_t blinky_com_channel = {
                     .port = 4,
                     .priority = 2,
                     .handeler = &handler

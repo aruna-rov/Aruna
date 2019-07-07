@@ -29,7 +29,7 @@ UART::UART(char *TAG,
         TX_BUF_SIZE(TX_BUF_SIZE),
         RX_BUF_SIZE(RX_BUF_SIZE){}
 
-Com::com_err UART::transmit(uint8_t *package, uint8_t package_size) {
+Com::err_t UART::transmit(uint8_t *package, uint8_t package_size) {
     ESP_LOGV(TAG, "sending...");
     ESP_LOG_BUFFER_HEXDUMP(TAG, package, package_size, ESP_LOG_VERBOSE);
 //    transmit
@@ -39,11 +39,11 @@ Com::com_err UART::transmit(uint8_t *package, uint8_t package_size) {
                          (const char *) package,
                          package_size)
         == (package_size)) {
-		return Com::COM_OK;
+		return Com::err_t::OK;
 	}
 
     else {
-		return Com::COM_ERR_HARDWARE;
+		return Com::err_t::HARDWARE;
 	}
 }
 
@@ -54,8 +54,8 @@ unsigned int UART::getSpeed() {
     return (unsigned int) (br / 8);
 }
 
-Com::com_link_t UART::getLinkType() {
-    return Com::COM_WIRED;
+Com::link_t UART::getLinkType() {
+    return Com::link_t::WIRED;
 }
 
 bool UART::isEndpointConnected() {
@@ -67,7 +67,7 @@ char *UART::getName() {
     return (char *) TAG;
 }
 
-Com::com_err UART::start() {
+Com::err_t UART::start() {
     ESP_LOGD(TAG, "START");
 //    TODO logging zou moeten worden uitgeschakeld op de target UART.
 
@@ -88,10 +88,10 @@ Com::com_err UART::start() {
     if (uart_rx_handle == nullptr)
 //        TODO set name acording to TAG
 		xTaskCreate(UART::handle_rx_task, "handle_rx_uart", 2048, this, 12, &uart_rx_handle);
-    return Com::COM_OK;
+    return Com::err_t::OK;
 }
 
-Com::com_err UART::stop() {
+Com::err_t UART::stop() {
     ESP_LOGD(TAG, "STOP");
 //    TODO flush tx queue
 //  flush rx queue
@@ -111,7 +111,7 @@ Com::com_err UART::stop() {
 //  delete task
     vTaskDelete(uart_rx_handle);
     uart_rx_handle = nullptr;
-    return (ufi) != ESP_OK ? Com::COM_ERR_HARDWARE : Com::COM_OK;
+    return (ufi) != ESP_OK ? Com::err_t::HARDWARE : Com::err_t::OK;
 }
 
 void UART::handle_rx_task(void *__this) {
@@ -145,7 +145,7 @@ void UART::handle_rx_task(void *__this) {
 //                    if the data now contains a 0x0 then datalength will be set at that byte.
                     ESP_LOG_BUFFER_HEXDUMP(_this->TAG, dtmp, dtmp[0], ESP_LOG_VERBOSE);
 //                    convert binary to transmitpackage and alert COM of an incomming connection.
-                    if (COM.incoming_connection(dtmp, dtmp[0]) != Com::COM_OK) {
+                    if (COM.incoming_connection(dtmp, dtmp[0]) != Com::err_t::OK) {
                         ESP_LOGV(_this->TAG, "protocol error");
                     }
                     break;

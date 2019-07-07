@@ -136,14 +136,14 @@ void com_handler_task(void *arg) {
 		GOTO_CORDINATES = 0x32,
 	};
 //	initialize coms
-	Com::com_transmitpackage_t request;
+	Com::transmitpackage_t request;
 	uint8_t mask;
 	uint8_t flags;
 	uint16_t data;
 	uint8_t buffer[6];
 	axis_mask_t active_axis;
 	QueueHandle_t control_com;
-	Com::com_channel_t control_channel = {
+	Com::channel_t control_channel = {
 			.port = 3,
 			.priority = 1,
 			.handeler = &control_com,

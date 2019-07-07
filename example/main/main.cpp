@@ -24,22 +24,22 @@ void start_COM();
 void register_drivers();
 
 void com_test_task(void * arg) {
-    aruna::Com::com_transmitpackage_t d;
+    aruna::Com::transmitpackage_t d;
     QueueHandle_t handler;
 
-    aruna::Com::com_channel_t testapp = {
+    aruna::Com::channel_t testapp = {
             .port = 1,
             .priority = 1,
             .handeler = &handler
     };
     //    TODO register channel needs redesign, all endpoint data as paramter. handeler should be used.
-    ESP_LOGI("com_test_task", "register: %d", COM.register_channel(&testapp));
-    ESP_LOGI("com_test_task", "send: %X", COM.send(&testapp, 0xAA, (uint8_t *) "precies 32 bytes aan data size!\n", 32,
+    ESP_LOGI("com_test_task", "register: %d", (uint8_t) COM.register_channel(&testapp));
+    ESP_LOGI("com_test_task", "send: %X", (uint8_t) COM.send(&testapp, 0xAA, (uint8_t *) "precies 32 bytes aan data size!\n", 32,
 												   0));
-    ESP_LOGI("com_test_task", "send: %X", COM.send(&testapp, 0xAE,
+    ESP_LOGI("com_test_task", "send: %X", (uint8_t) COM.send(&testapp, 0xAE,
 												   (uint8_t *) "een overflow van data! ohh nee, wat gebeurt er nu?\n",
 												   51, true));
-	ESP_LOGI("com_test_task", "send: %X", COM.send(&testapp, 0xDE, (uint8_t *) "My man!\n", 8, true));
+	ESP_LOGI("com_test_task", "send: %X", (uint8_t) COM.send(&testapp, 0xDE, (uint8_t *) "My man!\n", 8, true));
 
     while (1) {
         if (xQueueReceive(handler,(void *) &d, (portTickType) portMAX_DELAY)) {
@@ -110,8 +110,8 @@ void register_drivers() {
 }
 
 void start_COM() {
-    ESP_LOGD(LOG_TAG, "COM start: %d", COM.start());
-    ESP_LOGD(LOG_TAG, "COM status: %d", COM.get_status());
-    ESP_LOGD(LOG_TAG, "COM driver: %s", COM.getName());
-    ESP_LOGD(LOG_TAG, "COM speed: %d", COM.get_speed());
+    ESP_LOGD(LOG_TAG, "COM start: %d", (uint8_t) COM.start());
+    ESP_LOGD(LOG_TAG, "COM status: %d", (uint8_t) COM.get_status());
+    ESP_LOGD(LOG_TAG, "COM driver: %s", (char*) COM.getName());
+    ESP_LOGD(LOG_TAG, "COM speed: %d", (uint8_t) COM.get_speed());
 }
