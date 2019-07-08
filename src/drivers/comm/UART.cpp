@@ -3,10 +3,10 @@
 //
 
 #include <stdio.h>
-#include <aruna/Com.h>
-#include "aruna/drivers/com/UART.h"
+#include <aruna/comm.h>
+#include "aruna/drivers/comm/UART.h"
 #include "esp_log.h"
-namespace aruna { namespace drivers { namespace com {
+namespace aruna { namespace drivers { namespace comm {
 UART::UART(){}
 UART::UART(char *TAG,
            uart_port_t UART_NUM,
@@ -29,21 +29,21 @@ UART::UART(char *TAG,
         TX_BUF_SIZE(TX_BUF_SIZE),
         RX_BUF_SIZE(RX_BUF_SIZE){}
 
-Com::err_t UART::transmit(uint8_t *package, uint8_t package_size) {
+aruna::comm::err_t UART::transmit(uint8_t *package, uint8_t package_size) {
     ESP_LOGV(TAG, "sending...");
     ESP_LOG_BUFFER_HEXDUMP(TAG, package, package_size, ESP_LOG_VERBOSE);
 //    transmit
 
-//	TODO transmit() is not thread safe, it should work with a xqueue where data get pushed thru from Com to ComDriver
+//	TODO transmit() is not thread safe, it should work with a xqueue where data get pushed thru from Com to CommDriver
     if (uart_write_bytes(UART_NUM,
                          (const char *) package,
                          package_size)
         == (package_size)) {
-		return Com::err_t::OK;
+		return aruna::comm::err_t::OK;
 	}
 
     else {
-		return Com::err_t::HARDWARE;
+		return aruna::comm::err_t::HARDWARE;
 	}
 }
 
@@ -54,8 +54,8 @@ unsigned int UART::getSpeed() {
     return (unsigned int) (br / 8);
 }
 
-Com::link_t UART::getLinkType() {
-    return Com::link_t::WIRED;
+aruna::comm::link_t UART::getLinkType() {
+    return aruna::comm::link_t::WIRED;
 }
 
 bool UART::isEndpointConnected() {
@@ -67,7 +67,7 @@ char *UART::getName() {
     return (char *) TAG;
 }
 
-Com::err_t UART::start() {
+aruna::comm::err_t UART::start() {
     ESP_LOGD(TAG, "START");
 //    TODO logging zou moeten worden uitgeschakeld op de target UART.
 
@@ -88,10 +88,10 @@ Com::err_t UART::start() {
     if (uart_rx_handle == nullptr)
 //        TODO set name acording to TAG
 		xTaskCreate(UART::handle_rx_task, "handle_rx_uart", 2048, this, 12, &uart_rx_handle);
-    return Com::err_t::OK;
+    return aruna::comm::err_t::OK;
 }
 
-Com::err_t UART::stop() {
+aruna::comm::err_t UART::stop() {
     ESP_LOGD(TAG, "STOP");
 //    TODO flush tx queue
 //  flush rx queue
@@ -111,7 +111,7 @@ Com::err_t UART::stop() {
 //  delete task
     vTaskDelete(uart_rx_handle);
     uart_rx_handle = nullptr;
-    return (ufi) != ESP_OK ? Com::err_t::HARDWARE : Com::err_t::OK;
+    return (ufi) != ESP_OK ? aruna::comm::err_t::HARDWARE : aruna::comm::err_t::OK;
 }
 
 void UART::handle_rx_task(void *__this) {
@@ -144,8 +144,8 @@ void UART::handle_rx_task(void *__this) {
 					ESP_LOGV(_this->TAG, "incoming data[%d]:", read);
 //                    if the data now contains a 0x0 then datalength will be set at that byte.
                     ESP_LOG_BUFFER_HEXDUMP(_this->TAG, dtmp, dtmp[0], ESP_LOG_VERBOSE);
-//                    convert binary to transmitpackage and alert COM of an incomming connection.
-                    if (COM.incoming_connection(dtmp, dtmp[0]) != Com::err_t::OK) {
+//                    convert binary to transmitpackage and alert comm of an incomming connection.
+                    if (aruna::comm::incoming_connection(dtmp, dtmp[0]) != aruna::comm::err_t::OK) {
                         ESP_LOGV(_this->TAG, "protocol error");
                     }
                     break;

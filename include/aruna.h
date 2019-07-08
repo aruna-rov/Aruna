@@ -9,10 +9,10 @@
     // System is ESP
     // include embedded files
     #include "aruna/blinky.h"
-    #include "aruna/Com.h"
+    #include "aruna/comm.h"
     #include "aruna/control.h"
-    #include "aruna/drivers/com/ComDriver.h"
-    #include "aruna/drivers/com/UART.h"
+    #include "aruna/drivers/comm/CommDriver.h"
+    #include "aruna/drivers/comm/UART.h"
     #include "aruna/drivers/control/ControlActuatorDriver.h"
     #include "aruna/drivers/control/L293D.h"
 

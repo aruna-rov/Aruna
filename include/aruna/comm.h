@@ -2,8 +2,8 @@
 // Created by noeel on 7-1-19.
 //
 
-#ifndef ARUNA_COM_H
-#define ARUNA_COM_H
+#ifndef ARUNA_COMM_H
+#define ARUNA_COMM_H
 
 #include "set"
 #include "tuple"
@@ -12,14 +12,11 @@
 #include <freertos/queue.h>
 #include <string.h>
 namespace aruna {
-    namespace drivers { namespace com {
-            class ComDriver;
+    namespace drivers { namespace comm {
+            class CommDriver;
     }}
 
-
-    class Com {
-        friend drivers::com::ComDriver;
-    public:
+    namespace comm {
         static constexpr BaseType_t TRANSMISSION_CORE = 1;
 
         static constexpr uint8_t N_COUNT_MAX = 255;
@@ -31,7 +28,7 @@ namespace aruna {
             OK = 0x00,
             FAIL = 0x100,
 
-            //    COM running status
+            //    comm running status
             NOT_STOPPED = 0x101,
             NOT_STARTED = 0x102,
             NOT_PAUSED = 0x103,
@@ -61,8 +58,8 @@ namespace aruna {
             NONE
         };
 
-        // status of the COM object
-        enum status_t {
+        // status of the comm object
+        enum class status_t {
             RUNNING,
             STOPPED,
             PAUSED
@@ -70,7 +67,7 @@ namespace aruna {
 
         typedef uint8_t port_t;
 
-        // com data size minus the header
+        // comm data size minus the header
         // TODO increasing this causes an overflow
         static constexpr size_t MAX_DATA_SIZE = 150;
 
@@ -137,9 +134,9 @@ namespace aruna {
 
             /**
              * Get binary array of transmitpackage, for sending over a link.
-             * com_bin_t arrangement: from_port, to_port, data
+             * bin arrangement: size, n, from_port, to_port, data
              * @param transp package to make a binary from.
-             * @param bin com_bin_t to store the data to.
+             * @param bin to store the data to.
              */
             static void transmitpackage_to_binary(transmitpackage_t transp, uint8_t *bin) {
 
@@ -194,7 +191,7 @@ namespace aruna {
 //__attribute__((packed));
 
         /**
-         * endpoint type of a com channel
+         * endpoint type of a comm channel
          */
         struct channel_t {
             /**
@@ -210,7 +207,7 @@ namespace aruna {
 
             /**
              * @brief handeler to handle incomming connections
-             * @note incomming data is not garanteed to be `COM_DATA_SIZE` in length. Could be smaller.
+             * @note incomming data is not garanteed to be `DATA_SIZE` in length. Could be smaller.
              */
             QueueHandle_t *handeler;
 
@@ -233,53 +230,48 @@ namespace aruna {
         // control functions
 
         /**
-         * Constructor
-         */
-        Com();
-
-        /**
-         * @brief  Start new communication. Using `COM_LINK_HARDWARE` to define hardware
-         * @retval com_err
-         *  * `COM_HARDWARE_ERROR` if the hardware fails.
-         *  * `COM_OK` great success!
+         * @brief  Start new communication. Using `LINK_HARDWARE` to define hardware
+         * @retval err_t
+         *  * `HARDWARE_ERROR` if the hardware fails.
+         *  * `OK` great success!
          */
         err_t start();
 
         /**
-         * @brief  Start new communication. Using `COM_LINK_HARDWARE` to define hardware
+         * @brief  Start new communication. Using `LINK_HARDWARE` to define hardware
          * @param driver force to use specific driver.
-         * @retval com_err
-         *  * `COM_HARDWARE_ERROR` if the hardware fails.
-         *  * `COM_OK` great success!
+         * @retval err_t
+         *  * `HARDWARE_ERROR` if the hardware fails.
+         *  * `OK` great success!
          */
-        err_t start(drivers::com::ComDriver *driver);
+        err_t start(drivers::comm::CommDriver *driver);
 
         /**
          * @brief  Stop the communication, free all queue's, channels and buffers
-         * @retval com_err
-         *  * `COM_HARDWARE_ERROR` if the hardware fails.
-         *  * `COM_OK` great success!
-         *  * `COM_ERR_NOT_STARTED` if the com was not started.
+         * @retval err_t
+         *  * `HARDWARE_ERROR` if the hardware fails.
+         *  * `OK` great success!
+         *  * `NOT_STARTED` if the comm was not started.
          */
         err_t stop();
 
         /**
          * @brief  Register a new communication endpoint
-         * @param  channel: com_endpoint_t object
-         * @retval com_err
-         *  * `COM_ERR_INVALID_PARAMETERS` if parameters are invalid
-         *  * `COM_OK` if it was succesfully added.
-         *  * `COM_ERR_CHANNEL_EXISTS` if the channel already exists.
-         *  * `COM_ERR_BUFFER_OVERFLOW` channel buffer overflow
+         * @param  channel: channel_t object
+         * @retval err_t
+         *  * `INVALID_PARAMETERS` if parameters are invalid
+         *  * `OK` if it was succesfully added.
+         *  * `CHANNEL_EXISTS` if the channel already exists.
+         *  * `BUFFER_OVERFLOW` channel buffer overflow
          */
         err_t register_channel(channel_t *channel);
 
         /**
          * @brief  unregister an endpoint
          * @param  channel: endpoint to be removed
-         * @retval com_err
-         *  * `COM_OK` if it was succesfully removed.
-         *  * `COM_ERR_NO_CHANNEL` ain't got no channel, ain't got no knife.
+         * @retval err_t
+         *  * `OK` if it was succesfully removed.
+         *  * `NO_CHANNEL` ain't got no channel, ain't got no knife.
          */
         err_t unregister_channel(channel_t &channel);
 
@@ -291,51 +283,51 @@ namespace aruna {
          * @param  data: Data to send.
          * @param data_size: length of the data
          * @param wait_for_ack: if set to thrue, thread will block until ack is received or until timeout is reached
-         * @retval com_err
-         *  * `COM_ERR_INVALID_PARAMETERS` if parameters are invalid
-         *  * `COM_OK` if it was succesfully send.
-         *  * `COM_ERR_NO_CONNECTION` if there is no connection,
-         *  * `COM_ERR_BUFFER_OVERFLOW` if the data was not added to the bugger due an overflow,
-         *  * `COM_ERR_NO_CHANNEL` if the channel does'nt exist.
-         *  * `COM_ERR_NO_RESPONSE` if there was no response (only if `wait_for_ack` is true)
+         * @retval err_t
+         *  * `INVALID_PARAMETERS` if parameters are invalid
+         *  * `OK` if it was succesfully send.
+         *  * `NO_CONNECTION` if there is no connection,
+         *  * `BUFFER_OVERFLOW` if the data was not added to the bugger due an overflow,
+         *  * `NO_CHANNEL` if the channel does'nt exist.
+         *  * `NO_RESPONSE` if there was no response (only if `wait_for_ack` is true)
          */
         //	 TODO documentation
         err_t send(channel_t *channel, port_t to_port, uint8_t *data, size_t data_size, bool wait_for_ack = false);
 
         /**
          * pause all communication. buffers, channels and queue's will be saved
-         * @return com_err
-         *  * `COM_OK` if it was a success,
-         *  * `COM_ERR_NOT_STARTED` if the com was not started.
+         * @return err_t
+         *  * `OK` if it was a success,
+         *  * `NOT_STARTED` if the comm was not started.
          */
         err_t pause();
 
         /**
          * resume all communication.
-         * @return com_err
-         *  * `COM_OK` if it was a success,
-         *  * `COM_ERR_NOT_STARTED` if the com was not started.
-         *  * `COM_ERR_NOT_PAUSED` if it was not paused.
+         * @return err_t
+         *  * `OK` if it was a success,
+         *  * `NOT_STARTED` if the comm was not started.
+         *  * `NOT_PAUSED` if it was not paused.
          */
         err_t resume();
 
         // getters and setters
 
         /**
-         * @brief  Get the status of the com link
+         * @brief  Get the status of the comm link
          * @retval 1 is connected, 0 if not.
          */
         bool is_connected();
 
         /**
          * Get the running status of com
-         * @return `com_status` (RUNNING, PAUSED, STOPPED)
+         * @return `status_t` (RUNNING, PAUSED, STOPPED)
          */
         status_t get_status();
 
         /**
          * @brief  Get connection hardware type
-         * @retval com_link_type
+         * @retval link_t
          */
         link_t get_link_type();
 
@@ -354,10 +346,10 @@ namespace aruna {
         /**
          * @brief get all names of the channels currently registered
          * @param buffer to write the names into.
-         * @return com_err
-         *  * `COM_OK` if it was a success
-         *  * `COM_ERR_BUFFER_OVERFLOW` if the suplied buffer is to small,
-         *  * `COM_ERR_INVALID_PARAMETERS if the parameters are incorrect,
+         * @return err_t
+         *  * `OK` if it was a success
+         *  * `BUFFER_OVERFLOW` if the suplied buffer is to small,
+         *  * `INVALID_PARAMETERS if the parameters are incorrect,
          */
         err_t get_channels(char *buffer);
 
@@ -369,26 +361,26 @@ namespace aruna {
         unsigned int get_speed();
 
         /**
-         * register a driver to be a com driver candidate.
+         * register a driver to be a comm driver candidate.
          * @param driver ComDriver object
-         * @return com_err
-         * * `COM_ERR_DRIVER_EXISTS` if driver already exists.
-         * * `COM_ERR_BUFFER_OVERFLOW` driver buffer overflow
-         * * `COM_OK` all is well :).
+         * @return err_t
+         * * `DRIVER_EXISTS` if driver already exists.
+         * * `BUFFER_OVERFLOW` driver buffer overflow
+         * * `OK` all is well :).
          */
-        err_t register_candidate_driver(drivers::com::ComDriver *driver);
+        err_t register_candidate_driver(drivers::comm::CommDriver *driver);
 
         /**
          * unregister a driver to be a comdiver candidate
          * @param driver ComDriver to be deleted
-         * @return com_err
-         * * `COM_OK` great success!
-         * * `COM_ERR_NO_DRIVER` driver does'nt exists.
+         * @return err_t
+         * * `OK` great success!
+         * * `NO_DRIVER` driver does'nt exists.
          */
-        err_t unregister_candidate_driver(drivers::com::ComDriver *driver);
+        err_t unregister_candidate_driver(drivers::comm::CommDriver *driver);
 
         /**
-         * get all the com driver candidates
+         * get all the comm driver candidates
          */
         void get_candidate_drivers(char *buffer[]);
         //     TODO come here and make it!
@@ -396,136 +388,13 @@ namespace aruna {
         /**
          * @brief  Interrupt incomming connection handeler
          * @param package that needs to be handeled.
-         * @retval com_err
-         * `COM_ERR_NOT_STARTED` com is not started
-         * `COM_OK` handeled
-         * `COM_ERR_NO_CHANNEL` there is no channel to handle it
+         * @retval err_t
+         * `NOT_STARTED` comm is not started
+         * `OK` handeled
+         * `NO_CHANNEL` there is no channel to handle it
          */
         err_t incoming_connection(uint8_t *package, uint8_t package_size);
 
-    protected:
-
-        static const short TRANSMIT_QUEUE_BUFFER_SIZE = 16;
-
-        /**
-         * @brief set the com status
-         * @param status: new status
-         */
-        void set_status(status_t status);
-
-    private:
-
-        // variables
-
-        static constexpr char *LOG_TAG = (char *) "COM";
-        TaskHandle_t ack_tasks[N_COUNT_MAX];
-        transmitpackage_t watched_packages[N_COUNT_MAX];
-        uint8_t times_tried[N_COUNT_MAX + 1];
-        uint8_t n_count = 1;
-
-        std::set<drivers::com::ComDriver *> driverCandidates;
-
-        /**
-         * transmission queue
-         */
-        QueueHandle_t transmission_queue[3];
-
-        /**
-         * xQueue set
-         */
-        QueueSetHandle_t transmission_queue_set;
-
-        /**
-         * @brief all endpoints
-         */
-        std::set<channel_t> channels;
-
-        /**
-         * @brief stores the com status
-         */
-        status_t status = status_t::STOPPED;
-
-        /**
-         * stores the driver.
-         */
-        drivers::com::ComDriver *driver;
-
-        /**
-         * RTOS task handeler for the tranmissionqueue handeler task
-         */
-        TaskHandle_t transmissionQueueHandeler_task;
-
-        /**
-         * Transmit a package
-         * @param transmitpackage package to be transmitted
-         * @return com_err.
-         * 		-	COM_OK if success
-         * 		-	COM_HARDWARE_ERR if the hardware layer failed
-         */
-        err_t transmit(transmitpackage_t transmitpackage);
-
-        /**
-         * @brief  Tramsmission handeler. Do not call directly, blocks CPU.
-         * @retval None
-         */
-        void transmissionQueueHandeler();
-
-        /**
-         * static wrapper for transmissionQueueHandeler so that RTOS can access it.
-         * @param _this
-         */
-        static void transmissionQueueHandeler(void *_this);
-
-
-        /**
-         * get the driver
-         * @return ComdDriver object
-         */
-        drivers::com::ComDriver *getDriver();
-
-        /**
-         * pick the best available driver
-         * @return tuple    0: ComDriver best candidate object.
-         *                  1: com_err.
-         * 1: `COM_ERR_NO_DRIVER` if no driver can be found
-         * 1: `COM_OK` if all is well
-         */
-        std::tuple<drivers::com::ComDriver *, err_t> pickDriver();
-
-        /**
-         * set the driver
-         * @param driver to use.
-         */
-        void setDriver(drivers::com::ComDriver &driver);
-
-        /**
-         * rate the driver on speed, errors, active connection, realtime, connection type etc.
-         * @param driver
-         * @return rating of the driver. Higher is better.
-         */
-        unsigned int rateDriver(drivers::com::ComDriver &driver);
-
-        /**
-         * pick a new best driver, dont call directly will delete your process.
-         */
-        void _selectDriverTask();
-
-        /**
-         * static wrapper for _selectDriverTask so that it can be used in an RTOS task.
-         * @param _this, that, there
-         */
-        static void _selectDriverTask(void *_this);
-
-        /**
-         * start a task to select a driver, does not block.
-         */
-        void selectDriverTask();
-
-
-        void acknowledge_handler_task(transmitpackage_t transmitpackage_to_watch);
-
-        static void _acknowledge_handler_task(void *handle);
-    };
-    extern Com COM;
+    }
 }
-#endif //ARUNA_COM_H
+#endif //ARUNA_COMM_H

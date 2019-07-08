@@ -6,7 +6,7 @@
 #include <freertos/FreeRTOS.h>
 #include <freertos/task.h>
 #include <driver/gpio.h>
-#include <aruna/Com.h>
+#include <aruna/comm.h>
 #include <aruna/blinky.h>
 #include <esp_log.h>
 
@@ -17,13 +17,13 @@ namespace aruna {
         void start_blinky_task(void *arg) {
             ESP_LOGV("BLINK", "started!");
             QueueHandle_t handler;
-            Com::transmitpackage_t tp;
-            Com::channel_t blinky_com_channel = {
+            comm::transmitpackage_t tp;
+            comm::channel_t blinky_comm_channel = {
                     .port = 4,
                     .priority = 2,
                     .handeler = &handler
             };
-            COM.register_channel(&blinky_com_channel);
+            comm::register_channel(&blinky_comm_channel);
             gpio_pad_select_gpio(LED_GPIO_PIN);
             ESP_ERROR_CHECK(gpio_set_direction(LED_GPIO_PIN, GPIO_MODE_OUTPUT));
             set_led(LED_ON);

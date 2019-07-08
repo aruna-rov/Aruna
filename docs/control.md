@@ -1,13 +1,13 @@
 # Control
 
 ## Acceleration and gyroscope
-The sensor for the closed looped system can be (almost) any MPU controller. Please see [esp-mpu-driver repo](https://github.com/natanaeljr/esp32-MPU-driver) for more information.
+The sensor for the closed looped system can be (almost) any MPU controller. Please see [esp-mpu-driver repo](https://github.comm/natanaeljr/esp32-MPU-driver) for more information.
 
 The sensor is not required. The control module will try to find an attached MPU controller and print "MPU functionality disabled." if the controller is not working propely. The following functionality is then disabled:
 * Closed loop control (damping, keep velocity or degree etc.)
 * get/set velocity or degree
 
-See the com command "activate MPU" and "get MPU status" for more information.
+See the comm command "activate MPU" and "get MPU status" for more information.
 
 **MPU pinout:**
 
@@ -38,14 +38,14 @@ motorV (4.5-36)	| -		| 8
 interV 5v	| -		| 16
 GRND	| GND	| 4, 5, 13 or 12	|
 
-## Com
+## Comm
 
-com interface with the control unit.
+comm interface with the control unit.
 
 * Port: `3`
 * Priority: `1`
 
-**com axis package layout:**
+**comm axis package layout:**
 
 1 byte | 1 byte | 1 byte | 1 byte | 2 bytes
 --- | --- | --- | --- | --- 
@@ -54,7 +54,7 @@ from port | to port | command | axis | data
 
 *all packages use the axis package layout unless stated otherwise*
 
-**com simple package layout:**
+**comm simple package layout:**
 
 1 byte | 1 byte | 1 byte | 1 byte
 --- | --- | --- | ---  
@@ -215,7 +215,7 @@ foreach axis in request a seperate response will be send.
 #### Set running state
 Set the state of the control tasks.
 
-**This command uses the simple com package**
+**This command uses the simple comm package**
 
 *request*
 * command: `0x20`
@@ -227,7 +227,7 @@ Set the state of the control tasks.
 #### Get running state
 get the state of the control tasks.
 
-**This command uses the simple com package**
+**This command uses the simple comm package**
 
 *request*
 * command: `0x21`
@@ -240,7 +240,7 @@ get the state of the control tasks.
 #### Test sensors
 Test the MPU sensor for closedloop feedback
 
-**This command uses the simple com package**
+**This command uses the simple comm package**
 
 *request*
 * command: `0x22`
@@ -253,7 +253,7 @@ Test the MPU sensor for closedloop feedback
 #### Calibrate sensors
 Calibrate the sensors (set 0 point). takes about 400ms. So stand still and level at that time.
 
-**This command uses the simple com package**
+**This command uses the simple comm package**
 
 *request*
 * command: `0x23`
@@ -278,7 +278,7 @@ Get a axis mask of all the axis that are supported by this ROV.
 #### Activate MPU
 Try to activate the MPU if it was disabled on boot.
 
-**This command uses the simple com package**
+**This command uses the simple comm package**
 
 *request*
 * command: `0x27`
@@ -290,7 +290,7 @@ Try to activate the MPU if it was disabled on boot.
 #### Get MPU status
 See if the MPU is enabled and working.
 
-**This command uses the simple com package**
+**This command uses the simple comm package**
 
 *request*
 * command: `0x28`

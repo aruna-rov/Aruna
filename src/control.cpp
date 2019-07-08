@@ -9,7 +9,7 @@
 #include <aruna/control.h>
 #include <set>
 #include <esp_log.h>
-#include <aruna/Com.h>
+#include <aruna/comm.h>
 #include "aruna/drivers/control/ControlActuatorDriver.h"
 #include "MPU.hpp"
 #include "mpu/math.hpp"   // math helper for dealing with MPU data
@@ -23,7 +23,7 @@ namespace {
 //    variables
 	const char *LOG_TAG = "CONTROL";
 	status_t control_status = status_t::STOPPED;
-	TaskHandle_t control_com_handler;
+	TaskHandle_t control_comm_handler;
 	TaskHandle_t control_damping;
 	std::set<ControlActuatorDriver *> drivers;
 	const gpio_num_t I2C_SDA_PIN = GPIO_NUM_26;
@@ -93,7 +93,7 @@ status_t start() {
 	}
 
 //    start threads.
-    xTaskCreate(com_handler_task, "control_com_handler", 2048, NULL, 12, &control_com_handler);
+    xTaskCreate(comm_handler_task, "control_comm_handler", 2048, NULL, 12, &control_comm_handler);
 	control_status = status_t::RUNNING;
 	return control_status;
 }
@@ -102,8 +102,8 @@ status_t get_status() {
 	return control_status;
 }
 
-void com_handler_task(void *arg) {
-	enum com_commands_t {
+void comm_handler_task(void *arg) {
+	enum comm_commands_t {
 		NO_COMMAND = 0x00,
 
 //		basic functionality
@@ -135,25 +135,25 @@ void com_handler_task(void *arg) {
 		SET_HOME = 0x31,
 		GOTO_CORDINATES = 0x32,
 	};
-//	initialize coms
-	Com::transmitpackage_t request;
+//	initialize comms
+	comm::transmitpackage_t request;
 	uint8_t mask;
 	uint8_t flags;
 	uint16_t data;
 	uint8_t buffer[6];
 	axis_mask_t active_axis;
-	QueueHandle_t control_com;
-	Com::channel_t control_channel = {
+	QueueHandle_t control_comm;
+	comm::channel_t control_channel = {
 			.port = 3,
 			.priority = 1,
-			.handeler = &control_com,
+			.handeler = &control_comm,
 	};
 	uint16_t (*get_value)(axis_mask_t mode);
 	void (*set_value)(axis_mask_t mode, uint16_t speed, direction_t direction);
-	com_commands_t command;
-	COM.register_channel(&control_channel);
+	comm_commands_t command;
+	comm::register_channel(&control_channel);
 	while (1) {
-		if (xQueueReceive(control_com, &request, (portTickType) portMAX_DELAY)) {
+		if (xQueueReceive(control_comm, &request, (portTickType) portMAX_DELAY)) {
 //			if (request.data_received_lenght < 2)
 //				continue;
 			flags = request.data_received[1];
@@ -161,7 +161,7 @@ void com_handler_task(void *arg) {
 			get_value = nullptr;
 			set_value = nullptr;
 			command = NO_COMMAND;
-			ESP_LOGD(LOG_TAG, "com command:%X, flag:%X, data:%d", request.data_received[0], request.data_received[1], data);
+			ESP_LOGD(LOG_TAG, "comm command:%X, flag:%X, data:%d", request.data_received[0], request.data_received[1], data);
 			switch (request.data_received[0]) {
 //				basic functionality
 
@@ -195,8 +195,8 @@ void com_handler_task(void *arg) {
 							buffer[3] = speed & 0xff;
 //							ESP_LOGD(LOG_TAG, "mask: %X flag: %X", mask, flags);
 //							ESP_LOGD(LOG_TAG, "GET_COMMAND: %X, value: %d",command,  speed);
-//							TODO error check com.send return value
-							COM.send(&control_channel, request.from_port, buffer, 4);
+//							TODO error check comm.send return value
+							comm::send(&control_channel, request.from_port, buffer, 4);
 						}
 					}
 					break;
@@ -209,7 +209,7 @@ void com_handler_task(void *arg) {
 						if (mask & flags & (uint8_t) active_axis) {
 							buffer[1] = mask;
 							buffer[2] = (uint8_t) get_direction((axis_mask_t) mask);
-							COM.send(&control_channel, request.from_port, buffer, 3);
+							comm::send(&control_channel, request.from_port, buffer, 3);
 						}
 					}
 					break;
@@ -248,7 +248,7 @@ void com_handler_task(void *arg) {
 							buffer[0] = GET_DAMPING;
 							buffer[1] = mask;
 							buffer[2] = (uint8_t) get_damping((axis_mask_t) mask);
-							COM.send(&control_channel, request.from_port, buffer, 3);
+							comm::send(&control_channel, request.from_port, buffer, 3);
 						}
 					}
 					break;
@@ -263,7 +263,7 @@ void com_handler_task(void *arg) {
 				case GET_RUNNING_STATE:
 					buffer[0] = GET_RUNNING_STATE;
 					buffer[1] = (uint8_t) get_status();
-					COM.send(&control_channel, request.from_port, buffer, 2);
+					comm::send(&control_channel, request.from_port, buffer, 2);
 					break;
 //				set running state
 				case SET_RUNNING_STATE:
@@ -285,7 +285,7 @@ void com_handler_task(void *arg) {
 					t = test_sensor();
 					buffer[0] = TEST_SENSORS;
 					buffer[1] = t;
-					COM.send(&control_channel, request.from_port, buffer, 2);
+					comm::send(&control_channel, request.from_port, buffer, 2);
 					break;
 //				calibrate sensors
 				case CALIBRATE_SENSORS:
@@ -297,7 +297,7 @@ void com_handler_task(void *arg) {
 				case GET_SUPPORTED_AXIS:
 					buffer[0] = GET_SUPPORTED_AXIS;
 					buffer[1] = (uint8_t) get_active_axis();
-					COM.send(&control_channel, request.from_port, buffer, 2);
+					comm::send(&control_channel, request.from_port, buffer, 2);
 					break;
 				case SET_SENSOR_OFFSET:
 				case GET_SENSOR_OFFSET:
@@ -309,7 +309,7 @@ void com_handler_task(void *arg) {
 				case GET_MPU_STATUS:
 					buffer[0] = GET_MPU_STATUS;
 					buffer[1] = MPU_active;
-					COM.send(&control_channel, request.from_port, buffer, 2);
+					comm::send(&control_channel, request.from_port, buffer, 2);
 					break;
 //				advanced automated control
 
@@ -422,7 +422,7 @@ status_t stop() {
 	}
 
 //    stop task
-	vTaskDelete(control_com_handler);
+	vTaskDelete(control_comm_handler);
 	vTaskDelete(control_damping);
 	control_status = status_t::STOPPED;
 	return control_status;

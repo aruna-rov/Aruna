@@ -44,10 +44,10 @@ status_t stop();
 status_t get_status();
 
 /**
- * FreeRTOS task to handle all the incoming com requests.
+ * FreeRTOS task to handle all the incoming comm requests.
  * @param arg, not used.
  */
-void com_handler_task(void *arg);
+void comm_handler_task(void *arg);
 
 /**
  * damping task to keep the device at a current speed, altitude or position.

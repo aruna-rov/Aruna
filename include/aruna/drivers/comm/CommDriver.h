@@ -2,31 +2,31 @@
 // Created by noeel on 14-1-19.
 //
 
-#ifndef ARUNA_COMDRIVER_H
-#define ARUNA_COMDRIVER_H
+#ifndef ARUNA_COMMDRIVER_H
+#define ARUNA_COMMDRIVER_H
 
-#include <aruna/Com.h>
-namespace aruna { namespace drivers { namespace com {
-class ComDriver {
+#include <aruna/comm.h>
+namespace aruna { namespace drivers { namespace comm {
+class CommDriver {
 public:
 
     /**
      * @brief  directly transmit a package on the link.
      * @param  package: package to be send
      * @param  package_size: size of the package
-     * @retval  `COM_OK` if all went well.
-     *          `COM_ERR_HARDWARE` if the hardware failes
+     * @retval  `OK` if all went well.
+     *          `HARDWARE` if the hardware failes
      */
-    virtual Com::err_t transmit(uint8_t *package, uint8_t package_size) = 0;
+    virtual aruna::comm::err_t transmit(uint8_t *package, uint8_t package_size) = 0;
     /**
      * @brief  directly transmit a package on the link.
      * @param  package: package to be send
      * @param  package_size: size of the package
      * @param  priority: (0 hightest to 2 lowest) only supported if link is realtime.
-     * @retval  `COM_OK` if all went well.
-     *          `COM_ERR_HARDWARE` if the hardware failes
+     * @retval  `OK` if all went well.
+     *          `HARDWARE` if the hardware failes
      */
-    virtual Com::err_t transmit(uint8_t *package, uint8_t package_size, unsigned short priority) {
+    virtual aruna::comm::err_t transmit(uint8_t *package, uint8_t package_size, unsigned short priority) {
         return transmit(package, package_size);
     };
 
@@ -63,10 +63,10 @@ public:
 
     /**
      * Get link type (RADIO, WIRED, NONE)
-     * @return com_link_t. COM_NONE if not connected.
+     * @return link_t. NONE if not connected.
      */
-    virtual Com::link_t getLinkType() {
-        return Com::link_t::NONE;
+    virtual aruna::comm::link_t getLinkType() {
+        return aruna::comm::link_t::NONE;
     };
 
     /**
@@ -87,20 +87,20 @@ public:
 
     /**
      * start the driver.
-     * @return com_err, `COM_OK` if started succesfully, `COM_ERR_HARDWARE` or other hardware error on failure.
+     * @return err_t, `OK` if started succesfully, `HARDWARE` or other hardware error on failure.
      */
-    virtual Com::err_t start(){
-        return Com::err_t::OK;
+    virtual aruna::comm::err_t start(){
+        return aruna::comm::err_t::OK;
     }
 
     /**
      * Stop the driver.
-     * @return com_err, `COM_OK` if started succesfully, `COM_ERR_HARDWARE` or other hardware error on failure.
+     * @return err_t, `OK` if started succesfully, `HARDWARE` or other hardware error on failure.
      */
-    virtual Com::err_t stop(){
-        return Com::err_t::OK;
+    virtual aruna::comm::err_t stop(){
+        return aruna::comm::err_t::OK;
     }
 };
 
 }}}
-#endif //ARUNA_COMDRIVER_H
+#endif //ARUNA_COMMDRIVER_H

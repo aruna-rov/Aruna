@@ -1,14 +1,14 @@
-# ARCOM
+# ARCOMM
 
-This document describes the Aruna Com protocol, further referenced to as ARCOM.
+This document describes the Aruna comm protocol, further referenced to as ARCOMM.
 
 Document version: 0.0.1
 
-ARCOM is designed for a 1:1 connection, one node talking to one other node. Flexibility is kept in mind for further expansion (hardware and application layer especially)
+ARCOMM is designed for a 1:1 connection, one node talking to one other node. Flexibility is kept in mind for further expansion (hardware and application layer especially)
 
 ## Hardware layer
 
-the hardware in not defined in ARCOM, the idea is that ARCOM is a very flexible protocol that allows for many different hardware layers. The default package layout is however defined and needs to be passed on to the process layer as described below. Extra headers may be added if it is necessary for the hardware link.
+the hardware in not defined in ARCOMM, the idea is that ARCOMM is a very flexible protocol that allows for many different hardware layers. The default package layout is however defined and needs to be passed on to the process layer as described below. Extra headers may be added if it is necessary for the hardware link.
 
 ### packet layout
 
@@ -24,13 +24,13 @@ size | N | from_port | to_port | data
 
 ## Processing layer
 
-This layer is responsible for all the logic in ARCOM.
+This layer is responsible for all the logic in ARCOMM.
 
 The maximum length of the data in a package is 255. When an application tries to send something bigger then it must be send in parts.
 
 ### Channels
 
-ARCOM communication is done by channels. Each application can register multiple channels and only deregister channels that they have ownership over. A channel consists of :
+ARCOMM communication is done by channels. Each application can register multiple channels and only deregister channels that they have ownership over. A channel consists of :
 
 * *channel handler:* This is the owner of the channel, and is used for transmitting, receiving packages and manipulating the channel properties.
 * *port:* port of the channel (0-255). Each port can only be used once until the channel is destroyed.
@@ -58,10 +58,10 @@ size | N
 
 ## Application layer
 
-Below describes the functions that must be accessible from any application using ARCOM.
+Below describes the functions that must be accessible from any application using ARCOMM.
 
-* Start/stop ARCOM on stopping ARCOM all the queue's and buffers must be cleared.
-* get status of ARCOM (running, stopped, error)
+* Start/stop ARCOMM on stopping ARCOMM all the queue's and buffers must be cleared.
+* get status of ARCOMM (running, stopped, error)
 * Get the name of de ComDriver (hardware layer)
 * register channel
 * deregister channel
