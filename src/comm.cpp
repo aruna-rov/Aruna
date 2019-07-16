@@ -3,7 +3,18 @@
 //
 
 #include "aruna/comm.h"
-#include <esp_log.h>
+#if defined(ESP_PLATFORM)
+    #include <esp_log.h>
+#else
+    // temp stub ESP_LOG
+    #define ESP_LOGD(a, ...) (true)
+    #define ESP_LOGE(a, ...) (true)
+    #define ESP_LOGV(a, ...) (true)
+    #define ESP_LOGW(a, ...) (true)
+    #define ESP_LOG_BUFFER_HEXDUMP(a, ...) (true)
+    #define ESP_LOG_VERBOSE
+    #define ESP_LOG_WARN
+#endif
 #include <math.h>
 #include <aruna/drivers/comm/CommDriver.h>
 namespace aruna {

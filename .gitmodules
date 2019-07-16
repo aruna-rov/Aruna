@@ -6,3 +6,6 @@
 	path = example/libs/MPUdriver
 	url = https://github.com/natanaeljr/esp32-MPU-driver.git
 	ignore = dirty
+[submodule "libs/FreeRTOS-Sim"]
+	path = libs/FreeRTOS-Sim
+	url = https://github.com/megakilo/FreeRTOS-Sim

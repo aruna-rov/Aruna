@@ -7,9 +7,15 @@
 
 #include "set"
 #include "tuple"
-#include "freertos/FreeRTOS.h"
-#include "freertos/task.h"
-#include <freertos/queue.h>
+#if defined(ESP_PLATFORM)
+    #include "freertos/FreeRTOS.h"
+    #include "freertos/task.h"
+    #include <freertos/queue.h>
+#elif defined (__unix__) || (defined (__APPLE__) && defined (__MACH__))
+    #include "FreeRTOS.h"
+    #include "task.h"
+    #include <queue.h>
+#endif
 #include <string.h>
 namespace aruna {
     namespace drivers { namespace comm {

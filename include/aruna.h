@@ -5,7 +5,7 @@
 #ifndef ARUNA_H
 #define ARUNA_H
 
-#if  defined(ESP_PLATFORM)
+#if defined(ESP_PLATFORM)
     // System is ESP
     // include embedded files
     #include "aruna/blinky.h"
@@ -19,7 +19,8 @@
 #elif defined (__unix__) || (defined (__APPLE__) && defined (__MACH__))
     // System is Posix
     // only include communication abstraction
-    #include "Com.h"
+    #include "aruna/FreeRTOS/FreeRTOSKernel.h"
+    #include "aruna/comm.h"
 #else
     #error "System is not supported."
 #endif
