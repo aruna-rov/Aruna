@@ -1,5 +1,6 @@
 set(COMPONENT_SRCS
         "src/blinky.cpp"
+        "src/log.cpp"
         "src/comm.cpp"
         "src/control.cpp"
         "src/drivers/comm/UART.cpp"

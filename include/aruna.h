@@ -8,6 +8,7 @@
 #if defined(ESP_PLATFORM)
     // System is ESP
     // include embedded files
+    #include "aruna/log.h"
     #include "aruna/blinky.h"
     #include "aruna/comm.h"
     #include "aruna/control.h"
@@ -20,6 +21,7 @@
     // System is Posix
     // only include communication abstraction
     #include "aruna/FreeRTOS/FreeRTOSKernel.h"
+    #include "aruna/log.h"
     #include "aruna/comm.h"
 #else
     #error "System is not supported."

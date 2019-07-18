@@ -23,5 +23,8 @@ This library is responsable for all communication. The library is quite extensiv
 
 This library handles all the movement of the rov, and is dependand of the `comm` module for communication and uses `ControlActuatorDriver` as a virtual class for drivers.
 
+## log
+
+logging for all the aruna modules
 
 *For more documentation see `./docs`*

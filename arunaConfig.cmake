@@ -1,6 +1,7 @@
 
 add_library(aruna STATIC
     #src/blinky.cpp
+    ${aruna_DIR}/src/log.cpp
     ${aruna_DIR}/src/comm.cpp
     ${aruna_DIR}/src/FreeRTOSKernel.cpp
     #src/control.cpp
