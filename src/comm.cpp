@@ -3,18 +3,7 @@
 //
 
 #include "aruna/comm.h"
-#if defined(ESP_PLATFORM)
-    #include <esp_log.h>
-#else
-    // temp stub ESP_LOG
-    #define ESP_LOGD(a, ...) (true)
-    #define ESP_LOGE(a, ...) (true)
-    #define ESP_LOGV(a, ...) (true)
-    #define ESP_LOGW(a, ...) (true)
-    #define ESP_LOG_BUFFER_HEXDUMP(a, ...) (true)
-    #define ESP_LOG_VERBOSE
-    #define ESP_LOG_WARN
-#endif
+#include "aruna/log.h"
 #include <math.h>
 #include <aruna/drivers/comm/CommDriver.h>
 namespace aruna {
@@ -28,7 +17,7 @@ namespace aruna {
 
         static const short TRANSMIT_QUEUE_BUFFER_SIZE = 16;
 
-        static constexpr char *LOG_TAG = (char *) "comm";
+        static log::channel_t *log;
         TaskHandle_t ack_tasks[N_COUNT_MAX];
         transmitpackage_t watched_packages[N_COUNT_MAX];
         uint8_t times_tried[N_COUNT_MAX + 1];
@@ -167,7 +156,7 @@ namespace aruna {
 //			TODO set correct priority
                 if (xTaskCreate(acknowledge_handler_task, task_name_buf, 2024, (void*)&watched_packages[n_count], 5,
                                 &ack_tasks[transmitpackage.n]) != pdPASS)
-                    ESP_LOGE(LOG_TAG, "failed to create task: %s", task_name_buf);
+                    log->error("failed to create task: %s", task_name_buf);
                 n_count = n_count >= N_COUNT_MAX ? 1 : n_count + 1;
             }
             return return_msg;
@@ -201,9 +190,9 @@ namespace aruna {
                     }
                 }
                 if (transmit_msg != err_t::OK) {
-                    ESP_LOGW(LOG_TAG, "transmit of: %d, to: %d, failed: 0x%X", transpack.from_port, transpack.to_port,
+                    log->warning("transmit of: %d, to: %d, failed: 0x%X", transpack.from_port, transpack.to_port,
                              (uint8_t) transmit_msg);
-                    ESP_LOG_BUFFER_HEXDUMP(LOG_TAG, &transpack.data_transmitting, transpack.data_lenght, ESP_LOG_WARN);
+                    log->dump(log::level_t::WARNING, transpack.data_transmitting, transpack.data_lenght);
                 }
             }
             vTaskDelete(NULL);
@@ -237,7 +226,7 @@ namespace aruna {
             unsigned int score = 0;
             err_t drivstrt = driver.start();
             if (drivstrt != err_t::OK) {
-                ESP_LOGW(LOG_TAG, "driver:%s, failed to start: %d", driver.getName(), (int) drivstrt);
+                log->warning("driver:%s, failed to start: %d", driver.getName(), (int) drivstrt);
                 return score;
             }
             if (!driver.isHardwareConnected())
@@ -267,7 +256,7 @@ namespace aruna {
 
             err_t drivstp = driver.stop();
             if (drivstp != err_t::OK) {
-                ESP_LOGW(LOG_TAG, "driver: %s, failed to stop: %d", driver.getName(), (int) drivstp);
+                log->warning("driver: %s, failed to stop: %d", driver.getName(), (int) drivstp);
                 return score / 1000;
             }
             return score;
@@ -277,7 +266,7 @@ namespace aruna {
             if (std::get<1>(dr) == err_t::OK) {
                 setDriver(*std::get<0>(dr));
             } else {
-                ESP_LOGE(LOG_TAG, "Failed to pick new driver: %d", (uint8_t) std::get<1>(dr));
+                log->error("Failed to pick new driver: %d", (uint8_t) std::get<1>(dr));
                 comm::stop();
             }
 
@@ -296,7 +285,7 @@ namespace aruna {
         void acknowledge_handler_task(void *transmitpackage_to_watch) {
             transmitpackage_t *package = (transmitpackage_t*) transmitpackage_to_watch;
             bool success = false;
-            ESP_LOGV(LOG_TAG, "new task watcher %d", package->n);
+            log->verbose("new task watcher %d", package->n);
             times_tried[package->n] = 1;
             while (1) {
 
@@ -307,14 +296,13 @@ namespace aruna {
 
 
                 if (times_tried[package->n] >= MAX_TRIES) {
-                    ESP_LOGE(LOG_TAG, "ack[%d] permanently failed. From: %d to: %d", package->n,
+                    log->error("ack[%d] permanently failed. From: %d to: %d", package->n,
                              package->from_port, package->to_port);
-                    ESP_LOG_BUFFER_HEXDUMP(LOG_TAG, package->data_transmitting,
-                                           package->data_lenght,
-                                           ESP_LOG_VERBOSE);
+                    log->dump(log::level_t::VERBOSE, package->data_transmitting,
+                             package->data_lenght);
                     break;
                 } else {
-                    ESP_LOGV(LOG_TAG, "ack[%d] timeout %d. From: %d to: %d", package->n,
+                    log->verbose("ack[%d] timeout %d. From: %d to: %d", package->n,
                              times_tried[package->n], package->from_port,
                              package->to_port);
                     package->resend = true;
@@ -330,6 +318,14 @@ namespace aruna {
 //	notify queue handeler that we are done.
             xTaskNotify(transmissionQueueHandeler_task, package->n, eSetValueWithOverwrite);
             vTaskDelete(NULL);
+        }
+        bool register_log() {
+            static bool registerd = false;
+            if (!registerd){
+                log = new log::channel_t("comm");
+                registerd = true;
+            }
+            return registerd;
         }
     }
 
@@ -357,6 +353,8 @@ namespace aruna {
             default:
                 break;
         }
+//        register com channel
+        register_log();
 //    set the driver
         err_t driver_err;
         setDriver(*driver);
@@ -370,7 +368,7 @@ namespace aruna {
         for (int i = 0; i < (sizeof(transmission_queue) / sizeof(*transmission_queue)); ++i) {
             transmission_queue[i] = xQueueCreate(TRANSMIT_QUEUE_BUFFER_SIZE, sizeof(transmitpackage_t));
             if (xQueueAddToSet(transmission_queue[i], transmission_queue_set) != pdPASS)
-                ESP_LOGW(LOG_TAG, "failed to add queue[%d] to set", i);
+                log->warning("failed to add queue[%d] to set", i);
         }
 //    TODO priority goed zetten.
 //      Gaat zoiezo mis als je meerdere Com objecten probeerd aan temaken.
@@ -385,7 +383,7 @@ namespace aruna {
 //        stop when task failes
             driver_err = getDriver()->stop();
             if (driver_err != err_t::OK)
-                ESP_LOGE(LOG_TAG, "Driver failed to stop: %d", (int) driver_err);
+                log->error("Driver failed to stop: %d", (int) driver_err);
 //        TODO driver unsetten en destroyen.
             return err_t::TASK_FAILED;
         }
@@ -412,7 +410,7 @@ namespace aruna {
         for (int i = 0; i < (sizeof(transmission_queue) / sizeof(*transmission_queue)); ++i) {
             xQueueReset(transmission_queue[i]);
             if (xQueueRemoveFromSet(transmission_queue[i], transmission_queue_set) != pdPASS)
-                ESP_LOGW(LOG_TAG, "failed to remove queue[%d] from set", i);
+                log->warning("failed to remove queue[%d] from set", i);
         }
         if (driver_err != err_t::OK)
             return driver_err;
@@ -513,7 +511,7 @@ namespace aruna {
 
             ds_p += ds_l;
             data_size -= ds_l;
-            ESP_LOGV(LOG_TAG, "sending from: %d to: %d, data: %s", tp[n_to_wait_for].from_port,
+            log->verbose("sending from: %d to: %d, data: %s", tp[n_to_wait_for].from_port,
                      tp[n_to_wait_for].to_port, tp[n_to_wait_for].data_transmitting);
             n_to_wait_for++;
             if (xQueueSend(transmission_queue[channel->priority], tp, 0) != pdPASS) {
@@ -578,7 +576,7 @@ namespace aruna {
         uint8_t ack[2] = {0x02};
         transmitpackage_t tp;
         if (get_status() != status_t::RUNNING) return err_t::NOT_STARTED;
-        ESP_LOGV(LOG_TAG, "incoming connection");
+        log->verbose("incoming connection");
         if (package[0] == 2 && package_size == 2) {
 //		recieved ack
             if (times_tried[package[1]] > 0)
@@ -606,8 +604,8 @@ namespace aruna {
 
     err_t register_candidate_driver(CommDriver *driver) {
 //    comdriver moet eigenlijk een referentie zijn en niet een levend object.
-
-        ESP_LOGD(LOG_TAG, "registering driver: %s", driver->getName());
+        register_log();
+        log->debug("registering driver: %s", driver->getName());
         if (driverCandidates.find(driver) != driverCandidates.end()) {
             return err_t::DRIVER_EXISTS;
         }
