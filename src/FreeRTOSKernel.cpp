@@ -1,3 +1,5 @@
+#if defined (__unix__) || (defined (__APPLE__) && defined (__MACH__))
+// only compile on posix
 #include "aruna/FreeRTOS/FreeRTOSKernel.h"
 
 #include <stdio.h>
@@ -166,3 +168,4 @@ extern "C" {
     }
     /*-----------------------------------------------------------*/
 }
+#endif // only compile on posix
