@@ -97,7 +97,7 @@ namespace aruna {
 
         int channel_t::print(level_t level, const char *format) {
             char level_txt[5];
-            if (((int) level < (int) this->level) || ((int) level > (int) max_level) || level == level_t::NONE) {
+            if (((int) level > (int) this->level) || ((int) level > (int) max_level) || level == level_t::NONE) {
                 return 0;
             }
             level_t_to_char(level, level_txt);

@@ -5,6 +5,7 @@
 #ifndef ARUNA_LOG_H
 #define ARUNA_LOG_H
 
+#include "stdarg.h"
 namespace aruna { namespace log {
     enum class level_t: int {
         NONE = -1,
@@ -29,7 +30,7 @@ namespace aruna { namespace log {
          */
         level_t level = default_level;
 
-        channel_t(const char* name, level_t level);
+        channel_t(const char* name, level_t level = default_level);
 
         /**
          * log verbose message
