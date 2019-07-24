@@ -168,7 +168,7 @@ namespace aruna {
         int set_level(const char *channel_name, level_t new_level) {
             int success = false;
             for (auto candidate: channels) {
-                if (candidate->name == channel_name) {
+                if (!strcmp(candidate->name, channel_name)) {
                     success = true;
                     candidate->level = new_level;
                 }
