@@ -10,9 +10,10 @@
 
 using namespace aruna;
 
-aruna::drivers::comm::CommDriver *uart_driver;
-aruna::drivers::control::ControlActuatorDriver* l293d_driver;
-aruna::drivers::comm::CommDriver *rs485_driver;
+drivers::comm::CommDriver *uart_driver;
+drivers::control::ControlActuatorDriver* l293d_driver;
+drivers::comm::CommDriver *rs485_driver;
+aruna::log::channel_t *example_log;
 
 const static char* LOG_TAG = "MAIN";
 
@@ -22,30 +23,27 @@ void start_comm();
 void register_drivers();
 
 void comm_test_task(void *arg) {
-    aruna::comm::transmitpackage_t d;
+    comm::transmitpackage_t d;
     QueueHandle_t handler;
 
-    aruna::comm::channel_t testapp = {
+    comm::channel_t testapp = {
             .port = 1,
             .priority = 1,
             .handeler = &handler
     };
     //    TODO register channel needs redesign, all endpoint data as paramter. handeler should be used.
-    ESP_LOGI("comm_test_task", "register: %d", (uint8_t) comm::register_channel(&testapp));
-    ESP_LOGI("comm_test_task", "send: %X", (uint8_t) comm::send(&testapp, 0xAA, (uint8_t *) "precies 32 bytes aan data size!\n", 32,
-												   0));
-    ESP_LOGI("comm_test_task", "send: %X", (uint8_t) comm::send(&testapp, 0xAE,
-												   (uint8_t *) "een overflow van data! ohh nee, wat gebeurt er nu?\n",
-												   51, true));
-	ESP_LOGI("comm_test_task", "send: %X", (uint8_t) comm::send(&testapp, 0xDE, (uint8_t *) "My man!\n", 8, true));
+    example_log->info("comm register: 0x%X", comm::register_channel(&testapp));
+    example_log->info("comm send: 0x%X", comm::send(&testapp, 0xAA, (uint8_t *) "precies 32 bytes aan data size!\n", 32, 0));
+    example_log->info("comm send: 0x%X", comm::send(&testapp, 0xAE, (uint8_t *) "een overflow van data! ohh nee, wat gebeurt er nu?\n", 51, true));
+	example_log->info("comm send: 0x%X", comm::send(&testapp, 0xDE, (uint8_t *) "My man!\n", 8, true));
 
     while (1) {
         if (xQueueReceive(handler,(void *) &d, (portTickType) portMAX_DELAY)) {
-            ESP_LOGI("comm_test_task", "howdy, partner!");
-            ESP_LOGI("comm_test_task", "data: '%s'", d.data_received);
-            ESP_LOGI("comm_test_task", "data_length: '%d'", d.data_lenght);
-            ESP_LOGI("comm_test_task", "from: '%d'", d.from_port);
-            ESP_LOGI("comm_test_task", "me: '%d'", d.to_port);
+            example_log->info("howdy, partner!");
+            example_log->info("data: '%s'", d.data_received);
+            example_log->info("data_length: '%d'", d.data_lenght);
+            example_log->info("from: '%d'", d.from_port);
+            example_log->info("me: '%d'", d.to_port);
         }
     }
     vTaskDelete(NULL);
@@ -53,15 +51,19 @@ void comm_test_task(void *arg) {
 
 
 extern "C" void app_main(void) {
-
-	esp_log_level_set("comm", ESP_LOG_VERBOSE);
+//    change to VERBOSE enable logging.
+    log::set_max_level(log::level_t::NONE);
+//
+    example_log = new log::channel_t("aruna_example");
+    log::set_level("comm", log::level_t::VERBOSE);
+    log::set_level("aruna_example", log::level_t::VERBOSE);
 	esp_log_level_set("UART", ESP_LOG_VERBOSE);
-	ESP_LOGI(LOG_TAG, "hello world!");
+	example_log->info("hello world!");
     register_drivers();
     start_comm();
 
-    aruna::control::start();
-//	aruna::control::set_X_velocity(100, direction_t::PLUS);
+    control::start();
+//	control::set_X_velocity(100, direction_t::PLUS);
 
 //    test application
 
@@ -108,8 +110,8 @@ void register_drivers() {
 }
 
 void start_comm() {
-    ESP_LOGD(LOG_TAG, "comm start: %d", (uint8_t) comm::start());
-    ESP_LOGD(LOG_TAG, "comm status: %d", (uint8_t) comm::get_status());
-    ESP_LOGD(LOG_TAG, "comm driver: %s", (char*) comm::getName());
-    ESP_LOGD(LOG_TAG, "comm speed: %d", (uint8_t) comm::get_speed());
+    example_log->debug("comm start: 0x%X", comm::start(uart_driver));
+    example_log->debug("comm status: 0x%X", comm::get_status());
+    example_log->debug("comm driver name: %s", comm::getName());
+    example_log->debug("comm speed: %i", comm::get_speed());
 }
