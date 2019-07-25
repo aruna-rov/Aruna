@@ -16,12 +16,9 @@ namespace aruna {
 
         void start_blinky_task(void *arg) {
             ESP_LOGV("BLINK", "started!");
-            QueueHandle_t handler;
             comm::transmitpackage_t tp;
             comm::channel_t blinky_comm_channel = {
                     .port = 4,
-                    .priority = 2,
-                    .handeler = &handler
             };
             comm::register_channel(&blinky_comm_channel);
             gpio_pad_select_gpio(LED_GPIO_PIN);
@@ -31,7 +28,7 @@ namespace aruna {
             set_led(LED_OFF);
 
             while (1) {
-                if (xQueueReceive(handler, (void *) &tp, (portTickType) portMAX_DELAY)) {
+                if (blinky_comm_channel.receive(&tp)) {
                     if (tp.data_lenght > 3) break;
                     switch (tp.data_received[0]) {
                         case 0x00:
@@ -58,6 +55,7 @@ namespace aruna {
                         default:
                             return;
                     }
+                    blinky_comm_channel.receive_clear();
                 }
             }
             vTaskDelete(NULL);

@@ -15,8 +15,6 @@ drivers::control::ControlActuatorDriver* l293d_driver;
 drivers::comm::CommDriver *rs485_driver;
 aruna::log::channel_t *example_log;
 
-const static char* LOG_TAG = "MAIN";
-
 extern "C" void app_main(void);
 void testUART_task(void *param);
 void start_comm();
@@ -24,12 +22,8 @@ void register_drivers();
 
 void comm_test_task(void *arg) {
     comm::transmitpackage_t d;
-    QueueHandle_t handler;
-
     comm::channel_t testapp = {
             .port = 1,
-            .priority = 1,
-            .handeler = &handler
     };
     //    TODO register channel needs redesign, all endpoint data as paramter. handeler should be used.
     example_log->info("comm register: 0x%X", comm::register_channel(&testapp));
@@ -38,12 +32,13 @@ void comm_test_task(void *arg) {
 	example_log->info("comm send: 0x%X", comm::send(&testapp, 0xDE, (uint8_t *) "My man!\n", 8, true));
 
     while (1) {
-        if (xQueueReceive(handler,(void *) &d, (portTickType) portMAX_DELAY)) {
+        if (testapp.receive(&d)) {
             example_log->info("howdy, partner!");
             example_log->info("data: '%s'", d.data_received);
             example_log->info("data_length: '%d'", d.data_lenght);
             example_log->info("from: '%d'", d.from_port);
             example_log->info("me: '%d'", d.to_port);
+            testapp.receive_clear();
         }
     }
     vTaskDelete(NULL);

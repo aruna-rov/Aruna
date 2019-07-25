@@ -142,18 +142,15 @@ void comm_handler_task(void *arg) {
 	uint16_t data;
 	uint8_t buffer[6];
 	axis_mask_t active_axis;
-	QueueHandle_t control_comm;
 	comm::channel_t control_channel = {
 			.port = 3,
-			.priority = 1,
-			.handeler = &control_comm,
 	};
 	uint16_t (*get_value)(axis_mask_t mode);
 	void (*set_value)(axis_mask_t mode, uint16_t speed, direction_t direction);
 	comm_commands_t command;
 	comm::register_channel(&control_channel);
 	while (1) {
-		if (xQueueReceive(control_comm, &request, (portTickType) portMAX_DELAY)) {
+		if (control_channel.receive(&request)) {
 //			if (request.data_received_lenght < 2)
 //				continue;
 			flags = request.data_received[1];
@@ -323,6 +320,7 @@ void comm_handler_task(void *arg) {
 				default:
 					break;
 			}
+			control_channel.receive_clear();
 		}
 	}
 	vTaskDelete(NULL);

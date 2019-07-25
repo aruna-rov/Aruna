@@ -7,27 +7,15 @@
 
 #include "set"
 #include "tuple"
-#if defined(ESP_PLATFORM)
-    #include "freertos/FreeRTOS.h"
-    #include "freertos/task.h"
-    #include <freertos/queue.h>
-#elif defined (__unix__) || (defined (__APPLE__) && defined (__MACH__))
-    #include "FreeRTOS.h"
-    #include "task.h"
-    #include <queue.h>
-#endif
+#include <queue>
 #include <string.h>
+#include <stdlib.h>
 namespace aruna {
     namespace drivers { namespace comm {
             class CommDriver;
     }}
 
     namespace comm {
-        static constexpr BaseType_t TRANSMISSION_CORE = 1;
-
-        static constexpr uint8_t N_COUNT_MAX = 255;
-        static constexpr portTickType ACK_TIMEOUT = 500 / portTICK_PERIOD_MS;
-        static constexpr uint8_t MAX_TRIES = 3;
 
         // state the status of the executed function, > 0 means no success
         enum class err_t {
@@ -97,10 +85,6 @@ namespace aruna {
              */
             uint8_t n;
 
-            /*
-             * Priority of the package
-             */
-            uint8_t priority;
 
             /**
              * @brief  Data to be transmitted.
@@ -110,7 +94,7 @@ namespace aruna {
             /**
              * pointer to where incoming data must be stored.
              */
-            uint8_t data_received[MAX_DATA_SIZE];
+            uint8_t *data_received;
 
             /**
              * size of the data
@@ -122,10 +106,6 @@ namespace aruna {
              */
             uint8_t size;
 
-            /**
-             * Task that is sending the message
-             */
-            TaskHandle_t sending_task;
 
             /**
              * notify the task on ack/no ack
@@ -172,7 +152,7 @@ namespace aruna {
              * get tansmitpackage of binary array.
              * @param bin array that stores the info
              * @param transp transmitpackage that the data need to go to.
-             * @return true if succeeded, false if not (not yet implemented, will always return 1)
+             * @return true if succeeded, false if not
              */
             static bool binary_to_transmitpackage(uint8_t *bin, transmitpackage_t &transp) {
                 //		check for complete header
@@ -182,6 +162,7 @@ namespace aruna {
                     return 0;
 
                 int dataLength = bin[0] - header_length;
+                transp.data_received = (uint8_t*) malloc(dataLength);
                 memcpy(&transp.size, &bin[0], (sizeof(transp.size)));
                 memcpy(&transp.n, &bin[sizeof(transp.size)], (sizeof(transp.n)));
                 memcpy(&transp.from_port, &bin[sizeof(transp.size) + sizeof(transp.n)], (sizeof(transp.from_port)));
@@ -194,28 +175,44 @@ namespace aruna {
                 return 1;
             }
         };
-//__attribute__((packed));
 
         /**
          * endpoint type of a comm channel
          */
         struct channel_t {
+            pthread_cond_t in_buffer_not_empty;
+            pthread_mutex_t in_buffer_lock;
+            std::queue<transmitpackage_t> in_buffer;
+
+            channel_t(port_t port): port(port) {
+                pthread_mutex_init(&in_buffer_lock, NULL);
+                pthread_cond_init(&in_buffer_not_empty, NULL);
+            }
             /**
              * @brief port nr. of the endpoint
              */
-            port_t port;
-
-            /**
-             * @brief priority 0-2
-             * 0 highest (reserverd for SIS), 2 lowest
-             */
-            short priority;
+            const port_t port;
 
             /**
              * @brief handeler to handle incomming connections
              * @note incomming data is not garanteed to be `DATA_SIZE` in length. Could be smaller.
              */
-            QueueHandle_t *handeler;
+//            QueueHandle_t *handeler;
+            bool receive(transmitpackage_t* tpp) {
+                pthread_mutex_lock(&in_buffer_lock);
+                while(in_buffer.empty()) {
+                    pthread_cond_wait(&in_buffer_not_empty, &in_buffer_lock);
+                }
+                *tpp = in_buffer.front();
+                pthread_mutex_unlock(&in_buffer_lock);
+                return true;
+            }
+//            TODO bool receive(transmitpackage_t*, uint32_t timeout_ms)
+            bool receive_clear() {
+                free(in_buffer.front().data_received);
+                in_buffer.pop();
+                return true;
+            }
 
             bool operator<(const channel_t &b) const {
                 return this->port < b.port;
@@ -226,11 +223,6 @@ namespace aruna {
             }
         };
 
-
-        struct ack_handel_t {
-            void *_this;
-            transmitpackage_t *transmitpackage;
-        };
 
 
         // control functions

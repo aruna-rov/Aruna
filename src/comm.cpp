@@ -6,6 +6,9 @@
 #include "aruna/log.h"
 #include <math.h>
 #include <aruna/drivers/comm/CommDriver.h>
+#include <pthread.h>
+#include <queue>
+#include <set>
 namespace aruna {
     namespace comm {
         using namespace drivers::comm;
@@ -15,30 +18,19 @@ namespace aruna {
 //        begin ahead declaration
         // variables
 
-        static const short TRANSMIT_QUEUE_BUFFER_SIZE = 16;
 
         static log::channel_t *log;
-        TaskHandle_t ack_tasks[N_COUNT_MAX];
-        transmitpackage_t watched_packages[N_COUNT_MAX];
-        uint8_t times_tried[N_COUNT_MAX + 1];
-        uint8_t n_count = 1;
 
+        pthread_t transmissionQueueHandeler_thread_handeler;
+        pthread_cond_t out_buffer_not_empty;
+        pthread_mutex_t out_buffer_critical;
+        std::queue<transmitpackage_t> out_buffer;
         std::set<drivers::comm::CommDriver *> driverCandidates;
-
-        /**
-         * transmission queue
-         */
-        QueueHandle_t transmission_queue[3];
-
-        /**
-         * xQueue set
-         */
-        QueueSetHandle_t transmission_queue_set;
 
         /**
          * @brief all endpoints
          */
-        std::set<channel_t> channels;
+        std::set<channel_t*> channels;
 
         /**
          * @brief stores the comm status
@@ -49,11 +41,6 @@ namespace aruna {
          * stores the driver.
          */
         CommDriver *driver;
-
-        /**
-         * RTOS task handeler for the tranmissionqueue handeler task
-         */
-        TaskHandle_t transmissionQueueHandeler_task;
 
 //        functions
 
@@ -76,7 +63,7 @@ namespace aruna {
          * @brief  Tramsmission handeler. Do not call directly, blocks CPU.
          * @retval None
          */
-        void transmissionQueueHandeler(void*);
+        void * transmissionQueueHandeler(void *);
 
         /**
          * get the driver
@@ -109,15 +96,12 @@ namespace aruna {
         /**
          * pick a new best driver, dont call directly will delete your process.
          */
-        void _selectDriverTask(void *);
+        void * _selectDriverTask(void *);
 
         /**
          * start a task to select a driver, does not block.
          */
         void selectDriverTask();
-
-
-        void acknowledge_handler_task(void *transmitpackage_to_watch);
 
 //        end ahead declaration
 
@@ -127,75 +111,35 @@ namespace aruna {
 
         err_t transmit(transmitpackage_t transmitpackage) {
             err_t return_msg;
-//	TODO use malloc for data size
-            uint8_t data[MAX_DATA_SIZE + transmitpackage_t::HEADER_SIZE];
-            char task_name_buf[15];
+            uint8_t* data = (uint8_t*) malloc(transmitpackage.data_lenght + transmitpackage_t::HEADER_SIZE);
 
-            if (!transmitpackage.resend && transmitpackage.priority < 2) {
-//	get N count if message has high priority and is not already set.
-                transmitpackage.n = n_count;
-//		if N count package from the prev loop is still in transit
-                if (times_tried[n_count] > 0) {
-//			wait for it to be done, before sending
-                    if (ulTaskNotifyTake(pdTRUE, ACK_TIMEOUT * MAX_TRIES) != n_count) {
-//					TODO set timer to allow for ack from other N pack in between instead of force quiting
-                        vTaskDelete(ack_tasks[n_count]);
-                        times_tried[n_count] = 0;
-                    }
-                }
-            }
             transmitpackage_t::transmitpackage_to_binary(transmitpackage, data);
-            watched_packages[n_count] = transmitpackage;
-            return_msg = getDriver()->transmit(data, transmitpackage.size, transmitpackage.priority);
+            return_msg = getDriver()->transmit(data, transmitpackage.size);
 
-//	start ack task if there is not already one and priority is high
-            if (!transmitpackage.resend && transmitpackage.priority < 2) {
-
-
-                sprintf(task_name_buf, "ack_handler_%d", transmitpackage.n);
-//			TODO set correct priority
-                if (xTaskCreate(acknowledge_handler_task, task_name_buf, 2024, (void*)&watched_packages[n_count], 5,
-                                &ack_tasks[transmitpackage.n]) != pdPASS)
-                    log->error("failed to create task: %s", task_name_buf);
-                n_count = n_count >= N_COUNT_MAX ? 1 : n_count + 1;
-            }
+            free(data);
             return return_msg;
         }
 
-        void transmissionQueueHandeler(void*) {
-//	int schedularCount = 0;
-            QueueSetMemberHandle_t xActivatedMember;
+        void * transmissionQueueHandeler(void *) {
             transmitpackage_t transpack;
             err_t transmit_msg = err_t::FAIL;
+            while(1) {
 
-            while (1) {
-                xActivatedMember = xQueueSelectFromSet(transmission_queue_set, (portTickType) portMAX_DELAY);
-                if (xActivatedMember == transmission_queue[0]) {
-                    xQueueReceive(transmission_queue[0], &transpack, 0);
-                    transmit_msg = transmit(transpack);
-                } else {
-                    if (
-//						TODO fix schedular
-//						schedularCount < 2 &&
-                            xActivatedMember == transmission_queue[1]) {
-                        xQueueReceive(transmission_queue[1], &transpack, 0);
-                        transmit_msg = transmit(transpack);
-
-//					schedularCount++;
-                    } else if (xActivatedMember == transmission_queue[2]) {
-                        xQueueReceive(transmission_queue[2], &transpack, 0);
-                        transmit_msg = transmit(transpack);
-
-//					schedularCount = 0;
-                    }
+                pthread_mutex_lock(&out_buffer_critical);
+                while(out_buffer.empty()){
+                    pthread_cond_wait(&out_buffer_not_empty, &out_buffer_critical);
                 }
+                transmit_msg = transmit(out_buffer.front());
                 if (transmit_msg != err_t::OK) {
                     log->warning("transmit of: %d, to: %d, failed: 0x%X", transpack.from_port, transpack.to_port,
                              (uint8_t) transmit_msg);
                     log->dump(log::level_t::WARNING, transpack.data_transmitting, transpack.data_lenght);
+                } else {
+                    out_buffer.pop();
                 }
+                pthread_mutex_unlock(&out_buffer_critical);
+
             }
-            vTaskDelete(NULL);
         }
         CommDriver *getDriver() {
             return driver;
@@ -261,7 +205,7 @@ namespace aruna {
             }
             return score;
         }
-        void _selectDriverTask(void *) {
+        void * _selectDriverTask(void *) {
             auto dr = pickDriver();
             if (std::get<1>(dr) == err_t::OK) {
                 setDriver(*std::get<0>(dr));
@@ -269,56 +213,14 @@ namespace aruna {
                 log->error("Failed to pick new driver: %d", (uint8_t) std::get<1>(dr));
                 comm::stop();
             }
-
-            vTaskDelete(NULL);
+            pthread_cancel(pthread_self());
+            return nullptr;
         }
 
         void selectDriverTask() {
-//    TODO priority hoger zetten en misschien nog een timeout ofzo toevoegen.
-            xTaskCreate(_selectDriverTask,
-                        "comm_selectDriverTask",
-                        configMINIMAL_STACK_SIZE,
-                        NULL,
-                        tskIDLE_PRIORITY,
-                        NULL);
+            pthread_create(NULL, NULL, _selectDriverTask, NULL);
         }
-        void acknowledge_handler_task(void *transmitpackage_to_watch) {
-            transmitpackage_t *package = (transmitpackage_t*) transmitpackage_to_watch;
-            bool success = false;
-            log->verbose("new task watcher %d", package->n);
-            times_tried[package->n] = 1;
-            while (1) {
 
-                if (ulTaskNotifyTake(pdTRUE, (portTickType) ACK_TIMEOUT)) {
-                    success = true;
-                    break;
-                }
-
-
-                if (times_tried[package->n] >= MAX_TRIES) {
-                    log->error("ack[%d] permanently failed. From: %d to: %d", package->n,
-                             package->from_port, package->to_port);
-                    log->dump(log::level_t::VERBOSE, package->data_transmitting,
-                             package->data_lenght);
-                    break;
-                } else {
-                    log->verbose("ack[%d] timeout %d. From: %d to: %d", package->n,
-                             times_tried[package->n], package->from_port,
-                             package->to_port);
-                    package->resend = true;
-                    xQueueSend(transmission_queue[package->priority], package, 0);
-                    times_tried[package->n]++;
-                }
-            }
-
-            times_tried[package->n] = 0;
-            if (success && package->notify_on_ack)
-                xTaskNotifyGive(package->sending_task);
-
-//	notify queue handeler that we are done.
-            xTaskNotify(transmissionQueueHandeler_task, package->n, eSetValueWithOverwrite);
-            vTaskDelete(NULL);
-        }
         bool register_log() {
             static bool registerd = false;
             if (!registerd){
@@ -353,33 +255,22 @@ namespace aruna {
             default:
                 break;
         }
+        int err = 0;
 //        register com channel
         register_log();
 //    set the driver
         err_t driver_err;
         setDriver(*driver);
         driver_err = getDriver()->start();
+//        init pthread mutex and cond
+        pthread_cond_init(&out_buffer_not_empty, NULL);
+        pthread_mutex_init(&out_buffer_critical, NULL);
         if (driver_err != err_t::OK)
             return driver_err;
-        bzero(&times_tried, N_COUNT_MAX + 1);
-        transmission_queue_set = xQueueCreateSet(TRANSMIT_QUEUE_BUFFER_SIZE + sizeof(transmitpackage_t) *
-                                                                              (sizeof(transmission_queue) /
-                                                                               sizeof(*transmission_queue)));
-        for (int i = 0; i < (sizeof(transmission_queue) / sizeof(*transmission_queue)); ++i) {
-            transmission_queue[i] = xQueueCreate(TRANSMIT_QUEUE_BUFFER_SIZE, sizeof(transmitpackage_t));
-            if (xQueueAddToSet(transmission_queue[i], transmission_queue_set) != pdPASS)
-                log->warning("failed to add queue[%d] to set", i);
-        }
-//    TODO priority goed zetten.
-//      Gaat zoiezo mis als je meerdere Com objecten probeerd aan temaken.
-//      Misschien kunnen we beter de hele class static maken?
-        if (xTaskCreate(transmissionQueueHandeler,
-                        "comm_transmissionQueueHandeler",
-                        (4096),
-                        NULL,
-                        20,
-                        &transmissionQueueHandeler_task
-        ) != pdPASS) {
+
+        err = pthread_create(&transmissionQueueHandeler_thread_handeler, NULL, transmissionQueueHandeler, NULL);
+        if (err) {
+            log->error("failed to start transmissionQueueHandeler: %i", err);
 //        stop when task failes
             driver_err = getDriver()->stop();
             if (driver_err != err_t::OK)
@@ -404,14 +295,13 @@ namespace aruna {
 //    stop all
         err_t driver_err;
         driver_err = getDriver()->stop();
-        vTaskDelete(transmissionQueueHandeler_task);
+        pthread_cond_destroy(&out_buffer_not_empty);
+        pthread_mutex_destroy(&out_buffer_critical);
+        pthread_cancel(transmissionQueueHandeler_thread_handeler);
+        while(!out_buffer.empty())
+            out_buffer.pop();
         set_status(status_t::STOPPED);
 
-        for (int i = 0; i < (sizeof(transmission_queue) / sizeof(*transmission_queue)); ++i) {
-            xQueueReset(transmission_queue[i]);
-            if (xQueueRemoveFromSet(transmission_queue[i], transmission_queue_set) != pdPASS)
-                log->warning("failed to remove queue[%d] from set", i);
-        }
         if (driver_err != err_t::OK)
             return driver_err;
         return err_t::OK;
@@ -425,7 +315,7 @@ namespace aruna {
             default:
                 break;
         }
-        vTaskSuspend(transmissionQueueHandeler_task);
+//        TODO suspend transmissionQueueHandeler_thread_handeler
         set_status(status_t::PAUSED);
         return err_t::OK;
     }
@@ -439,7 +329,7 @@ namespace aruna {
             default:
                 break;
         }
-        vTaskResume(transmissionQueueHandeler_task);
+//        TODO continue transmissionQueueHandeler_thread_handeler
         set_status(status_t::RUNNING);
         return err_t::OK;
     }
@@ -451,10 +341,9 @@ namespace aruna {
  */
 
 //    TODO testen of deze check wel werkt.
-        if (channels.find(*channel) != channels.end())
+        if (channels.find(channel) != channels.end())
             return err_t::CHANNEL_EXISTS;
-        if (channels.insert(*channel).second) {
-            *channel->handeler = xQueueCreate(TRANSMIT_QUEUE_BUFFER_SIZE, sizeof(transmitpackage_t));
+        if (channels.insert(channel).second) {
             return err_t::OK;
         } else
             return err_t::BUFFER_OVERFLOW;
@@ -462,7 +351,7 @@ namespace aruna {
     }
 
     err_t unregister_channel(channel_t &channel) {
-        if (channels.erase(channel))
+        if (channels.erase(&channel))
             return err_t::OK;
         else
             return err_t::NO_CHANNEL;
@@ -471,7 +360,7 @@ namespace aruna {
     err_t
     send(channel_t *channel, port_t to_port, uint8_t *data, size_t data_size, bool wait_for_ack) {
         if (get_status() != status_t::RUNNING) return err_t::NOT_STARTED;
-        if (channels.find(*channel) == channels.end()) {
+        if (channels.find(channel) == channels.end()) {
             return err_t::NO_CHANNEL;
         }
         uint packages = ceil((double) data_size / (double) MAX_DATA_SIZE);
@@ -482,24 +371,18 @@ namespace aruna {
         //        datasize pointer
         size_t ds_p = 0;
 
-
-        if (channel->priority >= sizeof(transmission_queue) / sizeof(*transmission_queue) ||
-            channel->priority < 0)
-            return err_t::INVALID_PARAMETERS;
-
         if (!getDriver()->isEndpointConnected())
             return err_t::NO_CONNECTION;
 
-        auto tp = (transmitpackage_t *) calloc(packages, sizeof(transmitpackage_t));
 //	TODO check if tp is allocated
+        auto tp = (transmitpackage_t *) calloc(packages, sizeof(transmitpackage_t));
+
 //    loop until all data in send
         while (data_size > 0) {
 //		static data
             tp[n_to_wait_for].to_port = to_port;
             tp[n_to_wait_for].from_port = channel->port;
-            tp[n_to_wait_for].priority = channel->priority;
             tp[n_to_wait_for].n = 0;
-            tp[n_to_wait_for].sending_task = xTaskGetCurrentTaskHandle();
             tp[n_to_wait_for].notify_on_ack = wait_for_ack;
 
             tp[n_to_wait_for].data_transmitting = &data[ds_p];
@@ -511,26 +394,15 @@ namespace aruna {
 
             ds_p += ds_l;
             data_size -= ds_l;
-            log->verbose("sending from: %d to: %d, data: %s", tp[n_to_wait_for].from_port,
-                     tp[n_to_wait_for].to_port, tp[n_to_wait_for].data_transmitting);
+            log->verbose("sending from: %d to: %d", tp[n_to_wait_for].from_port,
+                     tp[n_to_wait_for].to_port);
+            log->dump(log::level_t::VERBOSE, tp[n_to_wait_for].data_transmitting, tp[n_to_wait_for].data_lenght);
+            pthread_mutex_lock(&out_buffer_critical);
+            out_buffer.push(tp[n_to_wait_for]);
+            pthread_mutex_unlock(&out_buffer_critical);
+            pthread_cond_broadcast(&out_buffer_not_empty);
+
             n_to_wait_for++;
-            if (xQueueSend(transmission_queue[channel->priority], tp, 0) != pdPASS) {
-                free(tp);
-                return err_t::BUFFER_OVERFLOW;
-            }
-
-//        clear any left over data
-        }
-        if (wait_for_ack) {
-            while (n_to_wait_for > 0) {
-                if (ulTaskNotifyTake(pdTRUE, ACK_TIMEOUT * MAX_TRIES))
-                    n_to_wait_for--;
-                else {
-                    free(tp);
-                    return err_t::NO_RESPONSE;
-                }
-            }
-
         }
         free(tp);
         return err_t::OK;
@@ -573,28 +445,19 @@ namespace aruna {
  *    Als we het meteen kunnen opzoeken door ook nog een set te maken (of hashing table) van de namen
  *    scheelt dat ons heel veel tijd want dan is het O(1)!
  */
-        uint8_t ack[2] = {0x02};
         transmitpackage_t tp;
         if (get_status() != status_t::RUNNING) return err_t::NOT_STARTED;
         log->verbose("incoming connection");
-        if (package[0] == 2 && package_size == 2) {
-//		recieved ack
-            if (times_tried[package[1]] > 0)
-                xTaskNotifyGive(ack_tasks[package[1]]);
-            return err_t::OK;
-        }
 
         if (!transmitpackage_t::binary_to_transmitpackage(package, tp))
             return err_t::INVALID_PARAMETERS;
-        if (package[1] > 0) {
-//		send ack
-            ack[1] = package[1];
 
-            getDriver()->transmit(ack, 2);
-        }
-        for (const auto &channel : channels) {
-            if (channel.port == tp.to_port) {
-                xQueueSend(*channel.handeler, &tp, 0);
+        for (auto channel : channels) {
+            if (channel->port == tp.to_port) {
+                pthread_mutex_lock((pthread_mutex_t*)&channel->in_buffer_lock);
+                channel->in_buffer.push(tp);
+                pthread_mutex_unlock((pthread_mutex_t*)&channel->in_buffer_lock);
+                pthread_cond_broadcast((pthread_cond_t*)&channel->in_buffer_not_empty);
                 return err_t::OK;
             }
         }

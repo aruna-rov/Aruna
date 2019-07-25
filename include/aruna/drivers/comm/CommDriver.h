@@ -18,17 +18,6 @@ public:
      *          `HARDWARE` if the hardware failes
      */
     virtual aruna::comm::err_t transmit(uint8_t *package, uint8_t package_size) = 0;
-    /**
-     * @brief  directly transmit a package on the link.
-     * @param  package: package to be send
-     * @param  package_size: size of the package
-     * @param  priority: (0 hightest to 2 lowest) only supported if link is realtime.
-     * @retval  `OK` if all went well.
-     *          `HARDWARE` if the hardware failes
-     */
-    virtual aruna::comm::err_t transmit(uint8_t *package, uint8_t package_size, unsigned short priority) {
-        return transmit(package, package_size);
-    };
 
     /**
      * Get name of link.

@@ -20,7 +20,6 @@
 #elif defined (__unix__) || (defined (__APPLE__) && defined (__MACH__))
     // System is Posix
     // only include communication abstraction
-    #include "aruna/FreeRTOS/FreeRTOSKernel.h"
     #include "aruna/log.h"
     #include "aruna/comm.h"
 #else
