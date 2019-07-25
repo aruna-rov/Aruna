@@ -21,6 +21,7 @@
     // System is Posix
     // only include communication abstraction
     #include "aruna/log.h"
+    #include "aruna/drivers/comm/SerialPosix.h"
     #include "aruna/comm.h"
 #else
     #error "System is not supported."

@@ -9,5 +9,6 @@ add_library(aruna STATIC
     #src/drivers/control/L293D.cpp
 )
 target_include_directories(aruna PUBLIC ${aruna_DIR}/include)
+target_link_libraries(aruna pthread)
 
 export(PACKAGE aruna)
