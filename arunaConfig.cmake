@@ -2,6 +2,7 @@
 add_library(aruna STATIC
     #src/blinky.cpp
     ${aruna_DIR}/src/log.cpp
+    ${aruna_DIR}/src/drivers/comm/SerialPosix.cpp
     ${aruna_DIR}/src/comm.cpp
     #src/control.cpp
     #src/drivers/comm/UART.cpp
