@@ -7,6 +7,7 @@
 #include <freertos/task.h>
 #include <soc/uart_struct.h>
 #include "aruna.h"
+#include <driver/mcpwm.h>
 
 using namespace aruna;
 
@@ -100,7 +101,7 @@ void register_drivers() {
 
 //  Control
 // TODO error check
-    l293d_driver = new aruna::drivers::control::L293D;
+    l293d_driver = new drivers::control::Pwm(control::axis_mask_t::X, 32, 33, MCPWM_UNIT_0, MCPWM_TIMER_0, MCPWM0A, MCPWM0B);
     aruna::control::register_driver(l293d_driver);
 }
 
