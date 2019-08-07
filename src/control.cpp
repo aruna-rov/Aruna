@@ -93,7 +93,7 @@ status_t start() {
 	}
 
 //    start threads.
-    xTaskCreate(comm_handler_task, "control_comm_handler", 2048, NULL, 12, &control_comm_handler);
+    xTaskCreate(comm_handler_task, "control_comm_handler", 4048, NULL, 12, &control_comm_handler);
 	control_status = status_t::RUNNING;
 	return control_status;
 }
@@ -230,7 +230,7 @@ void comm_handler_task(void *arg) {
 					}
 					direction_t dir;
 					dir = ((request.data_received[1] >> 6) & 0b1) ? direction_t::MIN : direction_t::PLUS;
-					ESP_LOGV(LOG_TAG, "set: %X value: %d, dir: %d", command, data, (uint8_t) dir);
+					ESP_LOGV(LOG_TAG, "command: %X, axis: 0X%02X, speed: %i, dir: %i", command, flags, data, (uint8_t) dir);
 					set_value((axis_mask_t) flags, data, dir);
 					break;
 //				control

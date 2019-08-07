@@ -11,11 +11,13 @@
     #include "aruna/log.h"
     #include "aruna/blinky.h"
     #include "aruna/comm.h"
+    #include "aruna/controlTypes.h"
     #include "aruna/control.h"
     #include "aruna/drivers/comm/CommDriver.h"
     #include "aruna/drivers/comm/UART.h"
+    #include "aruna/drivers/control/DriverSet.h"
     #include "aruna/drivers/control/ControlActuatorDriver.h"
-    #include "aruna/drivers/control/L293D.h"
+    #include "aruna/drivers/control/Pwm.h"
 
 #elif defined (__unix__) || (defined (__APPLE__) && defined (__MACH__))
     // System is Posix
