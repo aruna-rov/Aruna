@@ -2,8 +2,8 @@
 // Created by noeel on 30-3-19.
 //
 
-#ifndef ARUNA_L293D_H
-#define ARUNA_L293D_H
+#ifndef ARUNA_PWM_H
+#define ARUNA_PWM_H
 
 #include <aruna.h>
 #include "aruna/controlTypes.h"
@@ -34,4 +34,4 @@ private:
 };
 }}}
 
-#endif //ARUNA_L293D_H
+#endif //ARUNA_PWM_H
