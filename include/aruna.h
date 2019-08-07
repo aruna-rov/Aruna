@@ -15,6 +15,7 @@
     #include "aruna/control.h"
     #include "aruna/drivers/comm/CommDriver.h"
     #include "aruna/drivers/comm/UART.h"
+    #include "aruna/drivers/control/DriverSet.h"
     #include "aruna/drivers/control/ControlActuatorDriver.h"
     #include "aruna/drivers/control/Pwm.h"
 
