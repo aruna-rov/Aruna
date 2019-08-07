@@ -6,6 +6,8 @@
 #define ARUNA_LOG_H
 
 #include "stdarg.h"
+#include "stddef.h"
+#include "stdint.h"
 namespace aruna { namespace log {
     enum class level_t: int {
         NONE = -1,

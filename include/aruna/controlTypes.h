@@ -5,6 +5,9 @@
 #ifndef ARUNA_CONTROLTYPES_H
 #define ARUNA_CONTROLTYPES_H
 
+#include <stdint.h>
+#include "stddef.h"
+
 namespace aruna { namespace control {
 
         enum class axis_mask_t: uint8_t {
@@ -17,6 +20,7 @@ namespace aruna { namespace control {
 
             ALL = 63,
             MAX = 6,
+            NONE = 0,
         };
 
         enum class err_t {
