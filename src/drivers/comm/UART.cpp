@@ -115,80 +115,30 @@ aruna::comm::err_t UART::stop() {
 }
 
 void UART::handle_rx_task(void *__this) {
-    uart_event_t event;
-
-    UART *_this = static_cast<UART*>(__this);
+	UART *_this = static_cast<UART*>(__this);
 //    smaller size for dtmp results in an stack overflow.
-    uint8_t *dtmp = (uint8_t *) malloc(_this->RX_BUF_SIZE);
-    int read;
-    for (;;) {
-        //Waiting for UART event.
-        if (xQueueReceive(_this->uart_queue, (void *) &event, (portTickType) portMAX_DELAY)) {
-            bzero(dtmp, _this->RX_BUF_SIZE);
-            ESP_LOGV(_this->TAG, "uart[%d] event:", _this->UART_NUM);
-            switch (event.type) {
-                //Event of UART receving data
-                /*We'd better handler data event fast, there would be much more data events than
-                other types of events. If we take too much time on data event, the queue might
-                be full.*/
-                case UART_DATA:
-//                    TODO UART_DATA event gets triggerd without any data being avaliable
-                    read = uart_read_bytes(_this->UART_NUM, dtmp, 1, 4);
-					if (read <= 0) break;
-					read = uart_read_bytes(_this->UART_NUM, &dtmp[1], (dtmp[0] -1 ), 10);
+	uint8_t *dtmp = (uint8_t *) malloc(_this->RX_BUF_SIZE);
+	int read;
+
+	while (1) {
+//	TODO make it interrupt based
+		read = uart_read_bytes(_this->UART_NUM, dtmp, 1, 4);
+		if (read <= 0) continue;
+		read = uart_read_bytes(_this->UART_NUM, &dtmp[1], (dtmp[0] - 1), 10);
 //                    stop if read fails
-					if (read != (dtmp[0] -1)) {
-						ESP_LOGV(_this->TAG, "could not read all bytes");
-						break;
-					}
-					ESP_LOGV(_this->TAG, "incoming data[%d]:", read);
+		if (read != (dtmp[0] - 1)) {
+			ESP_LOGV(_this->TAG, "could not read all bytes");
+			continue;
+		}
+		ESP_LOGV(_this->TAG, "incoming data[%d]:", read);
 //                    if the data now contains a 0x0 then datalength will be set at that byte.
-                    ESP_LOG_BUFFER_HEXDUMP(_this->TAG, dtmp, dtmp[0], ESP_LOG_VERBOSE);
+		ESP_LOG_BUFFER_HEXDUMP(_this->TAG, dtmp, dtmp[0], ESP_LOG_VERBOSE);
 //                    convert binary to transmitpackage and alert comm of an incomming connection.
-                    if (aruna::comm::incoming_connection(dtmp, dtmp[0]) != aruna::comm::err_t::OK) {
-                        ESP_LOGV(_this->TAG, "protocol error");
-                    }
-                    break;
-                    //Event of HW FIFO overflow detected
-                case UART_FIFO_OVF:
-                    ESP_LOGW(_this->TAG, "hw fifo overflow");
-                    // If fifo overflow happened, you should consider adding flow control for your application.
-                    // The ISR has already reset the rx FIFO,
-                    // As an example, we directly flush the rx buffer here in order to read more data.
-                    uart_flush_input(_this->UART_NUM);
-                    xQueueReset(_this->uart_queue);
-                    break;
-                    //Event of UART ring buffer full
-                case UART_BUFFER_FULL:
-                    ESP_LOGE(_this->TAG, "ring buffer full");
-                    // If buffer full happened, you should consider encreasing your buffer size
-                    // As an example, we directly flush the rx buffer here in order to read more data.
-                    uart_flush_input(_this->UART_NUM);
-                    xQueueReset(_this->uart_queue);
-                    break;
-                    //Event of UART RX break detected
-                case UART_BREAK:
-                    ESP_LOGI(_this->TAG, "uart rx break");
-                    break;
-                    //Event of UART parity check error
-                case UART_PARITY_ERR:
-                    ESP_LOGW(_this->TAG, "uart parity error");
-                    break;
-                    //Event of UART frame error
-                case UART_FRAME_ERR:
-                    ESP_LOGW(_this->TAG, "uart frame error");
-                    break;
-                    //UART_PATTERN_DET
-                case UART_PATTERN_DET:
-                    //Others
-                default:
-                    ESP_LOGE(_this->TAG, "uart event type: %d", event.type);
-                    break;
-            }
-        }
-    }
-    free(dtmp);
-    dtmp = NULL;
-    vTaskDelete(NULL);
+		if (aruna::comm::incoming_connection(dtmp, dtmp[0]) != aruna::comm::err_t::OK) {
+			ESP_LOGV(_this->TAG, "protocol error");
+		}
+	}
+//	TODO is this code even reached?
+	free(dtmp);
 }
 }}}
