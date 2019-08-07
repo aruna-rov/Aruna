@@ -127,9 +127,20 @@ namespace aruna {
         }
 
         int channel_t::dump(level_t level, uint8_t *bin, size_t size) {
+//       TODO 	this if statement is copied two times, there should be a function that implements it
+			if (((int) level > (int) this->level) || ((int) level > (int) max_level) || level == level_t::NONE) {
+				return 0;
+			}
 #if defined (__unix__) || (defined (__APPLE__) && defined (__MACH__))
-//        TODO posix variant
-            return 0;
+        	char level_c[5];
+        	level_t_to_char(level, level_c);
+//			TODO formatting should be staderlized
+        	out("%s (%u) %s, 0x%X  ", level_c, epoch(), name, bin);
+			for (int i = 0; i < size ; ++i) {
+				out("%02X ", bin[i]);
+			}
+			out("\n");
+            return size;
 #elif defined(ESP_PLATFORM)
             esp_log_level_t esp_log_level;
             switch (level) {
