@@ -53,8 +53,7 @@ namespace aruna { namespace drivers { namespace comm {
                     /*
                      * Could not open the port.
                      */
-//        TODO print port.
-                    log->error("Unable to open port: %s", strerror(errno));
+                    log->error("Unable to open port \"%s\": %s",PORT, strerror(errno));
                     port_opened = false;
                     return err_t::HARDWARE;
                 }
