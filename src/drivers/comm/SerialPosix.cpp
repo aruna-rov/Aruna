@@ -6,6 +6,7 @@
 #include <termio.h>
 #include <fcntl.h>
 #include <zconf.h>
+#include "aruna/arunaTypes.h"
 #include "aruna/drivers/comm/SerialPosix.h"
 #include <aruna/comm.h>
 #include <aruna/log.h>
@@ -22,7 +23,7 @@ namespace aruna { namespace drivers { namespace comm {
                 bytes_written = write(file_description, package, package_size);
                 if (bytes_written != package_size) {
                     log->error("failed to write to port");
-                    return err_t::HARDWARE;
+                    return err_t::HARDWARE_FAILURE;
                 }
                 return err_t::OK;
 
@@ -55,7 +56,7 @@ namespace aruna { namespace drivers { namespace comm {
                      */
                     log->error("Unable to open port \"%s\": %s",PORT, strerror(errno));
                     port_opened = false;
-                    return err_t::HARDWARE;
+                    return err_t::HARDWARE_FAILURE;
                 }
                 port_opened = true;
                 fcntl(file_description, F_SETFL, FNDELAY);

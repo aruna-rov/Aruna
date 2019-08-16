@@ -6,6 +6,7 @@
 #define ARUNA_UART_H
 
 #include "CommDriver.h"
+#include "aruna/arunaTypes.h"
 #include "driver/uart.h"
 
 namespace aruna { namespace drivers { namespace comm {
@@ -39,13 +40,13 @@ public:
      * Default uart constructor. Uses braudrate 921600 over usb, parity even.
      */
     UART();
-    aruna::comm::err_t transmit(uint8_t *package, uint8_t package_size) override;
+    err_t transmit(uint8_t *package, uint8_t package_size) override;
     char* getName() override;
     unsigned int getSpeed() override;
     aruna::comm::link_t getLinkType() override;
     bool isEndpointConnected() override;
-    aruna::comm::err_t start() override;
-    aruna::comm::err_t stop() override;
+    err_t start() override;
+    err_t stop() override;
 
 private:
     /**

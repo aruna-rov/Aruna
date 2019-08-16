@@ -3,6 +3,7 @@
 //
 
 #include <stdio.h>
+#include "aruna/arunaTypes.h"
 #include <aruna/comm.h>
 #include "aruna/drivers/comm/UART.h"
 #include "esp_log.h"
@@ -29,7 +30,7 @@ UART::UART(char *TAG,
         TX_BUF_SIZE(TX_BUF_SIZE),
         RX_BUF_SIZE(RX_BUF_SIZE){}
 
-aruna::comm::err_t UART::transmit(uint8_t *package, uint8_t package_size) {
+err_t UART::transmit(uint8_t *package, uint8_t package_size) {
     ESP_LOGV(TAG, "sending...");
     ESP_LOG_BUFFER_HEXDUMP(TAG, package, package_size, ESP_LOG_VERBOSE);
 //    transmit
@@ -39,11 +40,11 @@ aruna::comm::err_t UART::transmit(uint8_t *package, uint8_t package_size) {
                          (const char *) package,
                          package_size)
         == (package_size)) {
-		return aruna::comm::err_t::OK;
+		return err_t::OK;
 	}
 
     else {
-		return aruna::comm::err_t::HARDWARE;
+		return err_t::HARDWARE_FAILURE;
 	}
 }
 
@@ -67,7 +68,7 @@ char *UART::getName() {
     return (char *) TAG;
 }
 
-aruna::comm::err_t UART::start() {
+err_t UART::start() {
     ESP_LOGD(TAG, "START");
 //    TODO logging zou moeten worden uitgeschakeld op de target UART.
 
@@ -88,10 +89,10 @@ aruna::comm::err_t UART::start() {
     if (uart_rx_handle == nullptr)
 //        TODO set name acording to TAG
 		xTaskCreate(UART::handle_rx_task, "handle_rx_uart", 2048, this, 12, &uart_rx_handle);
-    return aruna::comm::err_t::OK;
+    return err_t::OK;
 }
 
-aruna::comm::err_t UART::stop() {
+err_t UART::stop() {
     ESP_LOGD(TAG, "STOP");
 //    TODO flush tx queue
 //  flush rx queue
@@ -111,7 +112,7 @@ aruna::comm::err_t UART::stop() {
 //  delete task
     vTaskDelete(uart_rx_handle);
     uart_rx_handle = nullptr;
-    return (ufi) != ESP_OK ? aruna::comm::err_t::HARDWARE : aruna::comm::err_t::OK;
+    return (ufi) != ESP_OK ? err_t::HARDWARE_FAILURE : err_t::OK;
 }
 
 void UART::handle_rx_task(void *__this) {
@@ -134,7 +135,7 @@ void UART::handle_rx_task(void *__this) {
 //                    if the data now contains a 0x0 then datalength will be set at that byte.
 		ESP_LOG_BUFFER_HEXDUMP(_this->TAG, dtmp, dtmp[0], ESP_LOG_VERBOSE);
 //                    convert binary to transmitpackage and alert comm of an incomming connection.
-		if (aruna::comm::incoming_connection(dtmp, dtmp[0]) != aruna::comm::err_t::OK) {
+		if (aruna::comm::incoming_connection(dtmp, dtmp[0]) != err_t::OK) {
 			ESP_LOGV(_this->TAG, "protocol error");
 		}
 	}

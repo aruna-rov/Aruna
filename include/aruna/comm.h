@@ -10,40 +10,13 @@
 #include <queue>
 #include <string.h>
 #include <stdlib.h>
+#include "aruna/arunaTypes.h"
 namespace aruna {
     namespace drivers { namespace comm {
             class CommDriver;
     }}
 
     namespace comm {
-
-        // state the status of the executed function, > 0 means no success
-        enum class err_t {
-            OK = 0x00,
-            FAIL = 0x100,
-
-            //    comm running status
-            NOT_STOPPED = 0x101,
-            NOT_STARTED = 0x102,
-            NOT_PAUSED = 0x103,
-
-            //    hardware
-            HARDWARE = 0x110,
-            NO_CONNECTION = 0x112,
-            NO_RESPONSE = 0x113,
-            PROTOCOL = 0x114,
-
-            //    config
-            BUFFER_OVERFLOW = 0x120,
-            INVALID_PARAMETERS = 0x121,
-            TASK_FAILED = 0x122,
-
-            //    channel/driver registation
-            NO_CHANNEL = 0x130,
-            CHANNEL_EXISTS = 0x131,
-            NO_DRIVER = 0x132,
-            DRIVER_EXISTS = 0x133,
-        };
 
         // kind of link, wired, wireless of non existing
         enum class link_t {

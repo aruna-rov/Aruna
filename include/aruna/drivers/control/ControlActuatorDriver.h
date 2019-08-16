@@ -5,7 +5,7 @@
 #ifndef ARUNA_CONTROLACTUATORDRIVER_H
 #define ARUNA_CONTROLACTUATORDRIVER_H
 
-
+#include "aruna/arunaTypes.h"
 #include "aruna/controlTypes.h"
 
 namespace aruna { namespace drivers { namespace control {
@@ -15,15 +15,15 @@ public:
 	/**
 	 * start the driver
 	 */
-	virtual aruna::control::err_t start() {
-		return aruna::control::err_t::OK;
+	virtual err_t start() {
+		return err_t::OK;
 	};
 
 	/**
 	 * stop the driver
 	 */
-	virtual aruna::control::err_t stop() {
-		return aruna::control::err_t::OK;
+	virtual err_t stop() {
+		return err_t::OK;
 	};
 
 	/**
@@ -39,7 +39,7 @@ public:
 	 * @param direction, direction to go to.
 	 * @return err_t::OK if the command was succesfull, others when it fails.
 	 */
-	virtual aruna::control::err_t set(aruna::control::axis_mask_t axisMask, uint16_t speed, aruna::control::direction_t direction) = 0;
+	virtual err_t set(aruna::control::axis_mask_t axisMask, uint16_t speed, aruna::control::direction_t direction) = 0;
 
 	/**
 	 * Convert uint16 to a new range

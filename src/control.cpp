@@ -89,7 +89,7 @@ status_t start() {
 		err_t stat = d->start();
 		if (stat != err_t::OK)
 //            TODO print driver name?
-			ESP_LOGW(LOG_TAG, "Driver failed to start:%d", (int) stat);
+			ESP_LOGW(LOG_TAG, "Driver failed to start: %s", err_to_char.at(stat));
 	}
 
 //    start threads.
@@ -416,7 +416,7 @@ status_t stop() {
 		err_t stat = d->stop();
 		if (stat != err_t::OK)
 //            TODO print driver name?
-			ESP_LOGW(LOG_TAG, "Driver failed to stop:%d", (uint8_t) stat);
+			ESP_LOGW(LOG_TAG, "Driver failed to stop: %s", err_to_char.at(stat));
 	}
 
 //    stop task
@@ -431,7 +431,7 @@ err_t register_driver(ControlActuatorDriver *driver) {
 		return err_t::DRIVER_EXISTS;
 	}
 	if (!drivers.insert(driver).second)
-		return err_t::DRIVER_OVERFLOW;
+		return err_t::BUFFER_OVERFLOW;
 	return err_t::OK;
 }
 
@@ -524,7 +524,7 @@ void set_speed(axis_mask_t axisMask, uint16_t speed, direction_t direction) {
 	for (ControlActuatorDriver *d: drivers) {
 		ret = d->set(axisMask, speed, direction);
 		if (ret != err_t::OK) {
-			ESP_LOGW(LOG_TAG, "setting speed of driver failed: %X", (uint8_t) ret);
+			ESP_LOGW(LOG_TAG, "setting speed of driver failed: %s", err_to_char.at(ret));
 		}
 	}
 	for (uint i = 0; i < (uint8_t) axis_mask_t::MAX; i++) {

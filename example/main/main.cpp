@@ -27,10 +27,10 @@ void comm_test_task(void *arg) {
             .port = 1,
     };
     //    TODO register channel needs redesign, all endpoint data as paramter. handeler should be used.
-    example_log->info("comm register: 0x%X", comm::register_channel(&testapp));
-    example_log->info("comm send: 0x%X", comm::send(&testapp, 0xAA, (uint8_t *) "precies 32 bytes aan data size!\n", 32, 0));
-    example_log->info("comm send: 0x%X", comm::send(&testapp, 0xAE, (uint8_t *) "een overflow van data! ohh nee, wat gebeurt er nu?\n", 51, true));
-	example_log->info("comm send: 0x%X", comm::send(&testapp, 0xDE, (uint8_t *) "My man!\n", 8, true));
+    example_log->info("comm register: %s", err_to_char.at(comm::register_channel(&testapp)));
+    example_log->info("comm send: %s", err_to_char.at(comm::send(&testapp, 0xAA, (uint8_t *) "precies 32 bytes aan data size!\n", 32, 0)));
+    example_log->info("comm send: %s", err_to_char.at(comm::send(&testapp, 0xAE, (uint8_t *) "een overflow van data! ohh nee, wat gebeurt er nu?\n", 51, true)));
+	example_log->info("comm send: %s", err_to_char.at(comm::send(&testapp, 0xDE, (uint8_t *) "My man!\n", 8, true)));
 
     while (1) {
         if (testapp.receive(&d)) {
@@ -101,13 +101,13 @@ void register_drivers() {
 
 //  Control
 // TODO error check
-    l293d_driver = new drivers::control::Pwm(control::axis_mask_t::X, 32, 33, MCPWM_UNIT_0, MCPWM_TIMER_0, MCPWM0A, MCPWM0B);
+    l293d_driver = new drivers::control::Pwm(control::axis_mask_t::X,(gpio_num_t) 32,(gpio_num_t) 33, MCPWM_UNIT_0, MCPWM_TIMER_0, MCPWM0A, MCPWM0B);
     aruna::control::register_driver(l293d_driver);
 }
 
 void start_comm() {
-    example_log->debug("comm start: 0x%X", comm::start(uart_driver));
-    example_log->debug("comm status: 0x%X", comm::get_status());
+    example_log->debug("comm start: %s", err_to_char.at(comm::start(uart_driver)));
+    example_log->debug("comm status: %d", comm::get_status());
     example_log->debug("comm driver name: %s", comm::getName());
     example_log->debug("comm speed: %i", comm::get_speed());
 }

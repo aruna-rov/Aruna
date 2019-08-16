@@ -8,6 +8,7 @@
 #if defined(ESP_PLATFORM)
     // System is ESP
     // include embedded files
+    #include "aruna/arunaTypes.h"
     #include "aruna/log.h"
     #include "aruna/blinky.h"
     #include "aruna/comm.h"
@@ -22,6 +23,7 @@
 #elif defined (__unix__) || (defined (__APPLE__) && defined (__MACH__))
     // System is Posix
     // only include communication abstraction
+	#include "aruna/arunaTypes.h"
     #include "aruna/log.h"
     #include "aruna/drivers/comm/SerialPosix.h"
     #include "aruna/comm.h"

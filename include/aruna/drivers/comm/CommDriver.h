@@ -5,6 +5,7 @@
 #ifndef ARUNA_COMMDRIVER_H
 #define ARUNA_COMMDRIVER_H
 
+#include "aruna/arunaTypes.h"
 #include <aruna/comm.h>
 namespace aruna { namespace drivers { namespace comm {
 class CommDriver {
@@ -17,7 +18,7 @@ public:
      * @retval  `OK` if all went well.
      *          `HARDWARE` if the hardware failes
      */
-    virtual aruna::comm::err_t transmit(uint8_t *package, uint8_t package_size) = 0;
+    virtual err_t transmit(uint8_t *package, uint8_t package_size) = 0;
 
     /**
      * Get name of link.
@@ -78,16 +79,16 @@ public:
      * start the driver.
      * @return err_t, `OK` if started succesfully, `HARDWARE` or other hardware error on failure.
      */
-    virtual aruna::comm::err_t start(){
-        return aruna::comm::err_t::OK;
+    virtual err_t start(){
+        return err_t::OK;
     }
 
     /**
      * Stop the driver.
      * @return err_t, `OK` if started succesfully, `HARDWARE` or other hardware error on failure.
      */
-    virtual aruna::comm::err_t stop(){
-        return aruna::comm::err_t::OK;
+    virtual err_t stop(){
+        return err_t::OK;
     }
 };
 

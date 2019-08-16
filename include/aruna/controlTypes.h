@@ -23,21 +23,6 @@ namespace aruna { namespace control {
             NONE = 0,
         };
 
-        enum class err_t {
-            OK,
-            FAIL,
-            NO_HARDWARE_FOUND,
-            NO_DRIVER_FOUND,
-            DRIVER_EXISTS,
-            NO_ACTIVE_MODULES,
-            NOT_STARTED,
-            ALREADY_STARTED,
-            MODE_NOT_ACTIVE,
-            HARDWARE_FAILURE,
-            DRIVER_OVERFLOW,
-            UNDERFLOW
-        };
-
         enum class damping_t {
             DISABLE = 0,
             KEEP_VELOCITY = 0x01,

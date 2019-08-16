@@ -5,6 +5,7 @@
 #ifndef ARUNA_SERIALPOSIX_H
 #define ARUNA_SERIALPOSIX_H
 
+#include "aruna/arunaTypes.h"
 #include <aruna/drivers/comm/CommDriver.h>
 #include <aruna/log.h>
 
@@ -14,7 +15,7 @@ namespace aruna { namespace drivers { namespace comm {
             public:
                 SerialPosix(char *port, uint32_t braudrate);
 
-                aruna::comm::err_t transmit(uint8_t *package, uint8_t package_size);
+                err_t transmit(uint8_t *package, uint8_t package_size);
 
                 char *getName();
 
@@ -22,9 +23,9 @@ namespace aruna { namespace drivers { namespace comm {
 
                 bool isHardwareConnected();
 
-                aruna::comm::err_t start();
+                err_t start();
 
-                aruna::comm::err_t stop();
+                err_t stop();
 
             private:
                 bool port_opened = false;

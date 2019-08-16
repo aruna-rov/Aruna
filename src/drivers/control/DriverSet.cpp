@@ -2,6 +2,7 @@
 // Created by noeel on 30-07-19.
 //
 
+#include "aruna/arunaTypes.h"
 #include "aruna/drivers/control/DriverSet.h"
 #include <algorithm>
 
@@ -14,7 +15,7 @@ namespace aruna {
 																				  log("DriverSet"){}
 //																				  TODO what happends to 'log' if multiple DriverSet's are made?
 
-			aruna::control::err_t DriverSet::set(aruna::control::axis_mask_t axisMask, uint16_t speed,
+			err_t DriverSet::set(aruna::control::axis_mask_t axisMask, uint16_t speed,
 												 aruna::control::direction_t direction) {
 				err_t err = err_t::OK;
 				err_t last_failure = err;
@@ -47,7 +48,7 @@ namespace aruna {
 				return axis;
 			}
 
-			aruna::control::err_t DriverSet::stop() {
+			err_t DriverSet::stop() {
 				err_t err = err_t::OK;
 				err_t last_failure = err;
 				for (int i = 0; i < transform_size; ++i) {
@@ -59,7 +60,7 @@ namespace aruna {
 				return last_failure;
 			}
 
-			aruna::control::err_t DriverSet::start() {
+			err_t DriverSet::start() {
 				err_t err = err_t::OK;
 				err_t last_failure = err;
 				for (int i = 0; i < transform_size; ++i) {

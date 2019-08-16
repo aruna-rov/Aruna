@@ -131,8 +131,8 @@ namespace aruna {
                 }
                 transmit_msg = transmit(out_buffer.front());
                 if (transmit_msg != err_t::OK) {
-                    log->warning("transmit of: %d, to: %d, failed: 0x%X", transpack.from_port, transpack.to_port,
-                             (uint8_t) transmit_msg);
+                    log->warning("transmit of: %d, to: %d, failed: %s", transpack.from_port, transpack.to_port,
+                             err_to_char.at(transmit_msg));
                     log->dump(log::level_t::WARNING, transpack.data_transmitting, transpack.data_lenght);
                 } else {
                     out_buffer.pop();
@@ -170,7 +170,7 @@ namespace aruna {
             unsigned int score = 0;
             err_t drivstrt = driver.start();
             if (drivstrt != err_t::OK) {
-                log->warning("driver:%s, failed to start: %d", driver.getName(), (int) drivstrt);
+                log->warning("driver:%s, failed to start: %s", driver.getName(), err_to_char.at(drivstrt));
                 return score;
             }
             if (!driver.isHardwareConnected())
@@ -200,7 +200,7 @@ namespace aruna {
 
             err_t drivstp = driver.stop();
             if (drivstp != err_t::OK) {
-                log->warning("driver: %s, failed to stop: %d", driver.getName(), (int) drivstp);
+                log->warning("driver: %s, failed to stop: %s", driver.getName(), err_to_char.at(drivstp));
                 return score / 1000;
             }
             return score;
@@ -210,7 +210,7 @@ namespace aruna {
             if (std::get<1>(dr) == err_t::OK) {
                 setDriver(*std::get<0>(dr));
             } else {
-                log->error("Failed to pick new driver: %d", (uint8_t) std::get<1>(dr));
+                log->error("Failed to pick new driver: %s", err_to_char.at(std::get<1>(dr)));
                 comm::stop();
             }
             pthread_cancel(pthread_self());
@@ -274,7 +274,7 @@ namespace aruna {
 //        stop when task failes
             driver_err = getDriver()->stop();
             if (driver_err != err_t::OK)
-                log->error("Driver failed to stop: %d", (int) driver_err);
+                log->error("Driver failed to stop: %s", err_to_char.at(driver_err));
 //        TODO driver unsetten en destroyen.
             return err_t::TASK_FAILED;
         }

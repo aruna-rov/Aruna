@@ -42,7 +42,7 @@ namespace aruna {
 				};
 				aruna::control::axis_mask_t get_axis() override;
 
-				aruna::control::err_t set(aruna::control::axis_mask_t axisMask, uint16_t speed, aruna::control::direction_t direction) override;
+				err_t set(aruna::control::axis_mask_t axisMask, uint16_t speed, aruna::control::direction_t direction) override;
 
 				/**
 				 * put diffrent drivers in a driver set to allow them to cooperate and transform into a different axis when turned on together
@@ -50,8 +50,8 @@ namespace aruna {
 				 * @param transform_size size of array
 				 */
 				DriverSet(transform_t *transform, size_t transform_size);
-				aruna::control::err_t stop() override;
-				aruna::control::err_t start() override;
+				err_t stop() override;
+				err_t start() override;
 			private:
 				transform_t *transform;
 				const size_t transform_size;
