@@ -77,7 +77,7 @@ damping_t get_damping(axis_mask_t single_axis);
  * @return `err_t::OK` if it went well.
  * `err_t::FAIL` if not.
  */
-err_t register_driver(drivers::control::ControlActuatorDriver *driver);
+err_t register_driver(ControlActuatorDriver *driver);
 
 /**
  * unregister a accelerator driver for use.
@@ -85,7 +85,7 @@ err_t register_driver(drivers::control::ControlActuatorDriver *driver);
  * @return `err_t::OK` if it went well.
  * `err_t::FAIL` if not.
  */
-err_t unregister_driver(drivers::control::ControlActuatorDriver *driver);
+err_t unregister_driver(ControlActuatorDriver *driver);
 // TODO implement
 
 /**

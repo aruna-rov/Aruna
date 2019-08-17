@@ -11,11 +11,11 @@
 #include "aruna/control/ControlActuatorDriver.h"
 #include <driver/mcpwm.h>
 
-namespace aruna { namespace drivers { namespace control {
+namespace aruna { namespace control {
 
 class Pwm: public ControlActuatorDriver  {
 private:
-	const aruna::control::axis_mask_t axis;
+	const axis_mask_t axis;
 	const gpio_num_t forward_pin;
 	const gpio_num_t backward_pin;
 	const mcpwm_unit_t pwm_unit;
@@ -26,13 +26,13 @@ private:
 public:
     err_t start() override;
     err_t stop() override;
-    aruna::control::axis_mask_t get_axis() override;
+    axis_mask_t get_axis() override;
 
-    err_t set(aruna::control::axis_mask_t axisMask, uint16_t speed, aruna::control::direction_t direction) override;
+    err_t set(axis_mask_t axisMask, uint16_t speed, direction_t direction) override;
 
-    Pwm(aruna::control::axis_mask_t axis, gpio_num_t forward_pin, gpio_num_t backward_pin, mcpwm_unit_t pwm_unit, mcpwm_timer_t pwm_timer, mcpwm_io_signals_t io_signal_forward, mcpwm_io_signals_t io_signal_backward);
+    Pwm(axis_mask_t axis, gpio_num_t forward_pin, gpio_num_t backward_pin, mcpwm_unit_t pwm_unit, mcpwm_timer_t pwm_timer, mcpwm_io_signals_t io_signal_forward, mcpwm_io_signals_t io_signal_backward);
 private:
 };
-}}}
+}}
 
 #endif //ARUNA_PWM_H

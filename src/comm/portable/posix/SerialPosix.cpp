@@ -12,7 +12,7 @@
 #include <aruna/log.h>
 using namespace aruna::comm;
 
-namespace aruna { namespace drivers { namespace comm {
+namespace aruna { namespace comm {
 
             err_t SerialPosix::transmit(uint8_t *package, uint8_t package_size) {
                 uint16_t bytes_written = 0;
@@ -147,5 +147,5 @@ namespace aruna { namespace drivers { namespace comm {
                     }
                 }
             }
-        }}}
+        }}
 #endif // System is Posix

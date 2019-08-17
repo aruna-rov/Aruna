@@ -5,8 +5,7 @@
 #include <driver/mcpwm.h>
 #include "aruna/control/portable/esp32/Pwm.h"
 #include "aruna/control.h"
-namespace aruna { namespace drivers { namespace control {
-using namespace aruna::control;
+namespace aruna { namespace control {
 
 axis_mask_t Pwm::get_axis() {
     return axis;
@@ -50,9 +49,9 @@ err_t Pwm::set(axis_mask_t axisMask, uint16_t speed, direction_t direction) {
 	return err_t::OK;
 }
 
-Pwm::Pwm(aruna::control::axis_mask_t axis, gpio_num_t forward_pin, gpio_num_t backward_pin,
+Pwm::Pwm(axis_mask_t axis, gpio_num_t forward_pin, gpio_num_t backward_pin,
 		 mcpwm_unit_t pwm_unit, mcpwm_timer_t pwm_timer, mcpwm_io_signals_t io_signal_forward, mcpwm_io_signals_t io_signal_backward)
 			 : axis(axis), forward_pin(forward_pin), backward_pin(backward_pin), pwm_unit(pwm_unit), pwm_timer(pwm_timer), io_signal_forward(io_signal_forward), io_signal_backward(io_signal_backward), log("Pwm") {
 //	TODO allow for single pwm pin
 }
-}}}
+}}

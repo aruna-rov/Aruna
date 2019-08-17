@@ -17,7 +17,6 @@
 #include "I2Cbus.hpp"
 
 namespace aruna { namespace control {
-using namespace drivers::control;
 
 namespace {
 //    variables

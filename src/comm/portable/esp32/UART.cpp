@@ -7,7 +7,7 @@
 #include <aruna/comm.h>
 #include "aruna/comm/portable/esp32/UART.h"
 #include "esp_log.h"
-namespace aruna { namespace drivers { namespace comm {
+namespace aruna { namespace comm {
 UART::UART(){}
 UART::UART(char *TAG,
            uart_port_t UART_NUM,
@@ -55,8 +55,8 @@ unsigned int UART::getSpeed() {
     return (unsigned int) (br / 8);
 }
 
-aruna::comm::link_t UART::getLinkType() {
-    return aruna::comm::link_t::WIRED;
+link_t UART::getLinkType() {
+    return link_t::WIRED;
 }
 
 bool UART::isEndpointConnected() {
@@ -142,4 +142,4 @@ void UART::handle_rx_task(void *__this) {
 //	TODO is this code even reached?
 	free(dtmp);
 }
-}}}
+}}

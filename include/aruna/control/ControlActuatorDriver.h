@@ -8,7 +8,7 @@
 #include "aruna/arunaTypes.h"
 #include "aruna/control/controlTypes.h"
 
-namespace aruna { namespace drivers { namespace control {
+namespace aruna { namespace control {
 
 class ControlActuatorDriver {
 public:
@@ -30,7 +30,7 @@ public:
 	 * get the control modes that this driver supports.
 	 * @return control_mode mask ORed.
 	 */
-	virtual aruna::control::axis_mask_t get_axis() = 0;
+	virtual axis_mask_t get_axis() = 0;
 
 	/**
 	 * Set the speed of the motors directly
@@ -39,7 +39,7 @@ public:
 	 * @param direction, direction to go to.
 	 * @return err_t::OK if the command was succesfull, others when it fails.
 	 */
-	virtual err_t set(aruna::control::axis_mask_t axisMask, uint16_t speed, aruna::control::direction_t direction) = 0;
+	virtual err_t set(axis_mask_t axisMask, uint16_t speed, direction_t direction) = 0;
 
 	/**
 	 * Convert uint16 to a new range
@@ -52,6 +52,6 @@ public:
 	}
 
 };
-}}}
+}}
 
 #endif //ARUNA_CONTROLACTUATORDRIVER_H

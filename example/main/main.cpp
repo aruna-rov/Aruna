@@ -11,9 +11,9 @@
 
 using namespace aruna;
 
-drivers::comm::CommDriver *uart_driver;
-drivers::control::ControlActuatorDriver* l293d_driver;
-drivers::comm::CommDriver *rs485_driver;
+comm::CommDriver *uart_driver;
+control::ControlActuatorDriver* l293d_driver;
+comm::CommDriver *rs485_driver;
 aruna::log::channel_t *example_log;
 
 extern "C" void app_main(void);
@@ -74,7 +74,7 @@ void register_drivers() {
 
 //  comm
 // TODO error check
-    uart_driver = new drivers::comm::UART();
+    uart_driver = new comm::UART();
     comm::register_candidate_driver(uart_driver);
 
 	uart_config_t rs485_config = {
@@ -86,7 +86,7 @@ void register_drivers() {
 			.rx_flow_ctrl_thresh = 122,
 			.use_ref_tick = false
 	};
-//	rs485_driver = new aruna::drivers::comm::UART((char*)"RS485",
+//	rs485_driver = new aruna::comm::UART((char*)"RS485",
 //							UART_NUM_1,
 //							23,
 //							22,
@@ -101,7 +101,7 @@ void register_drivers() {
 
 //  Control
 // TODO error check
-    l293d_driver = new drivers::control::Pwm(control::axis_mask_t::X,(gpio_num_t) 32,(gpio_num_t) 33, MCPWM_UNIT_0, MCPWM_TIMER_0, MCPWM0A, MCPWM0B);
+    l293d_driver = new control::Pwm(control::axis_mask_t::X,(gpio_num_t) 32,(gpio_num_t) 33, MCPWM_UNIT_0, MCPWM_TIMER_0, MCPWM0A, MCPWM0B);
     aruna::control::register_driver(l293d_driver);
 }
 

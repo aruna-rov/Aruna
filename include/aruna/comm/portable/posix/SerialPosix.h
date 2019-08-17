@@ -9,9 +9,9 @@
 #include <aruna/comm/CommDriver.h>
 #include <aruna/log.h>
 
-namespace aruna { namespace drivers { namespace comm {
+namespace aruna { namespace comm {
 
-            class SerialPosix : public aruna::drivers::comm::CommDriver {
+            class SerialPosix : public CommDriver {
             public:
                 SerialPosix(char *port, uint32_t braudrate);
 
@@ -40,5 +40,5 @@ namespace aruna { namespace drivers { namespace comm {
                 static void *watch_port_task(void *_this);
             };
 
-        }}}
+        }}
 #endif //ARUNA_SERIALPOSIX_H

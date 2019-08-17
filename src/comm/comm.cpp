@@ -11,7 +11,6 @@
 #include <set>
 namespace aruna {
     namespace comm {
-        using namespace drivers::comm;
 
 //        private
         namespace {
@@ -25,7 +24,7 @@ namespace aruna {
         pthread_cond_t out_buffer_not_empty;
         pthread_mutex_t out_buffer_critical;
         std::queue<transmitpackage_t> out_buffer;
-        std::set<drivers::comm::CommDriver *> driverCandidates;
+        std::set<CommDriver *> driverCandidates;
 
         /**
          * @brief all endpoints
@@ -78,20 +77,20 @@ namespace aruna {
          * 1: `NO_DRIVER` if no driver can be found
          * 1: `OK` if all is well
          */
-        std::tuple<drivers::comm::CommDriver *, err_t> pickDriver();
+        std::tuple<CommDriver *, err_t> pickDriver();
 
         /**
          * set the driver
          * @param driver to use.
          */
-        void setDriver(drivers::comm::CommDriver &driver);
+        void setDriver(CommDriver &driver);
 
         /**
          * rate the driver on speed, errors, active connection, realtime, connection type etc.
          * @param driver
          * @return rating of the driver. Higher is better.
          */
-        unsigned int rateDriver(drivers::comm::CommDriver &driver);
+        unsigned int rateDriver(CommDriver &driver);
 
         /**
          * pick a new best driver, dont call directly will delete your process.

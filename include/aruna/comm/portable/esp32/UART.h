@@ -9,7 +9,7 @@
 #include "aruna/arunaTypes.h"
 #include "driver/uart.h"
 
-namespace aruna { namespace drivers { namespace comm {
+namespace aruna { namespace comm {
 
 class UART: public CommDriver {
 public:
@@ -43,7 +43,7 @@ public:
     err_t transmit(uint8_t *package, uint8_t package_size) override;
     char* getName() override;
     unsigned int getSpeed() override;
-    aruna::comm::link_t getLinkType() override;
+    link_t getLinkType() override;
     bool isEndpointConnected() override;
     err_t start() override;
     err_t stop() override;
@@ -87,5 +87,5 @@ private:
     bool installed = false;
     xTaskHandle uart_rx_handle = nullptr;
 };
-}}}
+}}
 #endif //ARUNA_UART_H

@@ -7,7 +7,7 @@
 
 #include "aruna/arunaTypes.h"
 #include <aruna/comm.h>
-namespace aruna { namespace drivers { namespace comm {
+namespace aruna { namespace comm {
 class CommDriver {
 public:
 
@@ -55,8 +55,8 @@ public:
      * Get link type (RADIO, WIRED, NONE)
      * @return link_t. NONE if not connected.
      */
-    virtual aruna::comm::link_t getLinkType() {
-        return aruna::comm::link_t::NONE;
+    virtual link_t getLinkType() {
+        return link_t::NONE;
     };
 
     /**
@@ -92,5 +92,5 @@ public:
     }
 };
 
-}}}
+}}
 #endif //ARUNA_COMMDRIVER_H
