@@ -11,6 +11,7 @@
     #include "aruna/arunaTypes.h"
     #include "aruna/log.h"
     #include "aruna/blinky.h"
+    #include "aruna/comm/commTypes.h"
     #include "aruna/comm.h"
     #include "aruna/control/controlTypes.h"
     #include "aruna/control.h"
@@ -25,6 +26,7 @@
     // only include communication abstraction
 	#include "aruna/arunaTypes.h"
     #include "aruna/log.h"
+    #include "aruna/comm/commTypes.h"
     #include "aruna/comm/portable/posix/Serial.h"
     #include "aruna/comm.h"
 #else

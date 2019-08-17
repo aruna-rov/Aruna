@@ -6,7 +6,7 @@
 #define ARUNA_COMMLINK_H
 
 #include "aruna/arunaTypes.h"
-#include <aruna/comm.h>
+#include <aruna/comm/commTypes.h>
 namespace aruna { namespace comm {
 class Link {
 public:
