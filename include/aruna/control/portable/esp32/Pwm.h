@@ -8,12 +8,12 @@
 #include <aruna.h>
 #include "aruna/control/controlTypes.h"
 #include "aruna/arunaTypes.h"
-#include "aruna/control/ControlActuatorDriver.h"
+#include "aruna/control/Actuator.h"
 #include <driver/mcpwm.h>
 
 namespace aruna { namespace control {
 
-class Pwm: public ControlActuatorDriver  {
+class Pwm: public Actuator  {
 private:
 	const axis_mask_t axis;
 	const gpio_num_t forward_pin;

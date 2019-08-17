@@ -15,7 +15,7 @@ namespace aruna {
 
     namespace comm {
 
-		class CommDriver;
+		class Link;
 
 		// kind of link, wired, wireless of non existing
         enum class link_t {
@@ -214,7 +214,7 @@ namespace aruna {
          *  * `HARDWARE_ERROR` if the hardware fails.
          *  * `OK` great success!
          */
-        err_t start(CommDriver *driver);
+        err_t start(Link *driver);
 
         /**
          * @brief  Stop the communication, free all queue's, channels and buffers
@@ -338,7 +338,7 @@ namespace aruna {
          * * `BUFFER_OVERFLOW` driver buffer overflow
          * * `OK` all is well :).
          */
-        err_t register_candidate_driver(CommDriver *driver);
+        err_t register_candidate_driver(Link *driver);
 
         /**
          * unregister a driver to be a comdiver candidate
@@ -347,7 +347,7 @@ namespace aruna {
          * * `OK` great success!
          * * `NO_DRIVER` driver does'nt exists.
          */
-        err_t unregister_candidate_driver(CommDriver *driver);
+        err_t unregister_candidate_driver(Link *driver);
 
         /**
          * get all the comm driver candidates

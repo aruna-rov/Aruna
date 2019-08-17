@@ -10,7 +10,7 @@
 #include <set>
 #include <esp_log.h>
 #include <aruna/comm.h>
-#include "aruna/control/ControlActuatorDriver.h"
+#include "aruna/control/Actuator.h"
 #include "MPU.hpp"
 #include "mpu/math.hpp"   // math helper for dealing with MPU data
 #include "mpu/types.hpp"  // MPU data types and definitions
@@ -24,7 +24,7 @@ namespace {
 	status_t control_status = status_t::STOPPED;
 	TaskHandle_t control_comm_handler;
 	TaskHandle_t control_damping;
-	std::set<ControlActuatorDriver *> drivers;
+	std::set<Actuator *> drivers;
 	const gpio_num_t I2C_SDA_PIN = GPIO_NUM_26;
 	const gpio_num_t I2C_CLK_PIN = GPIO_NUM_25;
 	constexpr uint I2C_CLK_SPEED = 400;
@@ -84,7 +84,7 @@ status_t start() {
 	if (!MPU_active)
 		ESP_LOGI(LOG_TAG, "MPU functionality disabled.");
 //    start all drivers
-	for (ControlActuatorDriver *d: drivers) {
+	for (Actuator *d: drivers) {
 		err_t stat = d->start();
 		if (stat != err_t::OK)
 //            TODO print driver name?
@@ -411,7 +411,7 @@ status_t stop() {
 		return control_status;
 
 	//    stop all drivers
-	for (ControlActuatorDriver *d: drivers) {
+	for (Actuator *d: drivers) {
 		err_t stat = d->stop();
 		if (stat != err_t::OK)
 //            TODO print driver name?
@@ -425,7 +425,7 @@ status_t stop() {
 	return control_status;
 }
 
-err_t register_driver(ControlActuatorDriver *driver) {
+err_t register_driver(Actuator *driver) {
 	if (drivers.find(driver) != drivers.end()) {
 		return err_t::DRIVER_EXISTS;
 	}
@@ -520,7 +520,7 @@ void set_speed(axis_mask_t axisMask, uint16_t speed, direction_t direction) {
 	uint8_t j = 1;
 	err_t ret;
 	axis_mask_t active_axis = get_active_axis();
-	for (ControlActuatorDriver *d: drivers) {
+	for (Actuator *d: drivers) {
 		ret = d->set(axisMask, speed, direction);
 		if (ret != err_t::OK) {
 			ESP_LOGW(LOG_TAG, "setting speed of driver failed: %s", err_to_char.at(ret));
@@ -563,7 +563,7 @@ void set_velocity(axis_mask_t axisMask, uint16_t mm_per_second, direction_t dire
 
 axis_mask_t get_active_axis() {
 	uint8_t modes = 0;
-	for (ControlActuatorDriver *d: drivers) {
+	for (Actuator *d: drivers) {
 		modes |= (uint8_t) d->get_axis();
 	}
 	return (axis_mask_t) modes;

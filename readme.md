@@ -17,11 +17,11 @@ this is more of a test library, The one thing it does is blink a led on the devi
 
 ## comm
 
-This library is responsable for all communication. The library is quite extensive. Diffrent physical layer could be applied using the `CommDriver`.virtual class to allow for diffrent physical implementations
+This library is responsable for all communication. The library is quite extensive. Diffrent physical layer could be applied using the `Link`.virtual class to allow for diffrent physical implementations
 
 ## control
 
-This library handles all the movement of the rov, and is dependand of the `comm` module for communication and uses `ControlActuatorDriver` as a virtual class for drivers.
+This library handles all the movement of the rov, and is dependand of the `comm` module for communication and uses `Actuator` as a virtual class for drivers.
 
 ## log
 

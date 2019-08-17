@@ -2,21 +2,21 @@
 // Created by noeel on 30-07-19.
 //
 
-#ifndef ARUNA_DRIVERSET_H
-#define ARUNA_DRIVERSET_H
+#ifndef ARUNA_ACTUATORSET_H
+#define ARUNA_ACTUATORSET_H
 
 #include <aruna.h>
-#include "ControlActuatorDriver.h"
+#include "Actuator.h"
 
 namespace aruna {
 	namespace control {
-		class DriverSet : public ControlActuatorDriver {
+		class ActuatorSet : public Actuator {
 		public:
 			struct transform_t {
 				/**
 				 * pointer to driver
 				 */
-				ControlActuatorDriver *driver;
+				Actuator *driver;
 
 				/**
 				 * axis this driver can transform to
@@ -50,7 +50,7 @@ namespace aruna {
 			 * @param transform array of transform_t
 			 * @param transform_size size of array
 			 */
-			DriverSet(transform_t *transform, size_t transform_size);
+			ActuatorSet(transform_t *transform, size_t transform_size);
 
 			err_t stop() override;
 
@@ -63,4 +63,4 @@ namespace aruna {
 		};
 	}
 }
-#endif //ARUNA_DRIVERSET_H
+#endif //ARUNA_ACTUATORSET_H

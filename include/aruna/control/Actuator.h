@@ -2,15 +2,15 @@
 // Created by noeel on 27-3-19.
 //
 
-#ifndef ARUNA_CONTROLACTUATORDRIVER_H
-#define ARUNA_CONTROLACTUATORDRIVER_H
+#ifndef ARUNA_CONTROLACTUATOR_H
+#define ARUNA_CONTROLACTUATOR_H
 
 #include "aruna/arunaTypes.h"
 #include "aruna/control/controlTypes.h"
 
 namespace aruna { namespace control {
 
-class ControlActuatorDriver {
+class Actuator {
 public:
 	/**
 	 * start the driver
@@ -54,4 +54,4 @@ public:
 };
 }}
 
-#endif //ARUNA_CONTROLACTUATORDRIVER_H
+#endif //ARUNA_CONTROLACTUATOR_H

@@ -7,7 +7,7 @@
 
 #include <stdint.h>
 #include "aruna/control/controlTypes.h"
-#include "aruna/control/ControlActuatorDriver.h"
+#include "aruna/control/Actuator.h"
 namespace aruna { namespace control {
 // variables
 
@@ -77,7 +77,7 @@ damping_t get_damping(axis_mask_t single_axis);
  * @return `err_t::OK` if it went well.
  * `err_t::FAIL` if not.
  */
-err_t register_driver(ControlActuatorDriver *driver);
+err_t register_driver(Actuator *driver);
 
 /**
  * unregister a accelerator driver for use.
@@ -85,7 +85,7 @@ err_t register_driver(ControlActuatorDriver *driver);
  * @return `err_t::OK` if it went well.
  * `err_t::FAIL` if not.
  */
-err_t unregister_driver(ControlActuatorDriver *driver);
+err_t unregister_driver(Actuator *driver);
 // TODO implement
 
 /**

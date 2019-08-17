@@ -6,14 +6,14 @@
 #define ARUNA_SERIALPOSIX_H
 
 #include "aruna/arunaTypes.h"
-#include <aruna/comm/CommDriver.h>
+#include <aruna/comm/Link.h>
 #include <aruna/log.h>
 
 namespace aruna { namespace comm {
 
-            class SerialPosix : public CommDriver {
+            class Serial : public Link {
             public:
-                SerialPosix(char *port, uint32_t braudrate);
+                Serial(char *port, uint32_t braudrate);
 
                 err_t transmit(uint8_t *package, uint8_t package_size);
 

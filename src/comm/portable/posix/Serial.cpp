@@ -7,14 +7,14 @@
 #include <fcntl.h>
 #include <zconf.h>
 #include "aruna/arunaTypes.h"
-#include "aruna/comm/portable/posix/SerialPosix.h"
+#include "aruna/comm/portable/posix/Serial.h"
 #include <aruna/comm.h>
 #include <aruna/log.h>
 using namespace aruna::comm;
 
 namespace aruna { namespace comm {
 
-            err_t SerialPosix::transmit(uint8_t *package, uint8_t package_size) {
+            err_t Serial::transmit(uint8_t *package, uint8_t package_size) {
                 uint16_t bytes_written = 0;
                 log->verbose("transmit size: %i", package_size);
                 log->verbose("from: %i, to: %i, n: %i", package[2], package[3], package[1]);
@@ -29,23 +29,23 @@ namespace aruna { namespace comm {
 
             }
 
-            char *SerialPosix::getName() {
+            char *Serial::getName() {
                 return (char *) "PosixSerial";
             }
 
-            SerialPosix::SerialPosix(char *port, uint32_t braudrate) : PORT(port), BRAUDRATE(braudrate) {
-                this->log = new aruna::log::channel_t("SerialPosix");
+            Serial::Serial(char *port, uint32_t braudrate) : PORT(port), BRAUDRATE(braudrate) {
+                this->log = new aruna::log::channel_t("Serial");
             }
 
-            bool SerialPosix::isEndpointConnected() {
+            bool Serial::isEndpointConnected() {
                 return true;
             }
 
-            bool SerialPosix::isHardwareConnected() {
+            bool Serial::isHardwareConnected() {
                 return this->port_opened;
             }
 
-            err_t SerialPosix::start() {
+            err_t Serial::start() {
 
                 file_description = open(PORT, O_RDWR | O_NOCTTY | O_NDELAY);
 
@@ -113,19 +113,19 @@ namespace aruna { namespace comm {
                 return err_t::OK;
             }
 
-            err_t SerialPosix::stop() {
+            err_t Serial::stop() {
                 pthread_cancel(watch_thread);
                 close(file_description);
                 return err_t::OK;
             }
 
-            void *SerialPosix::watch_port_task(void *_this) {
+            void *Serial::watch_port_task(void *_this) {
 //    static cast to make pthread happy
-                ((SerialPosix *) _this)->_watch_port_task();
+                ((Serial *) _this)->_watch_port_task();
                 return nullptr;
             }
 
-            void SerialPosix::_watch_port_task() {
+            void Serial::_watch_port_task() {
                 uint16_t bytes_read = 0;
                 uint16_t size = 0;
                 uint8_t *buff;

@@ -3,19 +3,19 @@
 //
 
 #include "aruna/arunaTypes.h"
-#include "aruna/control/DriverSet.h"
+#include "aruna/control/ActuatorSet.h"
 #include <algorithm>
 
 using namespace aruna::control;
 namespace aruna {
 	namespace control {
-		DriverSet::DriverSet(transform_t *transform, size_t transform_size) : transform(transform),
-																			  transform_size(transform_size),
-																			  log("DriverSet") {}
-//																				  TODO what happends to 'log' if multiple DriverSet's are made?
+		ActuatorSet::ActuatorSet(transform_t *transform, size_t transform_size) : transform(transform),
+																				  transform_size(transform_size),
+																				  log("ActuatorSet") {}
+//																				  TODO what happends to 'log' if multiple ActuatorSet's are made?
 
-		err_t DriverSet::set(axis_mask_t axisMask, uint16_t speed,
-							 direction_t direction) {
+		err_t ActuatorSet::set(axis_mask_t axisMask, uint16_t speed,
+							   direction_t direction) {
 			err_t err = err_t::OK;
 			err_t last_failure = err;
 			for (int i = 0; i < transform_size; ++i) {
@@ -39,7 +39,7 @@ namespace aruna {
 			return last_failure;
 		}
 
-		axis_mask_t DriverSet::get_axis() {
+		axis_mask_t ActuatorSet::get_axis() {
 			axis_mask_t axis = axis_mask_t::NONE;
 			for (int i = 0; i < transform_size; ++i) {
 				axis = (axis_mask_t) ((uint8_t) axis | (uint8_t) transform[i].driver->get_axis() |
@@ -48,7 +48,7 @@ namespace aruna {
 			return axis;
 		}
 
-		err_t DriverSet::stop() {
+		err_t ActuatorSet::stop() {
 			err_t err = err_t::OK;
 			err_t last_failure = err;
 			for (int i = 0; i < transform_size; ++i) {
@@ -60,7 +60,7 @@ namespace aruna {
 			return last_failure;
 		}
 
-		err_t DriverSet::start() {
+		err_t ActuatorSet::start() {
 			err_t err = err_t::OK;
 			err_t last_failure = err;
 			for (int i = 0; i < transform_size; ++i) {

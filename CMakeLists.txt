@@ -5,7 +5,7 @@ set(COMPONENT_SRCS
         "src/control/control.cpp"
         "src/comm/portable/esp32/UART.cpp"
         "src/control/portable/esp32/Pwm.cpp"
-        "src/control/DriverSet.cpp"
+        "src/control/ActuatorSet.cpp"
         )
 set(COMPONENT_ADD_INCLUDEDIRS
         "include"

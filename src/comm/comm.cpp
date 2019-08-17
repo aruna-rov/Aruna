@@ -5,7 +5,7 @@
 #include "aruna/comm.h"
 #include "aruna/log.h"
 #include <math.h>
-#include <aruna/comm/CommDriver.h>
+#include <aruna/comm/Link.h>
 #include <pthread.h>
 #include <queue>
 #include <set>
@@ -24,7 +24,7 @@ namespace aruna {
         pthread_cond_t out_buffer_not_empty;
         pthread_mutex_t out_buffer_critical;
         std::queue<transmitpackage_t> out_buffer;
-        std::set<CommDriver *> driverCandidates;
+        std::set<Link *> driverCandidates;
 
         /**
          * @brief all endpoints
@@ -39,7 +39,7 @@ namespace aruna {
         /**
          * stores the driver.
          */
-        CommDriver *driver;
+        Link *driver;
 
 //        functions
 
@@ -68,7 +68,7 @@ namespace aruna {
          * get the driver
          * @return ComdDriver object
          */
-        CommDriver *getDriver();
+        Link *getDriver();
 
         /**
          * pick the best available driver
@@ -77,20 +77,20 @@ namespace aruna {
          * 1: `NO_DRIVER` if no driver can be found
          * 1: `OK` if all is well
          */
-        std::tuple<CommDriver *, err_t> pickDriver();
+        std::tuple<Link *, err_t> pickDriver();
 
         /**
          * set the driver
          * @param driver to use.
          */
-        void setDriver(CommDriver &driver);
+        void setDriver(Link &driver);
 
         /**
          * rate the driver on speed, errors, active connection, realtime, connection type etc.
          * @param driver
          * @return rating of the driver. Higher is better.
          */
-        unsigned int rateDriver(CommDriver &driver);
+        unsigned int rateDriver(Link &driver);
 
         /**
          * pick a new best driver, dont call directly will delete your process.
@@ -140,16 +140,16 @@ namespace aruna {
 
             }
         }
-        CommDriver *getDriver() {
+        Link *getDriver() {
             return driver;
         }
-        void setDriver(CommDriver &driver) {
+        void setDriver(Link &driver) {
             comm::driver = &driver;
         }
 
-        std::tuple<CommDriver *, err_t> pickDriver() {
+        std::tuple<Link *, err_t> pickDriver() {
 //    bestpick initalisren omdat hij anders een lege terug kan geven.
-            CommDriver *bestPick = nullptr;
+            Link *bestPick = nullptr;
             unsigned int bestPickScore = 0;
             unsigned int s = 0;
             if (driverCandidates.empty())
@@ -165,7 +165,7 @@ namespace aruna {
             return std::make_tuple(bestPick, err_t::OK);
         }
 
-        unsigned int rateDriver(CommDriver &driver) {
+        unsigned int rateDriver(Link &driver) {
             unsigned int score = 0;
             err_t drivstrt = driver.start();
             if (drivstrt != err_t::OK) {
@@ -244,7 +244,7 @@ namespace aruna {
         return std::get<1>(dr);
     }
 
-    err_t start(CommDriver *driver) {
+    err_t start(Link *driver) {
         switch (get_status()) {
             case status_t::RUNNING:
                 return err_t::NOT_STOPPED;
@@ -464,7 +464,7 @@ namespace aruna {
 
     }
 
-    err_t register_candidate_driver(CommDriver *driver) {
+    err_t register_candidate_driver(Link *driver) {
 //    comdriver moet eigenlijk een referentie zijn en niet een levend object.
         register_log();
         log->debug("registering driver: %s", driver->getName());
@@ -482,7 +482,7 @@ namespace aruna {
     }
 
 
-    err_t unregister_candidate_driver(CommDriver *driver) {
+    err_t unregister_candidate_driver(Link *driver) {
         if (driverCandidates.erase(driver)) {
 //        if we delete our own driver, search for a new one
             if (driver == driver)

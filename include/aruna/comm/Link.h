@@ -2,13 +2,13 @@
 // Created by noeel on 14-1-19.
 //
 
-#ifndef ARUNA_COMMDRIVER_H
-#define ARUNA_COMMDRIVER_H
+#ifndef ARUNA_COMMLINK_H
+#define ARUNA_COMMLINK_H
 
 #include "aruna/arunaTypes.h"
 #include <aruna/comm.h>
 namespace aruna { namespace comm {
-class CommDriver {
+class Link {
 public:
 
     /**
@@ -93,4 +93,4 @@ public:
 };
 
 }}
-#endif //ARUNA_COMMDRIVER_H
+#endif //ARUNA_COMMLINK_H

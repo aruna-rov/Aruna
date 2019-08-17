@@ -5,13 +5,13 @@
 #ifndef ARUNA_UART_H
 #define ARUNA_UART_H
 
-#include "aruna/comm/CommDriver.h"
+#include "aruna/comm/Link.h"
 #include "aruna/arunaTypes.h"
 #include "driver/uart.h"
 
 namespace aruna { namespace comm {
 
-class UART: public CommDriver {
+class UART: public Link {
 public:
 /**
  * Create a uart driver with custom settings

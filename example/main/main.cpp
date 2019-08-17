@@ -11,9 +11,9 @@
 
 using namespace aruna;
 
-comm::CommDriver *uart_driver;
-control::ControlActuatorDriver* l293d_driver;
-comm::CommDriver *rs485_driver;
+comm::Link *uart_driver;
+control::Actuator* l293d_driver;
+comm::Link *rs485_driver;
 aruna::log::channel_t *example_log;
 
 extern "C" void app_main(void);
