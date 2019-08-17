@@ -5,7 +5,7 @@
 #include "aruna/comm.h"
 #include "aruna/log.h"
 #include <math.h>
-#include <aruna/drivers/comm/CommDriver.h>
+#include <aruna/comm/CommDriver.h>
 #include <pthread.h>
 #include <queue>
 #include <set>

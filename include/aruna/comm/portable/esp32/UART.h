@@ -5,7 +5,7 @@
 #ifndef ARUNA_UART_H
 #define ARUNA_UART_H
 
-#include "CommDriver.h"
+#include "aruna/comm/CommDriver.h"
 #include "aruna/arunaTypes.h"
 #include "driver/uart.h"
 

@@ -6,7 +6,7 @@
 #define ARUNA_DRIVERSET_H
 
 #include <aruna.h>
-#include "aruna/drivers/control/ControlActuatorDriver.h"
+#include "ControlActuatorDriver.h"
 
 namespace aruna {
 	namespace drivers {

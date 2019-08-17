@@ -1,11 +1,11 @@
 set(COMPONENT_SRCS
-        "src/blinky.cpp"
-        "src/log.cpp"
-        "src/comm.cpp"
-        "src/control.cpp"
-        "src/drivers/comm/UART.cpp"
-        "src/drivers/control/Pwm.cpp"
-        "src/drivers/control/DriverSet.cpp"
+        "src/blinky/blinky.cpp"
+        "src/log/log.cpp"
+        "src/comm/comm.cpp"
+        "src/control/control.cpp"
+        "src/comm/portable/esp32/UART.cpp"
+        "src/control/portable/esp32/Pwm.cpp"
+        "src/control/DriverSet.cpp"
         )
 set(COMPONENT_ADD_INCLUDEDIRS
         "include"

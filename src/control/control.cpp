@@ -10,7 +10,7 @@
 #include <set>
 #include <esp_log.h>
 #include <aruna/comm.h>
-#include "aruna/drivers/control/ControlActuatorDriver.h"
+#include "aruna/control/ControlActuatorDriver.h"
 #include "MPU.hpp"
 #include "mpu/math.hpp"   // math helper for dealing with MPU data
 #include "mpu/types.hpp"  // MPU data types and definitions

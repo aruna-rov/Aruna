@@ -3,7 +3,7 @@
 //
 
 #include <driver/mcpwm.h>
-#include "aruna/drivers/control/Pwm.h"
+#include "aruna/control/portable/esp32/Pwm.h"
 #include "aruna/control.h"
 namespace aruna { namespace drivers { namespace control {
 using namespace aruna::control;

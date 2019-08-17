@@ -5,7 +5,7 @@
 #include <stdio.h>
 #include "aruna/arunaTypes.h"
 #include <aruna/comm.h>
-#include "aruna/drivers/comm/UART.h"
+#include "aruna/comm/portable/esp32/UART.h"
 #include "esp_log.h"
 namespace aruna { namespace drivers { namespace comm {
 UART::UART(){}

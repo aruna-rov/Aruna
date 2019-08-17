@@ -6,8 +6,8 @@
 #define ARUNA_CONTROL_H
 
 #include <stdint.h>
-#include "controlTypes.h"
-#include "aruna/drivers/control/ControlActuatorDriver.h"
+#include "aruna/control/controlTypes.h"
+#include "aruna/control/ControlActuatorDriver.h"
 namespace aruna { namespace control {
 // variables
 

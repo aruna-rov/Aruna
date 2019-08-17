@@ -3,7 +3,7 @@
 //
 
 #include "aruna/arunaTypes.h"
-#include "aruna/drivers/control/DriverSet.h"
+#include "aruna/control/DriverSet.h"
 #include <algorithm>
 
 using namespace aruna::control;

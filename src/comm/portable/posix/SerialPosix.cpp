@@ -7,7 +7,7 @@
 #include <fcntl.h>
 #include <zconf.h>
 #include "aruna/arunaTypes.h"
-#include "aruna/drivers/comm/SerialPosix.h"
+#include "aruna/comm/portable/posix/SerialPosix.h"
 #include <aruna/comm.h>
 #include <aruna/log.h>
 using namespace aruna::comm;

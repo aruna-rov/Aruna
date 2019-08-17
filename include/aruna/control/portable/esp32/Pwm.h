@@ -6,9 +6,9 @@
 #define ARUNA_PWM_H
 
 #include <aruna.h>
-#include "aruna/controlTypes.h"
+#include "aruna/control/controlTypes.h"
 #include "aruna/arunaTypes.h"
-#include "ControlActuatorDriver.h"
+#include "aruna/control/ControlActuatorDriver.h"
 #include <driver/mcpwm.h>
 
 namespace aruna { namespace drivers { namespace control {

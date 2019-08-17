@@ -6,7 +6,7 @@
 #define ARUNA_CONTROLACTUATORDRIVER_H
 
 #include "aruna/arunaTypes.h"
-#include "aruna/controlTypes.h"
+#include "aruna/control/controlTypes.h"
 
 namespace aruna { namespace drivers { namespace control {
 

@@ -6,7 +6,7 @@
 #define ARUNA_SERIALPOSIX_H
 
 #include "aruna/arunaTypes.h"
-#include <aruna/drivers/comm/CommDriver.h>
+#include <aruna/comm/CommDriver.h>
 #include <aruna/log.h>
 
 namespace aruna { namespace drivers { namespace comm {
