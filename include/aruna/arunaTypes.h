@@ -11,6 +11,7 @@ namespace aruna {
 	// state the status of the executed function, > 0 means no success
 	enum class err_t : uint8_t {
 		OK = 0,
+		UNDEFINED = 1,
 		FAIL = 100,
 
 		// running status

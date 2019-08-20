@@ -26,11 +26,10 @@ void comm_test_task(void *arg) {
     comm::channel_t testapp = {
             .port = 1,
     };
-    //    TODO register channel needs redesign, all endpoint data as paramter. handeler should be used.
-    example_log->info("comm register: %s", err_to_char.at(comm::register_channel(&testapp)));
-    example_log->info("comm send: %s", err_to_char.at(comm::send(&testapp, 0xAA, (uint8_t *) "precies 32 bytes aan data size!\n", 32, 0)));
-    example_log->info("comm send: %s", err_to_char.at(comm::send(&testapp, 0xAE, (uint8_t *) "een overflow van data! ohh nee, wat gebeurt er nu?\n", 51, true)));
-	example_log->info("comm send: %s", err_to_char.at(comm::send(&testapp, 0xDE, (uint8_t *) "My man!\n", 8, true)));
+    example_log->info("comm register: %s", err_to_char.at(testapp.register_err));
+    example_log->info("comm send: %s", err_to_char.at(testapp.send( 0xAA, (uint8_t *) "precies 32 bytes aan data size!\n", 32, 0)));
+    example_log->info("comm send: %s", err_to_char.at(testapp.send( 0xAE, (uint8_t *) "een overflow van data! ohh nee, wat gebeurt er nu?\n", 51, true)));
+	example_log->info("comm send: %s", err_to_char.at(testapp.send( 0xDE, (uint8_t *) "My man!\n", 8, true)));
 
     while (1) {
         if (testapp.receive(&d)) {
@@ -48,7 +47,7 @@ void comm_test_task(void *arg) {
 
 extern "C" void app_main(void) {
 //    change to VERBOSE enable logging.
-    log::set_max_level(log::level_t::NONE);
+    log::set_max_level(log::level_t::VERBOSE);
 //
     example_log = new log::channel_t("aruna_example");
     log::set_level("comm", log::level_t::VERBOSE);

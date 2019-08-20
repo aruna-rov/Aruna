@@ -20,7 +20,10 @@ namespace aruna {
             comm::channel_t blinky_comm_channel = {
                     .port = 4,
             };
-            comm::register_channel(&blinky_comm_channel);
+			if((int) blinky_comm_channel.register_err) {
+				ESP_LOGE("BLINK", "failed to register comm channel: %s", err_to_char.at(blinky_comm_channel.register_err));
+				return;
+			}
             gpio_pad_select_gpio(LED_GPIO_PIN);
             ESP_ERROR_CHECK(gpio_set_direction(LED_GPIO_PIN, GPIO_MODE_OUTPUT));
             set_led(LED_ON);

@@ -9,6 +9,8 @@
 #include <pthread.h>
 #include <queue>
 #include <set>
+#include <aruna/comm/commTypes.h>
+
 namespace aruna {
     namespace comm {
 
@@ -29,7 +31,7 @@ namespace aruna {
         /**
          * @brief all endpoints
          */
-        std::set<channel_t*> channels;
+        std::set<channel_t*, channel_t::compare_refrence> channels;
 
         /**
          * @brief stores the comm status
@@ -492,4 +494,20 @@ namespace aruna {
             return err_t::NO_DRIVER;
     }
 
-}}
+    channel_t::channel_t(aruna::comm::port_t port): port(port) {
+        pthread_mutex_init(&in_buffer_lock, NULL);
+		pthread_cond_init(&in_buffer_not_empty, NULL);
+		register_err = comm::register_channel(this);
+	}
+
+	err_t channel_t::send(port_t to_port, uint8_t *data, size_t data_size, bool wait_for_ack) {
+		return comm::send(this, to_port, data, data_size, wait_for_ack);
+	}
+
+	channel_t::~channel_t() {
+		pthread_mutex_destroy(&in_buffer_lock);
+		pthread_cond_destroy(&in_buffer_not_empty);
+		comm::unregister_channel(*this);
+	}
+
+	}}

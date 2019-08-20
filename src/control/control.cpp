@@ -147,7 +147,9 @@ void comm_handler_task(void *arg) {
 	uint16_t (*get_value)(axis_mask_t mode);
 	void (*set_value)(axis_mask_t mode, uint16_t speed, direction_t direction);
 	comm_commands_t command;
-	comm::register_channel(&control_channel);
+	if((int) control_channel.register_err) {
+		ESP_LOGE(LOG_TAG, "failed to register comm channel: %s", err_to_char.at(control_channel.register_err));
+	}
 	while (1) {
 		if (control_channel.receive(&request)) {
 //			if (request.data_received_lenght < 2)
@@ -192,7 +194,7 @@ void comm_handler_task(void *arg) {
 //							ESP_LOGD(LOG_TAG, "mask: %X flag: %X", mask, flags);
 //							ESP_LOGD(LOG_TAG, "GET_COMMAND: %X, value: %d",command,  speed);
 //							TODO error check comm.send return value
-							comm::send(&control_channel, request.from_port, buffer, 4);
+							control_channel.send(request.from_port, buffer, 4);
 						}
 					}
 					break;
@@ -205,7 +207,7 @@ void comm_handler_task(void *arg) {
 						if (mask & flags & (uint8_t) active_axis) {
 							buffer[1] = mask;
 							buffer[2] = (uint8_t) get_direction((axis_mask_t) mask);
-							comm::send(&control_channel, request.from_port, buffer, 3);
+							control_channel.send(request.from_port, buffer, 3);
 						}
 					}
 					break;
@@ -244,7 +246,7 @@ void comm_handler_task(void *arg) {
 							buffer[0] = GET_DAMPING;
 							buffer[1] = mask;
 							buffer[2] = (uint8_t) get_damping((axis_mask_t) mask);
-							comm::send(&control_channel, request.from_port, buffer, 3);
+							control_channel.send(request.from_port, buffer, 3);
 						}
 					}
 					break;
@@ -259,7 +261,7 @@ void comm_handler_task(void *arg) {
 				case GET_RUNNING_STATE:
 					buffer[0] = GET_RUNNING_STATE;
 					buffer[1] = (uint8_t) get_status();
-					comm::send(&control_channel, request.from_port, buffer, 2);
+					control_channel.send(request.from_port, buffer, 2);
 					break;
 //				set running state
 				case SET_RUNNING_STATE:
@@ -281,7 +283,7 @@ void comm_handler_task(void *arg) {
 					t = test_sensor();
 					buffer[0] = TEST_SENSORS;
 					buffer[1] = t;
-					comm::send(&control_channel, request.from_port, buffer, 2);
+					control_channel.send(request.from_port, buffer, 2);
 					break;
 //				calibrate sensors
 				case CALIBRATE_SENSORS:
@@ -293,7 +295,7 @@ void comm_handler_task(void *arg) {
 				case GET_SUPPORTED_AXIS:
 					buffer[0] = GET_SUPPORTED_AXIS;
 					buffer[1] = (uint8_t) get_active_axis();
-					comm::send(&control_channel, request.from_port, buffer, 2);
+					control_channel.send(request.from_port, buffer, 2);
 					break;
 				case SET_SENSOR_OFFSET:
 				case GET_SENSOR_OFFSET:
@@ -305,7 +307,7 @@ void comm_handler_task(void *arg) {
 				case GET_MPU_STATUS:
 					buffer[0] = GET_MPU_STATUS;
 					buffer[1] = MPU_active;
-					comm::send(&control_channel, request.from_port, buffer, 2);
+					control_channel.send(request.from_port, buffer, 2);
 					break;
 //				advanced automated control
 

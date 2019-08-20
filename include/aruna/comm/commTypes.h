@@ -149,12 +149,13 @@ namespace aruna {
 		struct channel_t {
 			pthread_cond_t in_buffer_not_empty;
 			pthread_mutex_t in_buffer_lock;
-			std::queue <transmitpackage_t> in_buffer;
+			std::queue<transmitpackage_t> in_buffer;
+			err_t register_err = err_t::NOT_STARTED;
 
-			channel_t(port_t port) : port(port) {
-				pthread_mutex_init(&in_buffer_lock, NULL);
-				pthread_cond_init(&in_buffer_not_empty, NULL);
-			}
+			channel_t(port_t port);
+			~channel_t();
+
+			err_t send(port_t to_port, uint8_t *data, size_t data_size, bool wait_for_ack = false);
 
 			/**
 			 * @brief port nr. of the endpoint
@@ -190,6 +191,18 @@ namespace aruna {
 			bool operator==(const uint8_t port) const {
 				return this->port == port;
 			}
+
+			struct compare_refrence {
+				inline bool operator()(const channel_t* a, const channel_t* b) const {
+					return a->port < b->port;
+				}
+			};
+
+			struct compare_value {
+				inline bool operator()(const channel_t& a, const channel_t& b) const {
+					return a.port < b.port;
+				}
+			};
 		};
 	}
 }
