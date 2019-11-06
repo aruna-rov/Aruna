@@ -45,10 +45,12 @@ public:
 	 * Convert uint16 to a new range
 	 * @param input input to convert
 	 * @param range_max maximum range (default is 100)
+	 * @param range_min minimum range (default is 0)
 	 * @return output of convertion
 	 */
-	static constexpr double convert_range(uint16_t input, float range_max=100.f) {
-		return (range_max/65535) *input;
+	static constexpr double convert_range(uint16_t input, float range_max=100.f, float range_min=0.f) {
+//	    TODO allow for other type then uint_16 (maybe use <template>? and sizeof()?)
+        return ((input * (range_max - range_min)) / 65535) + range_min;
 	}
 
 };

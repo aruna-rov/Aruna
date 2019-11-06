@@ -35,9 +35,10 @@ namespace aruna { namespace control {
             STOPPED = 1,
         };
 
-        enum class direction_t: bool {
+        enum class direction_t: uint8_t {
             PLUS = 0,
-            MIN = 1
+            MIN = 1,
+            BOTH = 2,
         };
 
 
