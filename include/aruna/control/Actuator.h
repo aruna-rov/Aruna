@@ -12,6 +12,7 @@ namespace aruna { namespace control {
 
 class Actuator {
 public:
+//    TODO direction and axis variable should be declared here
 	/**
 	 * start the driver
 	 */
@@ -23,13 +24,16 @@ public:
 	 * stop the driver
 	 */
 	virtual err_t stop() {
-		return err_t::OK;
+//	    TODO destructor and constructor instead of start() and stop()
+        set(axis_mask_t::ALL, 0, direction_t::PLUS);
+        return err_t::OK;
 	};
 
 	/**
 	 * get the control modes that this driver supports.
 	 * @return control_mode mask ORed.
 	 */
+//	 TODO return default axis variables
 	virtual axis_mask_t get_axis() = 0;
 
 	/**

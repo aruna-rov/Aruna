@@ -29,11 +29,6 @@ err_t Pwm::start() {
     return err_t::OK;
 }
 
-err_t Pwm::stop() {
-	set(axis_mask_t::ALL, 0, direction_t::PLUS);
-    return err_t::OK;
-}
-
 err_t Pwm::set(axis_mask_t axisMask, uint16_t speed, direction_t direction) {
 	log.debug("Pwm", "axis:%X, speed:%d, dir:%d", (int) axisMask, speed, (int) direction);
 	if ((uint8_t) axisMask & (uint8_t) axis && (this->direction == direction_t::BOTH || this->direction == direction)) {

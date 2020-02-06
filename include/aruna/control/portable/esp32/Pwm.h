@@ -32,7 +32,6 @@ private:
 public:
     static const mcpwm_config_t DEFAULT_PWM_CONFIG;
     err_t start() override;
-    err_t stop() override;
     axis_mask_t get_axis() override;
 
     err_t set(axis_mask_t axisMask, uint16_t speed, direction_t direction) override;

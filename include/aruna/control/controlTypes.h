@@ -35,6 +35,7 @@ namespace aruna { namespace control {
             STOPPED = 1,
         };
 
+//        TODO direction mask?
         enum class direction_t: uint8_t {
             PLUS = 0,
             MIN = 1,
