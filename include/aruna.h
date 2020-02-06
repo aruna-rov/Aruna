@@ -19,6 +19,8 @@
     #include "aruna/comm/portable/esp32/UART.h"
     #include "aruna/control/ActuatorSet.h"
     #include "aruna/control/Actuator.h"
+    #include "aruna/control/Stepper.h"
+    #include "aruna/control/portable/esp32/Stepper.h"
     #include "aruna/control/portable/esp32/Pwm.h"
 
 #elif defined (__unix__) || (defined (__APPLE__) && defined (__MACH__))
