@@ -15,7 +15,7 @@ aruna::err_t aruna::control::Stepper::set(aruna::control::axis_mask_t axisMask, 
         asked_direction = direction;
         if (xSemaphoreGive(asked_set_mutex) != pdTRUE)
             log->error("failed to give mutex");
-        xTaskNotifyGive(timer_task_handle)
+        xTaskNotifyGive(timer_task_handle);
     }
     return err_t::OK;
 }
