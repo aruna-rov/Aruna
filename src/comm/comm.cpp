@@ -214,7 +214,7 @@ namespace aruna {
                 log->error("Failed to pick new driver: %s", err_to_char.at(std::get<1>(dr)));
                 comm::stop();
             }
-            pthread_cancel(pthread_self());
+            pthread_exit(pthread_self());
             return nullptr;
         }
 
@@ -262,6 +262,7 @@ namespace aruna {
 //    set the driver
         err_t driver_err;
         setDriver(*driver);
+// TODO check if driver is not NULL
         driver_err = getDriver()->start();
 //        init pthread mutex and cond
         pthread_cond_init(&out_buffer_not_empty, NULL);
@@ -298,7 +299,7 @@ namespace aruna {
         driver_err = getDriver()->stop();
         pthread_cond_destroy(&out_buffer_not_empty);
         pthread_mutex_destroy(&out_buffer_critical);
-        pthread_cancel(transmissionQueueHandeler_thread_handeler);
+        pthread_exit(pthread_self());
         while(!out_buffer.empty())
             out_buffer.pop();
         set_status(status_t::STOPPED);
@@ -364,7 +365,7 @@ namespace aruna {
         if (channels.find(channel) == channels.end()) {
             return err_t::NO_CHANNEL;
         }
-        uint packages = ceil((double) data_size / (double) MAX_DATA_SIZE);
+        uint16_t packages = ceil((double) data_size / (double) MAX_DATA_SIZE);
 //	how many packages are we waiting for?
         uint8_t n_to_wait_for = 0;
         //        datasize length

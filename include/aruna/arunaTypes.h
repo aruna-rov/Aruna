@@ -5,6 +5,13 @@
 #ifndef ARUNA_ARUNATYPES_H
 #define ARUNA_ARUNATYPES_H
 
+// TODO make optional to only include these if FreeRTOS+POSIX is loaded.
+// might be even better to just include `pthread.h` but that results in issues.
+extern "C" {
+    #include "FreeRTOS_POSIX_portable.h"
+    #include <FreeRTOS_POSIX/pthread.h>
+};
+
 #include "map"
 
 namespace aruna {

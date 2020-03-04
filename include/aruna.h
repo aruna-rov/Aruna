@@ -31,9 +31,12 @@
     #include "aruna/comm/commTypes.h"
     #include "aruna/comm/portable/posix/Serial.h"
     #include "aruna/comm.h"
+#elif defined(STM32F1)
+    #warning "In development!"
 #else
     #error "System is not supported."
 #endif
+
 
 
 #endif //ARUNA_H

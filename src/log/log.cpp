@@ -106,7 +106,7 @@ namespace aruna {
 
         channel_t::channel_t(const char *name, level_t level) : name(name), level(level) {
             if (!register_channel((channel_t *) this))
-                perror("LOG ERROR inserting channel");
+                out("LOG ERROR inserting channel");
         }
 
         unsigned long channel_t::epoch() {

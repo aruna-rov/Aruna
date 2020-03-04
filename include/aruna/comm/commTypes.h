@@ -36,7 +36,7 @@ namespace aruna {
 		 * transmit ready package.
 		 */
 		struct transmitpackage_t {
-			constexpr static uint HEADER_SIZE = 4;
+			constexpr static uint8_t HEADER_SIZE = 4;
 			/**
 			 * @brief  channel who is sending the data.
 			 */
