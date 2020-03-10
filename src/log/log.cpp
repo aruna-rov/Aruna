@@ -106,6 +106,7 @@ namespace aruna {
 
         channel_t::channel_t(const char *name, level_t level) : name(name), level(level) {
             if (!register_channel((channel_t *) this))
+//                TODO return error instead of printing!
                 out("LOG ERROR inserting channel");
         }
 

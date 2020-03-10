@@ -8,7 +8,6 @@ if (UNIX)
             ${aruna_sources}
             ${aruna_DIR}/src/comm/portable/posix/Serial.cpp
             )
-    target_link_libraries(aruna pthread)
 
 endif()
 
@@ -17,4 +16,7 @@ add_library(aruna STATIC
         )
 target_include_directories(aruna PUBLIC ${aruna_DIR}/include)
 
+if (UNIX)
+    target_link_libraries(aruna pthread)
+endif()
 export(PACKAGE aruna)
