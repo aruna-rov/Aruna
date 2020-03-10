@@ -7,10 +7,10 @@
 
 // TODO make optional to only include these if FreeRTOS+POSIX is loaded.
 // might be even better to just include `pthread.h` but that results in issues.
-extern "C" {
-    #include "FreeRTOS_POSIX_portable.h"
-    #include <FreeRTOS_POSIX/pthread.h>
-};
+//extern "C" {
+//    #include "FreeRTOS_POSIX_portable.h"
+//    #include <FreeRTOS_POSIX/pthread.h>
+//};
 
 #include "map"
 

@@ -208,13 +208,14 @@ namespace aruna {
         }
         void * _selectDriverTask(void *) {
             auto dr = pickDriver();
+            int pret = 0;
             if (std::get<1>(dr) == err_t::OK) {
                 setDriver(*std::get<0>(dr));
             } else {
                 log->error("Failed to pick new driver: %s", err_to_char.at(std::get<1>(dr)));
                 comm::stop();
             }
-            pthread_exit(pthread_self());
+            pthread_exit(&pret);
             return nullptr;
         }
 
@@ -297,9 +298,11 @@ namespace aruna {
 //    stop all
         err_t driver_err;
         driver_err = getDriver()->stop();
+        int pret = 0;
         pthread_cond_destroy(&out_buffer_not_empty);
         pthread_mutex_destroy(&out_buffer_critical);
-        pthread_exit(pthread_self());
+        pthread_exit(&pret);
+//        TODO is this code even reached is the thread is terminated?
         while(!out_buffer.empty())
             out_buffer.pop();
         set_status(status_t::STOPPED);
