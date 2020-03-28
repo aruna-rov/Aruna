@@ -43,6 +43,7 @@ public:
 	 * @param direction, direction to go to.
 	 * @return err_t::OK if the command was succesfull, others when it fails.
 	 */
+//	 TODO axis and direction check is always the same, make a standard default one.
 	virtual err_t set(axis_mask_t axisMask, uint16_t speed, direction_t direction) = 0;
 
 	/**

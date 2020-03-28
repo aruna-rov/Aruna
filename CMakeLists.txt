@@ -1,5 +1,5 @@
 # TODO this if else is really ugly, is there no better way?
-if (DEFINED IDFTOOL)
+if (DEFINED IDF_PATH)
 #    included as lib in ESP-IDF
 set(COMPONENT_SRCS
         "src/blinky/blinky.cpp"
@@ -11,6 +11,7 @@ set(COMPONENT_SRCS
         "src/control/ActuatorSet.cpp"
         "src/control/Stepper.cpp"
         "src/control/portable/esp32/Stepper.cpp"
+        "src/control/portable/esp32/Dshot.cpp"
         )
 set(COMPONENT_ADD_INCLUDEDIRS
         "include"

@@ -128,6 +128,7 @@ namespace aruna {
 
                 pthread_mutex_lock(&out_buffer_critical);
                 while(out_buffer.empty()){
+//                    TODO cond_wait after mutex_lock can cause a deadlock.
                     pthread_cond_wait(&out_buffer_not_empty, &out_buffer_critical);
                 }
                 transmit_msg = transmit(out_buffer.front());

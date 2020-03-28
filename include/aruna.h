@@ -22,6 +22,7 @@
     #include "aruna/control/Stepper.h"
     #include "aruna/control/portable/esp32/Stepper.h"
     #include "aruna/control/portable/esp32/Pwm.h"
+    #include "aruna/control/portable/esp32/Dshot.h"
 
 #elif defined (__unix__) || (defined (__APPLE__) && defined (__MACH__))
     // System is Posix
