@@ -26,13 +26,29 @@ aruna::err_t esp32::Dshot::start() {
             break;
     }
 //    arm ESC
-    uint16_t arm_sequence[] = {200, 2000, 48};
-    for (int i = 0; i < 3 ; ++i) {
-        bits_to_dshotFrame(create_dshotFrame(arm_sequence[i], 0), dshot_frame);
+    uint16_t start_value = 48;
+    uint8_t step = 50;
+    uint8_t amount_of_steps = 40;
+
+//    up hill
+    for (int i = 0; i < amount_of_steps; ++i) {
+        bits_to_dshotFrame(create_dshotFrame((step * i) + start_value, 0), dshot_frame);
         ESP_ERROR_CHECK(rmt_write_items(driver_config.channel, dshot_frame, rmt_size, true));
-//        ets_delay_us(250);
         vTaskDelay(1);
     }
+//    down hill
+    for (int i = amount_of_steps -1; i > -1; --i) {
+        bits_to_dshotFrame(create_dshotFrame((step * i) + start_value, 0), dshot_frame);
+        ESP_ERROR_CHECK(rmt_write_items(driver_config.channel, dshot_frame, rmt_size, true));
+        vTaskDelay(1);
+    }
+//    stay low for a little while
+    for (int i = 0; i < 150 ; ++i) {
+        bits_to_dshotFrame(create_dshotFrame(start_value, 0), dshot_frame);
+        ESP_ERROR_CHECK(rmt_write_items(driver_config.channel, dshot_frame, rmt_size, true));
+        vTaskDelay(1);
+    }
+
     //    start thread
     int p_mut = 0;
     int p_cre = 0;
@@ -69,6 +85,7 @@ esp32::Dshot::Dshot(axis_mask_t axis, direction_t direction, rmt_channel_t chann
 
 //        calculate ticks
     const static float ticks_per_second_in_nanosecond = ((float) PERF_CLK_HZ / (float) clk_div) / 1000000000;
+//    TODO 300khz also works, make option to switch
     const static uint32_t speed_hz = 150000;
     const static uint32_t max_ns = (1.f / (float) speed_hz) * 1000000000;
 
