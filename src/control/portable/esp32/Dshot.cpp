@@ -37,13 +37,13 @@ aruna::err_t esp32::Dshot::start() {
         vTaskDelay(1);
     }
 //    down hill
-    for (int i = amount_of_steps -1; i > -1; --i) {
+    for (int i = amount_of_steps - 1; i > -1; --i) {
         bits_to_dshotFrame(create_dshotFrame((step * i) + start_value, 0), dshot_frame);
         ESP_ERROR_CHECK(rmt_write_items(driver_config.channel, dshot_frame, rmt_size, true));
         vTaskDelay(1);
     }
 //    stay low for a little while
-    for (int i = 0; i < 150 ; ++i) {
+    for (int i = 0; i < 150; ++i) {
         bits_to_dshotFrame(create_dshotFrame(start_value, 0), dshot_frame);
         ESP_ERROR_CHECK(rmt_write_items(driver_config.channel, dshot_frame, rmt_size, true));
         vTaskDelay(1);
@@ -66,8 +66,7 @@ aruna::err_t esp32::Dshot::stop() {
     return Actuator::stop();
 }
 
-esp32::Dshot::Dshot(axis_mask_t axis, direction_t direction, rmt_channel_t channel, gpio_num_t gpio_port): axis(axis), direction(direction) {
-//    TODO bidirectional direction support
+esp32::Dshot::Dshot(axis_mask_t axis, direction_t direction, rmt_channel_t channel, gpio_num_t gpio_port) : axis(axis), direction(direction) {
     const static uint32_t PERF_CLK_HZ = 80000000;
 //                TODO get the clock speed dynamicly
     const static uint8_t clk_div = 1;
@@ -114,10 +113,20 @@ esp32::Dshot::~Dshot() {
 aruna::err_t esp32::Dshot::set(axis_mask_t axisMask, uint16_t speed, direction_t direction) {
     const static uint16_t MAX_VALUE = 2047;
     const static uint16_t MIN_VALUE = 48;
+    const static uint16_t MID_VALUE = (MAX_VALUE + MIN_VALUE) / 2;
     const static uint8_t telemetry = 0;
 
     if ((uint8_t) axisMask & (uint8_t) axis && (this->direction == direction_t::BOTH || this->direction == direction)) {
-        uint16_t adjusted_speed = (uint16_t) convert_range(speed, MAX_VALUE, MIN_VALUE);
+        uint16_t max, min = 0;
+        if (this->direction == direction_t::BOTH) {
+            max = (uint8_t) direction ? MID_VALUE : MAX_VALUE;
+            min = (uint8_t) direction ? MIN_VALUE : MID_VALUE;
+        } else {
+            max = MAX_VALUE;
+            min = MIN_VALUE;
+        }
+        uint16_t adjusted_speed = (uint16_t) convert_range(speed, max, min);
+        adjusted_speed = speed ? adjusted_speed : MIN_VALUE;
         uint16_t bit_frame = create_dshotFrame(adjusted_speed, telemetry);
 
         pthread_mutex_lock(&dshot_frame_lock);
@@ -166,7 +175,7 @@ void esp32::Dshot::update_task() {
 
 }
 
-void * esp32::Dshot::__update_task(void *_this) {
+void *esp32::Dshot::__update_task(void *_this) {
     static_cast<Dshot *>(_this)->update_task();
     return 0;
 }
