@@ -12,6 +12,11 @@ set(COMPONENT_SRCS
         "src/control/Stepper.cpp"
         "src/control/portable/esp32/Stepper.cpp"
         "src/control/portable/esp32/Dshot.cpp"
+        "src/sis/Performer.cpp"
+        "src/sis/reporter.cpp"
+        "src/sis/watcher.cpp"
+        "src/sis/Water.cpp"
+        "src/sis/portable/esp32/WaterSensor.cpp"
         )
 set(COMPONENT_ADD_INCLUDEDIRS
         "include"

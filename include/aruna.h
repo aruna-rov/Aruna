@@ -23,6 +23,8 @@
     #include "aruna/control/portable/esp32/Stepper.h"
     #include "aruna/control/portable/esp32/Pwm.h"
     #include "aruna/control/portable/esp32/Dshot.h"
+    #include "aruna/sis.h"
+    #include "aruna/sis/portable/esp32/WaterSensor.h"
 
 #elif defined (__unix__) || (defined (__APPLE__) && defined (__MACH__))
     // System is Posix

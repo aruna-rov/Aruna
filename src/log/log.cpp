@@ -178,6 +178,7 @@ namespace aruna {
         }
 
         int set_level(const char *channel_name, level_t new_level) {
+//            TODO set level on channel instead of log manager
             int success = false;
             for (auto candidate: channels) {
                 if (!strcmp(candidate->name, channel_name)) {
