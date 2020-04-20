@@ -1,6 +1,10 @@
 set(aruna_sources
         ${aruna_DIR}/src/log/log.cpp
         ${aruna_DIR}/src/comm/comm.cpp
+        ${aruna_DIR}/src/sis/watcher.cpp
+        ${aruna_DIR}/src/sis/Performer.cpp
+        ${aruna_DIR}/src/sis/Water.cpp
+        ${aruna_DIR}/src/sis/reporter.cpp
         )
 
 if (UNIX)

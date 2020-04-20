@@ -24,8 +24,10 @@ namespace aruna {
          * Type of status
          */
         enum class type_t : uint8_t {
+            UNKNOWN = 0,
             DEFAULT = 1,
             WATER = 2,
+            MAX = 3,
         };
 
         /**

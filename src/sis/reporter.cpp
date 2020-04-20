@@ -9,9 +9,10 @@
 
 using namespace aruna;
 
-comm::channel_t *comm_channel;
-log::channel_t *log_channel;
-
+namespace {
+    comm::channel_t *comm_channel;
+    log::channel_t *log_channel;
+}
 aruna::err_t aruna::sis::reporter::start() {
     comm_channel = new comm::channel_t(port);
 //    TODO error check
