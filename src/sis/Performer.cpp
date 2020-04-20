@@ -2,11 +2,9 @@
 // Created by noeel on 15-04-20.
 //
 
-#include "freertos/FreeRTOS.h"
-#include <freertos/task.h>
-#include <esp_log.h>
 #include "aruna/sis/reporter.h"
 #include "aruna/sis/Performer.h"
+#include <unistd.h>
 
 using namespace aruna::sis;
 
@@ -36,7 +34,7 @@ void aruna::sis::Performer::update_handler() {
         while (do_update) {
             status = update_status();
             sis::reporter::alert(status);
-            vTaskDelay(update_ms / portTICK_PERIOD_MS);
+            usleep(update_ms);
         }
         pthread_mutex_lock(&do_update_mut);
         pthread_cond_wait(&do_update_con, &do_update_mut);
@@ -55,8 +53,8 @@ Performer::~Performer() {
 //    TODO if interrupt_based in changed between constructor and destructor,
 //     it will try to delete things that don't exists or don't delete the thread.
     if (not interrupt_based) {
-        pthread_exit(thread);
         pthread_cond_destroy(&do_update_con);
         pthread_mutex_destroy(&do_update_mut);
+        pthread_exit(thread);
     }
 }
