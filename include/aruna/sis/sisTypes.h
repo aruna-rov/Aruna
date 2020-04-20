@@ -41,6 +41,7 @@ namespace aruna {
             type_t type;
 
             explicit status_t(type_t type): type(type) {};
+            virtual ~status_t() {};
             virtual uint8_t get_encode_size() {
                 return strlen(description) + 3;
             }

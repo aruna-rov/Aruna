@@ -4,7 +4,12 @@
 
 #include "aruna/sis/reporter.h"
 #include "aruna/sis/Performer.h"
+#if defined(ESP_PLATFORM)
+#include <freertos/FreeRTOS.h>
+#include <freertos/task.h>
+#else
 #include <unistd.h>
+#endif
 
 using namespace aruna::sis;
 
@@ -34,7 +39,13 @@ void aruna::sis::Performer::update_handler() {
         while (do_update) {
             status = update_status();
             sis::reporter::alert(status);
-            usleep(update_ms);
+#if defined(ESP_PLATFORM)
+            vTaskDelay(update_ms / portTICK_PERIOD_MS);
+#else
+//            usleep blocks CPU in ESP-IDF 3.2.2
+//          TODO update to newer version of EPS-IDF
+            usleep(update_ms/ portTICK_PERIOD_MS);
+#endif
         }
         pthread_mutex_lock(&do_update_mut);
         pthread_cond_wait(&do_update_con, &do_update_mut);
