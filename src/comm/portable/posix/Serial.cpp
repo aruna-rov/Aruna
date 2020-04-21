@@ -5,7 +5,7 @@
 
 #include <termio.h>
 #include <fcntl.h>
-#include <zconf.h>
+#include <unistd.h>
 #include "aruna/arunaTypes.h"
 #include "aruna/comm/portable/posix/Serial.h"
 #include <aruna/comm.h>
