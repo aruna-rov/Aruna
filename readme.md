@@ -5,7 +5,7 @@ The design of the library is very flexable, allowing for multiple diffrent drive
 
 # Getting started
 
-To get started all you need is an ESP32, anything else is optional. The library is build on esp-idf 3.2.2 and some dependencies as library's. Please see `.gitsubmodules` for an up to date list. These submodules deploy however in the example folder. So you need to install them yourself.
+To get started all you need is an ESP32, anything else is optional. The library is build on esp-idf 3.2.2.
 
 # Modules
 

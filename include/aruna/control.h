@@ -49,11 +49,6 @@ status_t get_status();
  */
 void comm_handler_task(void *arg);
 
-/**
- * damping task to keep the device at a current speed, altitude or position.
- * @param arg, not used.
- */
-void damping_task(void *arg);
 
 /**
  * set the damping type.

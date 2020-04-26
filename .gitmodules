@@ -1,8 +1,0 @@
-[submodule "example/libs/I2Cbus"]
-	path = example/libs/I2Cbus
-	url = https://github.com/natanaeljr/esp32-I2Cbus.git
-	ignore = dirty
-[submodule "example/libs/MPUdriver"]
-	path = example/libs/MPUdriver
-	url = https://github.com/natanaeljr/esp32-MPU-driver.git
-	ignore = dirty
