@@ -26,6 +26,7 @@ err_t Pwm::start() {
 
 //  TODO what happens if mcpwm_init runs two times?
     ESP_ERROR_CHECK(mcpwm_init(pwm_unit, pwm_timer, &pwm_config));
+    set(this->get_axis(), 0, this->direction);
     return err_t::OK;
 }
 
