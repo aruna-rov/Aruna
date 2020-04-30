@@ -44,7 +44,7 @@ void aruna::sis::Performer::update_handler() {
 #else
 //            usleep blocks CPU in ESP-IDF 3.2.2
 //          TODO update to newer version of EPS-IDF
-            usleep(update_ms/ portTICK_PERIOD_MS);
+            usleep(update_ms);
 #endif
         }
         pthread_mutex_lock(&do_update_mut);
