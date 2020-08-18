@@ -30,6 +30,7 @@ void water_status_t::decode(uint8_t *to_decode) {
     status_t::decode(to_decode);
     uint8_t start_byte = status_t::get_encode_size();
     water_level_mm = to_decode[start_byte];
+//    TODO decoding of location is not always correct.
     memcpy(location, (char *) &to_decode[start_byte + 2], to_decode[start_byte + 1]);
 }
 

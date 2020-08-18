@@ -9,6 +9,7 @@
 namespace aruna {
     namespace driver {
         namespace ADS101x {
+//            TODO folder should be lowercase /ESP32 > /esp32, filename too.
             int16_t readConversion(uint16_t config, uint8_t address) {
 //                TODO make I2C port selectable
                 i2c_port_t I2C_port = I2C_NUM_0;

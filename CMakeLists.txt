@@ -19,6 +19,7 @@ set(COMPONENT_SRCS
         "src/sis/portable/esp32/WaterSensor.cpp"
         "src/driver/ADS101x/ADS101x.cpp"
         "src/driver/ADS101x/portable/ESP32/ADS101x_ESP32.cpp"
+        "src/sis/ADS101xWaterSensor.cpp"
         )
 set(COMPONENT_ADD_INCLUDEDIRS
         "include"
