@@ -17,3 +17,6 @@ example/sdkconfig
 .idea
 cmake-build-*
 CMakeListsPrivate.txt
+
+# docs
+doxygen
