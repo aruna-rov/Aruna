@@ -10,6 +10,8 @@
 #include "aruna/comm/portable/posix/Serial.h"
 #include <aruna/comm.h>
 #include <aruna/log.h>
+#include <errno.h>
+
 using namespace aruna::comm;
 
 namespace aruna { namespace comm {

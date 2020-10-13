@@ -32,6 +32,7 @@ else()
 #    standalone unit test
     cmake_minimum_required(VERSION 3.15)
     project(Aruna)
+    set(CMAKE_CXX_STANDARD 14)
     file(GLOB_RECURSE ARUNA_TEST_SOURCES
             "test/*.*"
             )

@@ -12,6 +12,7 @@
 //    #include <FreeRTOS_POSIX/pthread.h>
 //};
 
+#include <cstdint>
 #include "map"
 
 namespace aruna {
