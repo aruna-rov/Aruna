@@ -6,8 +6,7 @@
 #define ARUNA_WATERSENSOR_H
 
 #include "aruna/sis/Water.h"
-// TODO this path will not work on other computers
-#include "../../../../../../../../../../esp/esp-idf/components/esp_adc_cal/include/esp_adc_cal.h"
+#include "esp_adc_cal.h"
 
 namespace aruna {
     namespace sis {

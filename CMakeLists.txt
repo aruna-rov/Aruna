@@ -26,7 +26,7 @@ set(COMPONENT_SRCS
 set(COMPONENT_ADD_INCLUDEDIRS
         "include"
         )
-
+set(COMPONENT_REQUIRES esp_adc_cal)
 register_component()
 else()
 #    standalone unit test

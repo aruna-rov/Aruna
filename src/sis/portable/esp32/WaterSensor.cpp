@@ -4,8 +4,6 @@
 
 #include "aruna/sis/portable/esp32/WaterSensor.h"
 #include "driver/adc.h"
-// TODO this path is super weird!
-#include "../../../../../../../../../esp/esp-idf/components/esp_adc_cal/include/esp_adc_cal.h"
 
 using namespace aruna::sis;
 
