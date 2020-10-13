@@ -1,9 +1,12 @@
 //
 // Created by noeel on 09-03-20.
 //
-
+#include "main.h"
+#include "cmsis_os.h"
 #include <catch2/catch.hpp>
 #include <aruna.h>
+#include "aruna/log.h"
+#include <cstring>
 
 using namespace aruna::log;
 

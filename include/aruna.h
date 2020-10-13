@@ -34,7 +34,9 @@
 #elif defined(STM32F1)
     #warning "In development!"
 #else
-    #error "System is not supported."
+//    #error "System is not supported."
+#include "aruna/arunaTypes.h"
+#include "aruna/log.h"
 #endif
 
 

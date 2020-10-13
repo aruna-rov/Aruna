@@ -6,3 +6,9 @@
 	path = example/libs/MPUdriver
 	url = https://github.com/natanaeljr/esp32-MPU-driver.git
 	ignore = dirty
+[submodule "FreeRTOS-POSIX"]
+	path = FreeRTOS-POSIX
+	url = git@github.com:FreeRTOS/Lab-Project-FreeRTOS-POSIX.git
+[submodule "test/Catch2"]
+	path = test/Catch2
+	url = git@github.com:catchorg/Catch2.git
