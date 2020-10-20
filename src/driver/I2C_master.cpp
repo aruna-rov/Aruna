@@ -29,3 +29,26 @@ aruna::driver::I2C_master::~I2C_master() {
     pthread_mutex_destroy(&line_busy);
     pthread_mutexattr_destroy(&line_busy_attr);
 }
+
+aruna::err_t aruna::driver::I2C_master::write(uint8_t address, uint8_t reg, uint8_t data) {
+    return write(address, reg, &data, 1);
+}
+
+aruna::err_t aruna::driver::I2C_master::read(uint8_t address, uint8_t reg, uint8_t &buffer) {
+    return read(address, reg, &buffer, 1);
+}
+
+aruna::err_t aruna::driver::I2C_master::lock(uint8_t i2c_address) {
+//   TODO
+    return aruna::err_t::OK;
+}
+
+aruna::err_t aruna::driver::I2C_master::try_lock(uint8_t i2c_address) {
+    //   TODO
+    return aruna::err_t::OK;
+}
+
+aruna::err_t aruna::driver::I2C_master::unlock(uint8_t i2c_address) {
+    //   TODO
+    return aruna::err_t::OK;
+}
