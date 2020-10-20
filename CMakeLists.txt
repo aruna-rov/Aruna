@@ -24,6 +24,8 @@ set(COMPONENT_SRCS
         "src/control/PCA9685.cpp"
         "src/driver/I2C_master.cpp"
         "src/driver/port/ESP32/ESP32_I2C_master.cpp"
+        "src/driver/Pwm.cpp"
+        "src/driver/PCA9685.cpp"
         )
 set(COMPONENT_ADD_INCLUDEDIRS
         "include"
