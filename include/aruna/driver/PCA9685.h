@@ -7,6 +7,7 @@
 
 #include "aruna/driver/Pwm.h"
 #include "aruna/driver/I2C_master.h"
+#include "aruna/log.h"
 #include "pthread.h"
 
 namespace aruna {
@@ -14,6 +15,7 @@ namespace aruna {
         class PCA9685 : public Pwm {
         private:
 
+            static aruna::log::channel_t log;
             /**
             * Pointer to the registers.
             */
@@ -147,6 +149,17 @@ namespace aruna {
              * @return I²C bus error
              */
             err_t get_duty(uint16_t &on, uint16_t &off);
+
+            /**
+             * Is the PCA9685 connected to the I²C bus.
+             * @note only checks if a device with said I²C address returns an ACK.
+             * @return I²C error code.
+             *  - err_t::OK success
+             *  - err_t::NO_RESPONSE slave doesn't ACK the transfer
+             *  - err_t::INVALID_PARAMETERS parameter error
+             *  - err_t::HARDWARE_FAILURE I2C driver malfunction
+             */
+            err_t is_connected();
 
 //            TODO support for SUBADRx
 //            TODO support for ALLCALLADR
