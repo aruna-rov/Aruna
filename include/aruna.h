@@ -27,7 +27,6 @@
     #include "aruna/sis/portable/esp32/WaterSensor.h"
     #include "aruna/driver/ADS101x/ADS101x.h"
     #include "aruna/sis/ADS101xWaterSensor.h"
-    #include "aruna/control/PCA9685.h"
 
 #elif defined (__unix__) || (defined (__APPLE__) && defined (__MACH__))
     // System is Posix

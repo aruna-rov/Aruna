@@ -20,8 +20,6 @@ set(COMPONENT_SRCS
         "src/driver/ADS101x/ADS101x.cpp"
         "src/driver/ADS101x/portable/ESP32/ADS101x_ESP32.cpp"
         "src/sis/ADS101xWaterSensor.cpp"
-        "src/driver/PCA9685/portable/ESP32/PCA9685_ESP32.cpp"
-        "src/control/PCA9685.cpp"
         "src/driver/I2C_master.cpp"
         "src/driver/port/ESP32/ESP32_I2C_master.cpp"
         "src/driver/Pwm.cpp"
