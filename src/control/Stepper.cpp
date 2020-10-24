@@ -4,26 +4,23 @@
 
 #include "aruna/control/Stepper.h"
 
-aruna::err_t aruna::control::Stepper::set(aruna::control::axis_mask_t axisMask, uint16_t speed,
-                                          aruna::control::direction_t direction) {
-//    match axis
-    if ((uint8_t) axisMask && (uint8_t) axis) {
-//        TODO check if direction match
-        if (xSemaphoreTake(asked_set_mutex, portMAX_DELAY) != pdTRUE)
-            log->error("failed to take mutex");
-        asked_speed = speed;
-        asked_direction = direction;
-        if (xSemaphoreGive(asked_set_mutex) != pdTRUE)
-            log->error("failed to give mutex");
-        xTaskNotifyGive(timer_task_handle);
-    }
+aruna::err_t aruna::control::Stepper::_set(aruna::control::axis_mask_t axisMask, uint16_t speed,
+                                           aruna::control::direction_t direction) {
+    if (xSemaphoreTake(asked_set_mutex, portMAX_DELAY) != pdTRUE)
+        log->error("failed to take mutex");
+    asked_speed = speed;
+    asked_direction = direction;
+    if (xSemaphoreGive(asked_set_mutex) != pdTRUE)
+        log->error("failed to give mutex");
+    xTaskNotifyGive(timer_task_handle);
+
     return err_t::OK;
 }
 
 aruna::err_t aruna::control::Stepper::do_step(direction_t direction) {
 // TODO half stepping
     err_t last_err_msg;
-    for (int i = 0; i < pins_count ; ++i) {
+    for (int i = 0; i < pins_count; ++i) {
         if (i == active_pin_index)
             continue;
         last_err_msg = set_pin(pins[i], !active_high);
@@ -35,7 +32,8 @@ aruna::err_t aruna::control::Stepper::do_step(direction_t direction) {
 
 aruna::control::Stepper::Stepper(uint8_t *pins, size_t pins_count, axis_mask_t axis, direction_t direction,
                                  bool active_high)
-        : axis(axis), direction(direction), pins(pins), pins_count(pins_count), active_high(active_high) {
+        : Actuator(axis, direction), axis(axis), direction(direction), pins(pins), pins_count(pins_count),
+          active_high(active_high) {
 //  TODO creating two stepper object causes error on registering log
 //  TODO break_on_idle bool parameter. If true: lock motor when speed is zero; false: release motor is speed is zero.
     log = new log::channel_t("stepper");
@@ -46,12 +44,13 @@ aruna::control::Stepper::Stepper(uint8_t *pins, size_t pins_count, axis_mask_t a
     }
     if (xTaskCreate(_timer_task_wrapper, "stepper timer", 2048, this, 10, &timer_task_handle) != pdTRUE)
         log->error("failed to create stepper timer task");
+    startup_error = init_pins();
 
 }
 
 aruna::control::Stepper::~Stepper() {
-// TODO save to call stop() from here?
-// because stop() calls a pure virtual function.
+    clear_pins();
+    vTaskDelete(timer_task_handle);
 }
 
 uint8_t aruna::control::Stepper::get_pin(direction_t direction, uint8_t n) {
@@ -62,7 +61,7 @@ uint8_t aruna::control::Stepper::get_pin(direction_t direction, uint8_t n) {
         active_pin_index = (active_pin_index + 1) >= pins_count ? 0 : active_pin_index + 1;
     } else if (n == 0 and direction == direction_t::MIN) {
 //        move to prev pin
-        active_pin_index = ((int32_t)(active_pin_index - 1)) < 0 ? pins_count - 1 : active_pin_index - 1;
+        active_pin_index = ((int32_t) (active_pin_index - 1)) < 0 ? pins_count - 1 : active_pin_index - 1;
     }
     return ret_val;
 }
@@ -96,7 +95,7 @@ void aruna::control::Stepper::timer_task() {
         }
 //        loop the pins!
         err_msg = do_step(direction);
-        if(err_msg != err_t::OK)
+        if (err_msg != err_t::OK)
             log->error("failed to step: %s", err_to_char.at(err_msg));
         vTaskDelay(delay_ms / portTICK_PERIOD_MS);
 
@@ -108,9 +107,6 @@ void aruna::control::Stepper::_timer_task_wrapper(void *_this) {
     (static_cast<Stepper *>(_this))->timer_task();
 }
 
-aruna::control::axis_mask_t aruna::control::Stepper::get_axis() {
-    return axis;
-}
 
 aruna::err_t aruna::control::Stepper::init_pins() {
     err_t msg = err_t::OK;
@@ -134,14 +130,3 @@ aruna::err_t aruna::control::Stepper::clear_pins() {
     return msg;
 }
 
-aruna::err_t aruna::control::Stepper::start() {
-    init_pins();
-    return Actuator::start();
-}
-
-aruna::err_t aruna::control::Stepper::stop() {
-    //                close the pins
-    clear_pins();
-    vTaskDelete(timer_task_handle);
-    return Actuator::stop();
-}

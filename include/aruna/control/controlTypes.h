@@ -40,6 +40,8 @@ namespace aruna { namespace control {
             PLUS = 0,
             MIN = 1,
             BOTH = 2,
+            NONE = 4,
+            MAX = 4
         };
 
 

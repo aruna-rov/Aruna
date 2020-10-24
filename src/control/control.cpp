@@ -45,7 +45,7 @@ status_t start() {
 
 //    start all drivers
 	for (Actuator *d: drivers) {
-		err_t stat = d->start();
+		err_t stat = d->startup_error;
 		if (stat != err_t::OK)
 //            TODO print driver name?
 			ESP_LOGW(LOG_TAG, "Driver failed to start: %s", err_to_char.at(stat));
@@ -285,10 +285,7 @@ status_t stop() {
 
 	//    stop all drivers
 	for (Actuator *d: drivers) {
-		err_t stat = d->stop();
-		if (stat != err_t::OK)
-//            TODO print driver name?
-			ESP_LOGW(LOG_TAG, "Driver failed to stop: %s", err_to_char.at(stat));
+	    delete d;
 	}
 
 //    stop task

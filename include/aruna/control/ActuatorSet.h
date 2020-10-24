@@ -11,7 +11,9 @@
 namespace aruna {
 	namespace control {
 		class ActuatorSet : public Actuator {
-		public:
+		private:
+            err_t _set(axis_mask_t axisMask, uint16_t speed, direction_t direction) override;
+        public:
 			struct transform_t {
 				/**
 				 * pointer to driver
@@ -40,10 +42,6 @@ namespace aruna {
 //					TODO make speed_percentage optional
 			};
 
-			axis_mask_t get_axis() override;
-
-			err_t
-			set(axis_mask_t axisMask, uint16_t speed, direction_t direction) override;
 
 			/**
 			 * put diffrent drivers in a driver set to allow them to cooperate and transform into a different axis when turned on together
@@ -52,14 +50,25 @@ namespace aruna {
 			 */
 			ActuatorSet(transform_t *transform, size_t transform_size);
 
-			err_t stop() override;
-
-			err_t start() override;
 
 		private:
 			transform_t *transform;
 			const size_t transform_size;
-			aruna::log::channel_t log;
+			static aruna::log::channel_t log;
+
+			/**
+			 * Get alle the axis from all inside the set and put them together.
+			 * @return axis mask of all actuators in the set.
+			 */
+            axis_mask_t compute_axis();
+
+            /**
+			 * Get alle the axis from all inside the set and put them together.
+			 * @return axis mask of all actuators in the set.
+			 */
+            direction_t compute_direction();
+
+            err_t err_check();
 		};
 	}
 }

@@ -90,6 +90,8 @@ namespace aruna {
              */
             static void _timer_task_wrapper(void* _this);
 
+            err_t _set(axis_mask_t axisMask, uint16_t speed, direction_t direction) override;
+
         public:
             /**
              * Stepper motor
@@ -106,12 +108,6 @@ namespace aruna {
              */
             ~Stepper();
 
-            err_t set(axis_mask_t axisMask, uint16_t speed, direction_t direction) override;
-
-            axis_mask_t get_axis() override;
-
-            err_t start() override;
-            virtual err_t stop() override;
 
 
             };

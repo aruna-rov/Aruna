@@ -29,12 +29,18 @@ private:
 	const direction_t direction;
 	const uint8_t pwm_num;
 	aruna::log::channel_t log;
+
+	/**
+	 * called only once from constructor.
+	 */
+	void start();
+
+    err_t _set(axis_mask_t axisMask, uint16_t speed, direction_t direction) override;
+
 public:
     static const mcpwm_config_t DEFAULT_PWM_CONFIG;
-    err_t start() override;
-    axis_mask_t get_axis() override;
 
-    err_t set(axis_mask_t axisMask, uint16_t speed, direction_t direction) override;
+
 
 //    double pwm
     Pwm(axis_mask_t axis,

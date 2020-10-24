@@ -62,6 +62,8 @@ namespace aruna {
                  * @return dshot bit package with CRC
                  */
                 uint16_t create_dshotFrame(uint16_t speed, uint8_t telemetry);
+
+                err_t _set(axis_mask_t axisMask, uint16_t speed, direction_t direction) override;
             public:
                 /**
                  * Dshot150
@@ -74,13 +76,6 @@ namespace aruna {
 
                 ~Dshot();
 
-                err_t start() override;
-
-                err_t stop() override;
-
-                err_t set(axis_mask_t axisMask, uint16_t speed, direction_t direction) override;
-
-                axis_mask_t get_axis() override;
             };
         }
     }

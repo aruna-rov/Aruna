@@ -6,8 +6,46 @@
 
 using namespace aruna::control;
 
-// TODO write drivers
-aruna::err_t esp32::Dshot::start() {
+
+esp32::Dshot::Dshot(axis_mask_t axis, direction_t direction, rmt_channel_t channel, gpio_num_t gpio_port) :
+        Actuator(axis, direction), axis(axis), direction(direction) {
+    const static uint32_t PERF_CLK_HZ = 80000000;
+//                TODO get the clock speed dynamicly
+    const static uint8_t clk_div = 1;
+
+//    config driver
+    driver_config.channel = channel;
+    driver_config.gpio_num = gpio_port;
+    driver_config.rmt_mode = RMT_MODE_TX;
+    driver_config.clk_div = clk_div;
+    driver_config.mem_block_num = 1;
+    driver_config.tx_config.loop_en = false;
+    driver_config.tx_config.carrier_en = false;
+    driver_config.tx_config.idle_level = RMT_IDLE_LEVEL_LOW;
+    driver_config.tx_config.idle_output_en = false;
+
+//        calculate ticks
+    const static float ticks_per_second_in_nanosecond = ((float) PERF_CLK_HZ / (float) clk_div) / 1000000000;
+//    TODO 300khz also works, make option to switch
+    const static uint32_t speed_hz = 150000;
+    const static uint32_t max_ns = (1.f / (float) speed_hz) * 1000000000;
+
+    const static float T0H_percentage = 0.375;
+    const static float T1H_percentage = 0.75;
+    const static float T0L_percentage = 1 - T0H_percentage;
+    const static float T1L_percentage = 1 - T1H_percentage;
+
+    const static uint16_t T0H_ns = max_ns * T0H_percentage;
+    const static uint16_t T1H_ns = max_ns * T1H_percentage;
+    const static uint16_t T0L_ns = max_ns * T0L_percentage;
+    const static uint16_t T1L_ns = max_ns * T1L_percentage;
+
+    T0H_ticks = ticks_per_second_in_nanosecond * T0H_ns;
+    T1H_ticks = ticks_per_second_in_nanosecond * T1H_ns;
+    T0L_ticks = ticks_per_second_in_nanosecond * T0L_ns;
+    T1L_ticks = ticks_per_second_in_nanosecond * T1L_ns;
+
+
     err_t rval;
     esp_err_t eerr;
     ESP_ERROR_CHECK(rmt_config(&driver_config));
@@ -56,89 +94,39 @@ aruna::err_t esp32::Dshot::start() {
     p_cre = pthread_create(&update_handler, NULL, __update_task, this);
     if (p_mut || p_cre)
         rval = err_t::TASK_FAILED;
-    return rval;
-}
-
-aruna::err_t esp32::Dshot::stop() {
-    rmt_driver_uninstall(driver_config.channel);
-    pthread_exit(&update_handler);
-    pthread_mutex_destroy(&dshot_frame_lock);
-    return Actuator::stop();
-}
-
-esp32::Dshot::Dshot(axis_mask_t axis, direction_t direction, rmt_channel_t channel, gpio_num_t gpio_port) : axis(axis), direction(direction) {
-    const static uint32_t PERF_CLK_HZ = 80000000;
-//                TODO get the clock speed dynamicly
-    const static uint8_t clk_div = 1;
-
-//    config driver
-    driver_config.channel = channel;
-    driver_config.gpio_num = gpio_port;
-    driver_config.rmt_mode = RMT_MODE_TX;
-    driver_config.clk_div = clk_div;
-    driver_config.mem_block_num = 1;
-    driver_config.tx_config.loop_en = false;
-    driver_config.tx_config.carrier_en = false;
-    driver_config.tx_config.idle_level = RMT_IDLE_LEVEL_LOW;
-    driver_config.tx_config.idle_output_en = false;
-
-//        calculate ticks
-    const static float ticks_per_second_in_nanosecond = ((float) PERF_CLK_HZ / (float) clk_div) / 1000000000;
-//    TODO 300khz also works, make option to switch
-    const static uint32_t speed_hz = 150000;
-    const static uint32_t max_ns = (1.f / (float) speed_hz) * 1000000000;
-
-    const static float T0H_percentage = 0.375;
-    const static float T1H_percentage = 0.75;
-    const static float T0L_percentage = 1 - T0H_percentage;
-    const static float T1L_percentage = 1 - T1H_percentage;
-
-    const static uint16_t T0H_ns = max_ns * T0H_percentage;
-    const static uint16_t T1H_ns = max_ns * T1H_percentage;
-    const static uint16_t T0L_ns = max_ns * T0L_percentage;
-    const static uint16_t T1L_ns = max_ns * T1L_percentage;
-
-    T0H_ticks = ticks_per_second_in_nanosecond * T0H_ns;
-    T1H_ticks = ticks_per_second_in_nanosecond * T1H_ns;
-    T0L_ticks = ticks_per_second_in_nanosecond * T0L_ns;
-    T1L_ticks = ticks_per_second_in_nanosecond * T1L_ns;
-
-
+    startup_error = rval;
 }
 
 esp32::Dshot::~Dshot() {
-
+    rmt_driver_uninstall(driver_config.channel);
+    pthread_exit(&update_handler);
+    pthread_mutex_destroy(&dshot_frame_lock);
 }
 
-aruna::err_t esp32::Dshot::set(axis_mask_t axisMask, uint16_t speed, direction_t direction) {
+aruna::err_t esp32::Dshot::_set(axis_mask_t axisMask, uint16_t speed, direction_t direction) {
     const static uint16_t MAX_VALUE = 2047;
     const static uint16_t MIN_VALUE = 48;
     const static uint16_t MID_VALUE = (MAX_VALUE + MIN_VALUE) / 2;
     const static uint8_t telemetry = 0;
 
-    if ((uint8_t) axisMask & (uint8_t) axis && (this->direction == direction_t::BOTH || this->direction == direction)) {
-        uint16_t max, min = 0;
-        if (this->direction == direction_t::BOTH) {
-            max = (uint8_t) direction ? MID_VALUE : MAX_VALUE;
-            min = (uint8_t) direction ? MIN_VALUE : MID_VALUE;
-        } else {
-            max = MAX_VALUE;
-            min = MIN_VALUE;
-        }
-        uint16_t adjusted_speed = (uint16_t) convert_range(speed, max, min);
-        adjusted_speed = speed ? adjusted_speed : MIN_VALUE;
-        uint16_t bit_frame = create_dshotFrame(adjusted_speed, telemetry);
-
-        pthread_mutex_lock(&dshot_frame_lock);
-        bits_to_dshotFrame(bit_frame, dshot_frame);
-        pthread_mutex_unlock(&dshot_frame_lock);
+    uint16_t max, min = 0;
+    if (this->direction == direction_t::BOTH) {
+        max = (uint8_t) direction ? MID_VALUE : MAX_VALUE;
+        min = (uint8_t) direction ? MIN_VALUE : MID_VALUE;
+    } else {
+        max = MAX_VALUE;
+        min = MIN_VALUE;
     }
+    uint16_t adjusted_speed = (uint16_t) convert_range(speed, max, min);
+    adjusted_speed = speed ? adjusted_speed : MIN_VALUE;
+    uint16_t bit_frame = create_dshotFrame(adjusted_speed, telemetry);
+
+    pthread_mutex_lock(&dshot_frame_lock);
+    bits_to_dshotFrame(bit_frame, dshot_frame);
+    pthread_mutex_unlock(&dshot_frame_lock);
     return err_t::OK;
 }
 
-axis_mask_t esp32::Dshot::get_axis() {
-    return axis;
-}
 
 void esp32::Dshot::bits_to_dshotFrame(uint16_t bits, rmt_item32_t *frame_buffer) {
 
