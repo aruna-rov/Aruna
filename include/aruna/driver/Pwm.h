@@ -6,10 +6,11 @@
 #define ARUNA_PWM_H
 
 #include "aruna/arunaTypes.h"
+#include "aruna/control/Actuator.h"
 
 namespace aruna {
     namespace driver {
-        class Pwm {
+    class Pwm: public control::Actuator {
         private:
             uint32_t frequency_hz;
             uint16_t duty;
@@ -17,6 +18,8 @@ namespace aruna {
             virtual err_t _set_frequency(uint32_t frequency_hz) = 0;
 
             virtual err_t _set_duty(uint16_t duty) = 0;
+
+            err_t _set(control::axis_mask_t axisMask, uint16_t speed, control::direction_t direction) override;
 
         public:
 

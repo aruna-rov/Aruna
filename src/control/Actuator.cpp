@@ -45,3 +45,9 @@ err_t Actuator::set_axis(axis_mask_t new_axis) {
     axis = new_axis;
     return err_t::OK;
 }
+
+// TODO constexpr?
+double Actuator::convert_range(uint16_t input, float range_max, float range_min) {
+//	    TODO allow for other type then uint_16 (maybe use <template>? and sizeof()?)
+    return ((input * (range_max - range_min)) / 65535) + range_min;
+}
