@@ -113,7 +113,9 @@ namespace aruna {
             const uint8_t led, i2c_address;
             I2C_master* i2c_bus;
 
-            static uint8_t instances;
+            err_t _set_frequency(uint32_t frequency_hz) override;
+
+            err_t _set_duty(uint16_t duty) override;
         public:
             /**
              * PCA9685 pwm object for every LED
@@ -126,11 +128,10 @@ namespace aruna {
 
             ~PCA9685();
 
-            err_t _set_frequency(uint32_t frequency_hz) override;
 
+//            TODO without override does this function get called?
             uint32_t get_frequency();
 
-            err_t _set_duty(uint16_t duty) override;
 
             /**
              * Set the on and off timing of the PCA9685 led
@@ -140,6 +141,7 @@ namespace aruna {
              */
             err_t set_duty(uint16_t on, uint16_t off);
 
+//            TODO without override does this function get called?
             uint16_t get_duty();
 
             /**
