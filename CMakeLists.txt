@@ -7,7 +7,6 @@ set(COMPONENT_SRCS
         "src/comm/comm.cpp"
         "src/control/control.cpp"
         "src/comm/portable/esp32/UART.cpp"
-        "src/control/portable/esp32/Pwm.cpp"
         "src/control/ActuatorSet.cpp"
         "src/control/Stepper.cpp"
         "src/control/portable/esp32/Stepper.cpp"
@@ -25,6 +24,7 @@ set(COMPONENT_SRCS
         "src/driver/Pwm.cpp"
         "src/driver/PCA9685.cpp"
         "src/control/Actuator.cpp"
+        "src/driver/port/ESP32/ESP32_MCPwm.cpp"
         )
 set(COMPONENT_ADD_INCLUDEDIRS
         "include"
