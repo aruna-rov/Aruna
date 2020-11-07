@@ -26,7 +26,6 @@ private:
 	const mcpwm_config_t pwm_config;
 	const float min_duty_cycle_percentage;
 	const float max_duty_cycle_percentage;
-	const direction_t direction;
 	const uint8_t pwm_num;
 	aruna::log::channel_t log;
 
@@ -35,7 +34,7 @@ private:
 	 */
 	void start();
 
-    err_t _set(axis_mask_t axisMask, uint16_t speed, direction_t direction) override;
+    err_t _set(axis_mask_t axisMask, int16_t speed) override;
 
 public:
     static const mcpwm_config_t DEFAULT_PWM_CONFIG;
@@ -61,12 +60,11 @@ public:
             mcpwm_timer_t pwm_timer,
             mcpwm_io_signals_t io_signal,
             mcpwm_operator_t pwm_operator,
-            direction_t direction,
             mcpwm_config_t pwm_config = DEFAULT_PWM_CONFIG,
             float min_duty_cycle_percentage = 0,
             float max_duty_cycle_percentage = 100);
 
-private:
+
 };
 }}
 

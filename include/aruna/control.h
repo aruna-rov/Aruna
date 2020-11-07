@@ -98,52 +98,44 @@ uint8_t test_sensor();
  * Set the speed of the motors directly
  * @param axisMask, multiple axis to apply speed to.
  * @param speed, speed of the motors
- * @param direction, direction to go to.
  */
-void set_speed(axis_mask_t axisMask, uint16_t speed, direction_t direction = direction_t::PLUS);
+void set_speed(axis_mask_t axisMask, int16_t speed);
 
 /**
  * Set the target velocity of the ROV
  * @param axisMask axis to apply the velocity to
  * @param mm_per_second how fast
- * @param direction direction to go to (default is plus)
  */
-void set_velocity(axis_mask_t axisMask, uint16_t mm_per_second, direction_t direction = direction_t::PLUS);
+void set_velocity(axis_mask_t axisMask, int16_t mm_per_second);
 
 /**
  * set the degree of an axis (only applies to yaw, pitch and roll)
  * @param axisMask multiple axis to apply this to
  * @param degree degree (65535 is maximum)
- * @param direction not used, exist for pointer compatability
  */
-void set_degree(axis_mask_t axisMask, uint16_t degree, direction_t direction = direction_t::PLUS);
+void set_degree(axis_mask_t axisMask, int16_t degree);
 
 /**
  * Get the speed of an axis.
  * @param single_axis one axis at a time
  * @return speed.
  */
-uint16_t get_speed(axis_mask_t single_axis);
+int16_t get_speed(axis_mask_t single_axis);
 
 /**
  * get the current velocity
  * @param single_axis of target axis
  * @return mm_second how fast we are going
  */
-uint16_t get_velocity(axis_mask_t single_axis);
+int16_t get_velocity(axis_mask_t single_axis);
 
 /**
  * get the angle of an axis (pitch, roll and yaw only)
  * @param single_axis of target axis
- * @return degree of axis (65535 = 360 deg)
+ * @return degree of axis (32767 = 360 deg)
  */
-uint16_t get_degree(axis_mask_t single_axis);
+int16_t get_degree(axis_mask_t single_axis);
 
-/**
- * Get the direction that an axis is spinning at.
- * @param single_axis target axis
- * @return direction
- */
-direction_t get_direction(axis_mask_t single_axis);
+
 }}
 #endif //ARUNA_CONTROL_H

@@ -19,7 +19,7 @@ namespace aruna {
 
             virtual err_t _set_duty(uint16_t duty) = 0;
 
-            err_t _set(control::axis_mask_t axisMask, uint16_t speed, control::direction_t direction) override;
+            err_t _set(control::axis_mask_t axisMask, int16_t speed) override;
 
         public:
 

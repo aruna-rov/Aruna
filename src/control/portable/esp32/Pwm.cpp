@@ -16,14 +16,14 @@ namespace aruna {
                 MCPWM_UP_COUNTER,
         };
 
-        err_t Pwm::_set(axis_mask_t axisMask, uint16_t speed, direction_t direction) {
-            log.debug("Pwm", "axis:%X, speed:%d, dir:%d", (int) axisMask, speed, (int) direction);
+        err_t Pwm::_set(axis_mask_t axisMask, int16_t speed) {
+            log.debug("Pwm", "axis:%X, speed:%d", (int) axisMask, speed);
             float per_up = convert_range(speed, max_duty_cycle_percentage, min_duty_cycle_percentage);
             mcpwm_operator_t low;
             mcpwm_operator_t high;
             if (pwm_num > 1) {
-                low = (bool) direction ? MCPWM_OPR_A : MCPWM_OPR_B;
-                high = (bool) direction ? MCPWM_OPR_B : MCPWM_OPR_A;
+                low  = speed < 0 ? MCPWM_OPR_A : MCPWM_OPR_B;
+                high = speed < 0 ? MCPWM_OPR_B : MCPWM_OPR_A;
 
                 ESP_ERROR_CHECK(mcpwm_set_signal_low(pwm_unit, pwm_timer, low));
             } else
@@ -42,12 +42,11 @@ namespace aruna {
                  mcpwm_timer_t pwm_timer,
                  mcpwm_io_signals_t io_signal,
                  mcpwm_operator_t pwm_operator,
-                 direction_t direction,
                  mcpwm_config_t pwm_config,
                  float min_duty_cycle_percentage,
                  float max_duty_cycle_percentage) :
 
-                Actuator(axis, direction),
+                Actuator(axis),
                 axis(axis),
                 forward_pin(pin),
                 backward_pin(gpio_num_t(NULL)),
@@ -59,7 +58,6 @@ namespace aruna {
                 pwm_config(pwm_config),
                 min_duty_cycle_percentage(min_duty_cycle_percentage),
                 max_duty_cycle_percentage(max_duty_cycle_percentage),
-                direction(direction),
                 pwm_num(1),
                 log("Pwm") {
             start();
@@ -78,7 +76,7 @@ namespace aruna {
                  float min_duty_cycle_percentage,
                  float max_duty_cycle_percentage) :
 
-                Actuator(axis, direction_t::BOTH),
+                Actuator(axis),
                 axis(axis),
                 forward_pin(forward_pin),
                 backward_pin(backward_pin),
@@ -90,7 +88,6 @@ namespace aruna {
                 pwm_config(pwm_config),
                 min_duty_cycle_percentage(min_duty_cycle_percentage),
                 max_duty_cycle_percentage(max_duty_cycle_percentage),
-                direction(direction_t::BOTH),
                 pwm_num(2),
                 log("Pwm") {
             start();
@@ -103,7 +100,7 @@ namespace aruna {
 
 //  TODO what happens if mcpwm_init runs two times?
             ESP_ERROR_CHECK(mcpwm_init(pwm_unit, pwm_timer, &pwm_config));
-            startup_error = set(this->get_axis(), 0, this->direction);
+            startup_error = set(this->get_axis(), 0);
         }
     }
 }

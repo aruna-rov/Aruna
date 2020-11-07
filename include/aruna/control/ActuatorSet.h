@@ -12,7 +12,7 @@ namespace aruna {
 	namespace control {
 		class ActuatorSet : public Actuator {
 		private:
-            err_t _set(axis_mask_t axisMask, uint16_t speed, direction_t direction) override;
+            err_t _set(axis_mask_t axisMask, int16_t speed) override;
         public:
 			struct transform_t {
 				/**
@@ -62,11 +62,6 @@ namespace aruna {
 			 */
             axis_mask_t compute_axis();
 
-            /**
-			 * Get alle the axis from all inside the set and put them together.
-			 * @return axis mask of all actuators in the set.
-			 */
-            direction_t compute_direction();
 
             err_t err_check();
 		};

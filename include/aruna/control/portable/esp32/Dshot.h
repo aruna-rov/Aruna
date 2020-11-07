@@ -16,7 +16,6 @@ namespace aruna {
             private:
                 rmt_config_t driver_config;
                 const axis_mask_t axis;
-                const direction_t direction;
                 const static size_t rmt_size = 17;
                 rmt_item32_t dshot_frame[rmt_size];
 
@@ -63,16 +62,15 @@ namespace aruna {
                  */
                 uint16_t create_dshotFrame(uint16_t speed, uint8_t telemetry);
 
-                err_t _set(axis_mask_t axisMask, uint16_t speed, direction_t direction) override;
+                err_t _set(axis_mask_t axisMask, int16_t speed) override;
             public:
                 /**
                  * Dshot150
                  * @param axis, axis mask
-                 * @param direction, supported direction
                  * @param channel, rmt channel
                  * @param gpio_port, gpio port to send Dshot over.
                  */
-                Dshot(axis_mask_t axis, direction_t direction, rmt_channel_t channel, gpio_num_t gpio_port);
+                Dshot(axis_mask_t axis, rmt_channel_t channel, gpio_num_t gpio_port);
 
                 ~Dshot();
 

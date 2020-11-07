@@ -4,12 +4,11 @@
 
 #include "aruna/control/Stepper.h"
 
-aruna::err_t aruna::control::Stepper::_set(aruna::control::axis_mask_t axisMask, uint16_t speed,
-                                           aruna::control::direction_t direction) {
+aruna::err_t aruna::control::Stepper::_set(aruna::control::axis_mask_t axisMask, int16_t speed) {
     if (xSemaphoreTake(asked_set_mutex, portMAX_DELAY) != pdTRUE)
         log->error("failed to take mutex");
     asked_speed = speed;
-    asked_direction = direction;
+    asked_direction = speed >=0 ? axis_mask_t::DIRECTION_PLUS : axis_mask_t::DIRECTION_MIN;
     if (xSemaphoreGive(asked_set_mutex) != pdTRUE)
         log->error("failed to give mutex");
     xTaskNotifyGive(timer_task_handle);
@@ -17,7 +16,7 @@ aruna::err_t aruna::control::Stepper::_set(aruna::control::axis_mask_t axisMask,
     return err_t::OK;
 }
 
-aruna::err_t aruna::control::Stepper::do_step(direction_t direction) {
+aruna::err_t aruna::control::Stepper::do_step(axis_mask_t direction) {
 // TODO half stepping
     err_t last_err_msg;
     for (int i = 0; i < pins_count; ++i) {
@@ -30,9 +29,9 @@ aruna::err_t aruna::control::Stepper::do_step(direction_t direction) {
     return last_err_msg;
 }
 
-aruna::control::Stepper::Stepper(uint8_t *pins, size_t pins_count, axis_mask_t axis, direction_t direction,
+aruna::control::Stepper::Stepper(uint8_t *pins, size_t pins_count, axis_mask_t axis,
                                  bool active_high)
-        : Actuator(axis, direction), axis(axis), direction(direction), pins(pins), pins_count(pins_count),
+        : Actuator(axis), pins(pins), pins_count(pins_count),
           active_high(active_high) {
 //  TODO creating two stepper object causes error on registering log
 //  TODO break_on_idle bool parameter. If true: lock motor when speed is zero; false: release motor is speed is zero.
@@ -53,13 +52,13 @@ aruna::control::Stepper::~Stepper() {
     vTaskDelete(timer_task_handle);
 }
 
-uint8_t aruna::control::Stepper::get_pin(direction_t direction, uint8_t n) {
+uint8_t aruna::control::Stepper::get_pin(axis_mask_t direction, uint8_t n) {
     uint8_t ret_val = pins[active_pin_index + n];
 //        circular buffer
-    if (n == 0 and direction == direction_t::PLUS) {
+    if (n == 0 and direction == axis_mask_t::DIRECTION_PLUS) {
 //        move to next pin
         active_pin_index = (active_pin_index + 1) >= pins_count ? 0 : active_pin_index + 1;
-    } else if (n == 0 and direction == direction_t::MIN) {
+    } else if (n == 0 and direction == axis_mask_t::DIRECTION_MIN) {
 //        move to prev pin
         active_pin_index = ((int32_t) (active_pin_index - 1)) < 0 ? pins_count - 1 : active_pin_index - 1;
     }
@@ -68,7 +67,7 @@ uint8_t aruna::control::Stepper::get_pin(direction_t direction, uint8_t n) {
 
 void aruna::control::Stepper::timer_task() {
     uint16_t speed = 0;
-    direction_t direction = direction_t::PLUS;
+    axis_mask_t direction = axis_mask_t::DIRECTION_PLUS;
     uint16_t delay_ms = 0;
     bool first_time = true;
     err_t err_msg;

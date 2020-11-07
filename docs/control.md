@@ -83,8 +83,8 @@ Set the speed of the motors directly
 
 *request*
 * command: `0x01`
-* axis: `0x01` - `0x7F` multiple axis; this applies to and in what direction they need to go (`0x40` is backward)
-* data: speed (`0xFFFF` is maximum)
+* axis: `0x01` - `0x7F` multiple axis;
+* data: speed (int)
 
 *response*
 * none...
@@ -160,21 +160,6 @@ Get the degree of an axis. Note that only roll, yaw and pitch are supported.
 * data: `0x00` - `0xFFFF` degree from 0 to 360 degrees.
 
 For each valid axis in the request a new response is send.
-
-#### Get direction
-get the direction of a given axis.
-
-*request*
-* command: `0x07`
-* axis: `0x01` - `0x3F` mulpiple axis to get the direction from
-* data: none
-
-*response*
-* command: `0x07`
-* axis: `0x01` - `0x20` single axis
-* data: `0` if direction plus, `1` if direction min
-
-foreach axis in request a seperate response will be send.
 
 #### Set damping
 set damping rules

@@ -7,8 +7,8 @@
 using namespace aruna::control;
 
 
-esp32::Dshot::Dshot(axis_mask_t axis, direction_t direction, rmt_channel_t channel, gpio_num_t gpio_port) :
-        Actuator(axis, direction), axis(axis), direction(direction) {
+esp32::Dshot::Dshot(axis_mask_t axis, rmt_channel_t channel, gpio_num_t gpio_port) :
+        Actuator(axis), axis(axis) {
     const static uint32_t PERF_CLK_HZ = 80000000;
 //                TODO get the clock speed dynamicly
     const static uint8_t clk_div = 1;
@@ -103,16 +103,16 @@ esp32::Dshot::~Dshot() {
     pthread_mutex_destroy(&dshot_frame_lock);
 }
 
-aruna::err_t esp32::Dshot::_set(axis_mask_t axisMask, uint16_t speed, direction_t direction) {
+aruna::err_t esp32::Dshot::_set(axis_mask_t axisMask, int16_t speed) {
     const static uint16_t MAX_VALUE = 2047;
     const static uint16_t MIN_VALUE = 48;
     const static uint16_t MID_VALUE = (MAX_VALUE + MIN_VALUE) / 2;
     const static uint8_t telemetry = 0;
 
     uint16_t max, min = 0;
-    if (this->direction == direction_t::BOTH) {
-        max = (uint8_t) direction ? MID_VALUE : MAX_VALUE;
-        min = (uint8_t) direction ? MIN_VALUE : MID_VALUE;
+    if ((uint8_t) this->axis & (uint8_t) axis_mask_t::DIRECTION_BOTH) {
+        max = speed < 0 ? MID_VALUE : MAX_VALUE;
+        min = speed < 0 ? MIN_VALUE : MID_VALUE;
     } else {
         max = MAX_VALUE;
         min = MIN_VALUE;

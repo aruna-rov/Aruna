@@ -41,9 +41,9 @@ err_t Pwm::set_duty(uint16_t duty) {
     return err;
 }
 
-err_t Pwm::_set(control::axis_mask_t axisMask, uint16_t speed, control::direction_t direction) {
+err_t Pwm::_set(control::axis_mask_t axisMask, int16_t speed) {
 //    TODO allow for min and max duty_cycle
 //    TODO multi directional pwm
 //    TODO startup_error is not set to OK. Set to standard to OK, remove all together or standalize.
-    return set_duty(speed);
+    return set_duty((uint16_t)speed);
 }

@@ -18,7 +18,11 @@ namespace aruna { namespace control {
             YAW = (1 << 4),
             PITCH = (1 << 5),
 
-            ALL = 63,
+            DIRECTION_PLUS = (1 << 6),
+            DIRECTION_MIN = (1 << 7),
+
+            DIRECTION_BOTH = 192,
+            ALL_AXIS = 63,
             MAX = 6,
             NONE = 0,
         };
@@ -33,15 +37,6 @@ namespace aruna { namespace control {
         enum class status_t {
             RUNNING = 0,
             STOPPED = 1,
-        };
-
-//        TODO direction mask?
-        enum class direction_t: uint8_t {
-            PLUS = 0,
-            MIN = 1,
-            BOTH = 2,
-            NONE = 4,
-            MAX = 4
         };
 
 

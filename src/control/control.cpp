@@ -22,11 +22,9 @@ namespace {
 	TaskHandle_t control_comm_handler;
 	std::set<Actuator *> drivers;
 
-	float roll{0}, pitch{0}, yaw{0};
-	axis_t<uint16_t> currentSpeed = {0, 0, 0, 0, 0, 0};
-	axis_t<uint16_t> currentVelocity = {0, 0, 0, 0, 0, 0};
-	axis_t<uint16_t> currentDegree = {0, 0, 0, 0, 0, 0};
-	axis_t<direction_t> currentDirection;
+	axis_t<int16_t> currentSpeed = {0, 0, 0, 0, 0, 0};
+	axis_t<int16_t> currentVelocity = {0, 0, 0, 0, 0, 0};
+	axis_t<int16_t> currentDegree = {0, 0, 0, 0, 0, 0};
 	axis_t<damping_t> currentDamping;
 
 
@@ -98,14 +96,14 @@ void comm_handler_task(void *arg) {
 	comm::transmitpackage_t request;
 	uint8_t mask;
 	uint8_t flags;
-	uint16_t data;
+	int16_t data;
 	uint8_t buffer[6];
 	axis_mask_t active_axis;
 	comm::channel_t control_channel = {
 			.port = 3,
 	};
-	uint16_t (*get_value)(axis_mask_t mode);
-	void (*set_value)(axis_mask_t mode, uint16_t speed, direction_t direction);
+	int16_t (*get_value)(axis_mask_t mode);
+	void (*set_value)(axis_mask_t mode, int16_t speed);
 	comm_commands_t command;
 	if((int) control_channel.register_err) {
 		ESP_LOGE(LOG_TAG, "failed to register comm channel: %s", err_to_char.at(control_channel.register_err));
@@ -139,7 +137,7 @@ void comm_handler_task(void *arg) {
 						get_value = get_speed;
 					}
 					mask = 1;
-					uint16_t speed;
+					int16_t speed;
 					active_axis = get_active_axis();
 					for (int i = 0; i < (uint8_t) axis_mask_t::MAX; ++i) {
 						mask = 0b1 << i;
@@ -153,19 +151,6 @@ void comm_handler_task(void *arg) {
 //							ESP_LOGD(LOG_TAG, "GET_COMMAND: %X, value: %d",command,  speed);
 //							TODO error check comm.send return value
 							control_channel.send(request.from_port, buffer, 4);
-						}
-					}
-					break;
-				case GET_DIRECTION:
-					buffer[0] = GET_DIRECTION;
-					mask = 1;
-					active_axis = get_active_axis();
-					for (int i = 0; i < (uint8_t) axis_mask_t::MAX; ++i) {
-						mask = 1 << i;
-						if (mask & flags & (uint8_t) active_axis) {
-							buffer[1] = mask;
-							buffer[2] = (uint8_t) get_direction((axis_mask_t) mask);
-							control_channel.send(request.from_port, buffer, 3);
 						}
 					}
 					break;
@@ -185,10 +170,8 @@ void comm_handler_task(void *arg) {
 						set_value = set_speed;
 						command = SET_SPEED;
 					}
-					direction_t dir;
-					dir = ((request.data_received[1] >> 6) & 0b1) ? direction_t::MIN : direction_t::PLUS;
-					ESP_LOGV(LOG_TAG, "command: %X, axis: 0X%02X, speed: %i, dir: %i", command, flags, data, (uint8_t) dir);
-					set_value((axis_mask_t) flags, data, dir);
+					ESP_LOGV(LOG_TAG, "command: %X, axis: 0X%02X, speed: %i", command, flags, data);
+					set_value((axis_mask_t) flags, data);
 					break;
 //				control
 
@@ -312,12 +295,12 @@ uint8_t test_sensor() {
 	return 1;
 }
 
-void set_speed(axis_mask_t axisMask, uint16_t speed, direction_t direction) {
+void set_speed(axis_mask_t axisMask, int16_t speed) {
 	uint8_t j = 1;
 	err_t ret;
 	axis_mask_t active_axis = get_active_axis();
 	for (Actuator *d: drivers) {
-		ret = d->set(axisMask, speed, direction);
+		ret = d->set(axisMask, speed);
 		if (ret != err_t::OK) {
 			ESP_LOGW(LOG_TAG, "setting speed of driver failed: %s", err_to_char.at(ret));
 		}
@@ -325,35 +308,31 @@ void set_speed(axis_mask_t axisMask, uint16_t speed, direction_t direction) {
 	for (uint i = 0; i < (uint8_t) axis_mask_t::MAX; i++) {
 		j= 1 << i;
 		if ((uint8_t) axisMask & j & (uint8_t) active_axis) {
-			currentDirection[j] = direction;
 			currentSpeed[j] = speed;
 		}
 	}
 }
 
-uint16_t get_speed(axis_mask_t single_axis) {
+int16_t get_speed(axis_mask_t single_axis) {
 	return currentSpeed[(uint8_t) single_axis];
 }
 
-uint16_t get_velocity(axis_mask_t single_axis) {
+int16_t get_velocity(axis_mask_t single_axis) {
 	return currentVelocity[(uint8_t) single_axis];
 }
 
-uint16_t get_degree(axis_mask_t single_axis) {
+int16_t get_degree(axis_mask_t single_axis) {
 	if ((uint8_t) single_axis & ((uint8_t) axis_mask_t::X | (uint8_t) axis_mask_t::Y | (uint8_t) axis_mask_t::Z))
 		return 0;
 	return currentDegree[(uint8_t) single_axis];
 }
 
-direction_t get_direction(axis_mask_t single_axis) {
-	return currentDirection[(uint8_t) single_axis];
-}
 
-void set_degree(axis_mask_t axisMask, uint16_t degree, direction_t direction) {
+void set_degree(axis_mask_t axisMask, int16_t degree) {
 //	TODO
 }
 
-void set_velocity(axis_mask_t axisMask, uint16_t mm_per_second, direction_t direction) {
+void set_velocity(axis_mask_t axisMask, int16_t mm_per_second) {
 // TODO
 }
 
