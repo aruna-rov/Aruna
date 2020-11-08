@@ -22,7 +22,7 @@
     #include "aruna/control/Stepper.h"
     #include "aruna/control/portable/esp32/Stepper.h"
     #include "aruna/driver/port/ESP32/ESP32_MCPwm.h"
-    #include "aruna/control/portable/esp32/Dshot.h"
+    #include "aruna/driver/port/ESP32/Dshot.h"
     #include "aruna/sis.h"
     #include "aruna/sis/portable/esp32/WaterSensor.h"
     #include "aruna/driver/ADS101x/ADS101x.h"

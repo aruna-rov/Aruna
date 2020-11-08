@@ -10,7 +10,7 @@ set(COMPONENT_SRCS
         "src/control/ActuatorSet.cpp"
         "src/control/Stepper.cpp"
         "src/control/portable/esp32/Stepper.cpp"
-        "src/control/portable/esp32/Dshot.cpp"
+        "src/driver/port/ESP32/Dshot.cpp"
         "src/sis/Performer.cpp"
         "src/sis/reporter.cpp"
         "src/sis/watcher.cpp"

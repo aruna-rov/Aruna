@@ -2,12 +2,12 @@
 // Created by noeel on 22-03-20.
 //
 
-#include "aruna/control/portable/esp32/Dshot.h"
+#include "aruna/driver/port/ESP32/Dshot.h"
 
 using namespace aruna::control;
 
 
-esp32::Dshot::Dshot(axis_mask_t axis, rmt_channel_t channel, gpio_num_t gpio_port) :
+Dshot::Dshot(axis_mask_t axis, rmt_channel_t channel, gpio_num_t gpio_port) :
         Actuator(axis), axis(axis) {
     const static uint32_t PERF_CLK_HZ = 80000000;
 //                TODO get the clock speed dynamicly
@@ -97,13 +97,13 @@ esp32::Dshot::Dshot(axis_mask_t axis, rmt_channel_t channel, gpio_num_t gpio_por
     startup_error = rval;
 }
 
-esp32::Dshot::~Dshot() {
+Dshot::~Dshot() {
     rmt_driver_uninstall(driver_config.channel);
     pthread_exit(&update_handler);
     pthread_mutex_destroy(&dshot_frame_lock);
 }
 
-aruna::err_t esp32::Dshot::_set(axis_mask_t axisMask, int16_t speed) {
+aruna::err_t Dshot::_set(axis_mask_t axisMask, int16_t speed) {
     const static uint16_t MAX_VALUE = 2047;
     const static uint16_t MIN_VALUE = 48;
     const static uint16_t MID_VALUE = (MAX_VALUE + MIN_VALUE) / 2;
@@ -128,7 +128,7 @@ aruna::err_t esp32::Dshot::_set(axis_mask_t axisMask, int16_t speed) {
 }
 
 
-void esp32::Dshot::bits_to_dshotFrame(uint16_t bits, rmt_item32_t *frame_buffer) {
+void Dshot::bits_to_dshotFrame(uint16_t bits, rmt_item32_t *frame_buffer) {
 
     for (uint8_t i = 0; i < rmt_size - 1; ++i) {
         uint16_t i_bit = (bits >> (rmt_size - 2 - i)) & 0b1;
@@ -141,7 +141,7 @@ void esp32::Dshot::bits_to_dshotFrame(uint16_t bits, rmt_item32_t *frame_buffer)
     frame_buffer[rmt_size - 1] = {{{0, 1, 0, 0}}};
 }
 
-void esp32::Dshot::add_CRC(uint16_t &bits) {
+void Dshot::add_CRC(uint16_t &bits) {
     uint8_t csum = 0;
     uint16_t csum_data = bits >> 4;
     for (uint8_t i = 0; i < 3; i++) {
@@ -152,7 +152,7 @@ void esp32::Dshot::add_CRC(uint16_t &bits) {
     bits |= csum;
 }
 
-void esp32::Dshot::update_task() {
+void Dshot::update_task() {
 
     while (true) {
         pthread_mutex_lock(&dshot_frame_lock);
@@ -163,12 +163,12 @@ void esp32::Dshot::update_task() {
 
 }
 
-void *esp32::Dshot::__update_task(void *_this) {
+void *Dshot::__update_task(void *_this) {
     static_cast<Dshot *>(_this)->update_task();
     return 0;
 }
 
-uint16_t esp32::Dshot::create_dshotFrame(uint16_t speed, uint8_t telemetry) {
+uint16_t Dshot::create_dshotFrame(uint16_t speed, uint8_t telemetry) {
     uint16_t bit_frame = 0;
     bit_frame = speed << 5;
     bit_frame |= telemetry << 4;
