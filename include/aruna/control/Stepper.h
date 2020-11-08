@@ -101,7 +101,19 @@ namespace aruna {
             Stepper(uint8_t *pins, size_t pins_count, axis_mask_t axis, bool active_high);
 
             /**
-             * destructor, call `stop()` before though.
+             * Set speed of the stepper motor
+             * @param speed: use minus to go the other way.
+             */
+            void set_speed(int16_t speed);
+
+            /**
+             * Do an x number of steps.
+             * @param steps: amount of steps to take
+             */
+            void do_steps(int32_t steps);
+
+            /**
+             * destructor.
              */
             ~Stepper();
 

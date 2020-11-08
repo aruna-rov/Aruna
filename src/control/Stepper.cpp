@@ -5,14 +5,8 @@
 #include "aruna/control/Stepper.h"
 
 aruna::err_t aruna::control::Stepper::_set(aruna::control::axis_mask_t axisMask, int16_t speed) {
-    if (xSemaphoreTake(asked_set_mutex, portMAX_DELAY) != pdTRUE)
-        log->error("failed to take mutex");
-    asked_speed = speed;
-    asked_direction = speed >=0 ? axis_mask_t::DIRECTION_PLUS : axis_mask_t::DIRECTION_MIN;
-    if (xSemaphoreGive(asked_set_mutex) != pdTRUE)
-        log->error("failed to give mutex");
-    xTaskNotifyGive(timer_task_handle);
 
+    set_speed(speed);
     return err_t::OK;
 }
 
@@ -127,5 +121,19 @@ aruna::err_t aruna::control::Stepper::clear_pins() {
         }
     }
     return msg;
+}
+
+void aruna::control::Stepper::set_speed(int16_t speed) {
+    if (xSemaphoreTake(asked_set_mutex, portMAX_DELAY) != pdTRUE)
+        log->error("failed to take mutex");
+    asked_speed = speed;
+    asked_direction = speed >=0 ? axis_mask_t::DIRECTION_PLUS : axis_mask_t::DIRECTION_MIN;
+    if (xSemaphoreGive(asked_set_mutex) != pdTRUE)
+        log->error("failed to give mutex");
+    xTaskNotifyGive(timer_task_handle);
+}
+
+void aruna::control::Stepper::do_steps(int32_t steps) {
+//    TODO
 }
 
