@@ -6,20 +6,20 @@
 #define ARUNA_STEPPER_H
 
 #include <stdint.h>
-#include "Actuator.h"
+#include "aruna/control/Actuator.h"
 #include "aruna/log.h"
 #include "freertos/FreeRTOS.h"
 #include <freertos/task.h>
 #include <freertos/semphr.h>
 
 namespace aruna {
-    namespace control {
+    namespace driver {
 
-        class Stepper : public Actuator {
+    class Stepper : public control::Actuator {
         private:
             SemaphoreHandle_t asked_set_mutex = NULL;
             uint16_t asked_speed;
-            axis_mask_t asked_direction;
+            control::axis_mask_t asked_direction;
             size_t active_pin_index = 0;
             TaskHandle_t timer_task_handle;
             const uint8_t* pins;
@@ -68,7 +68,7 @@ namespace aruna {
              * @param direction PLUS or MINUS
              * @return err_t
              */
-            err_t do_step(axis_mask_t direction);
+            err_t do_step(control::axis_mask_t direction);
 
             /**
              * pop pin from circular array buffer.
@@ -76,7 +76,7 @@ namespace aruna {
              * @param n, offset of current active pin, default 0
              * @return pin_nr
              */
-            uint8_t get_pin(axis_mask_t direction, uint8_t n = 0);
+            uint8_t get_pin(control::axis_mask_t direction, uint8_t n = 0);
 
             /**
              * task to set the next phase on time.
@@ -88,7 +88,7 @@ namespace aruna {
              */
             static void _timer_task_wrapper(void* _this);
 
-            err_t _set(axis_mask_t axisMask, int16_t speed) override;
+            err_t _set(control::axis_mask_t axisMask, int16_t speed) override;
 
         public:
             /**
@@ -98,7 +98,7 @@ namespace aruna {
              * @param axis, axis mask to work on
              * @param active_high, should the current phase be high and other low or current phase low and other pins high
              */
-            Stepper(uint8_t *pins, size_t pins_count, axis_mask_t axis, bool active_high);
+            Stepper(uint8_t *pins, size_t pins_count, control::axis_mask_t axis, bool active_high);
 
             /**
              * Set speed of the stepper motor
