@@ -25,6 +25,7 @@ set(COMPONENT_SRCS
         "src/driver/PCA9685.cpp"
         "src/control/Actuator.cpp"
         "src/driver/port/ESP32/ESP32_MCPwm.cpp"
+        "src/driver/UART.cpp"
         )
 set(COMPONENT_ADD_INCLUDEDIRS
         "include"
