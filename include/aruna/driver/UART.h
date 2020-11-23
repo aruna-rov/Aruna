@@ -17,13 +17,10 @@ namespace aruna {
         {
         public:
             enum class flowcontrol_t {
-                HW_CTS,
-                HW_RTS,
-                HW_CTS_RTS,
-                HW_DISABLE,
-                SW_XON,
-                SW_XOFF,
-                SW_DISABLE,
+                HARDWARE,
+                SOFTWARE,
+                HARDWARE_SOFTWARE,
+                DISABLED,
                 NONE,
             };
             enum class parity_t {
@@ -38,11 +35,19 @@ namespace aruna {
                 TWO,
                 NONE,
             };
+            enum class word_length_t {
+                FIVE,
+                SIX,
+                SEVEN,
+                EIGHT,
+                NONE
+            };
         private:
             uint32_t baudrate = 0;
             flowcontrol_t flowcontrol = flowcontrol_t::NONE;
             parity_t parity = parity_t::NONE;
             stop_bit_t stopBit = stop_bit_t::NONE;
+            word_length_t wordLength = word_length_t::NONE;
             pthread_mutex_t write_atomic;
             pthread_mutex_t read_atomic;
 
@@ -89,9 +94,19 @@ namespace aruna {
              * @param stop_bit: 1 1.5 or 2 bits
              * @return err_t::OK if no errors
              */
-            virtual err_t _set_stop_bit(stop_bit_t stop_bit_t) = 0;
+            virtual err_t _set_stop_bit(stop_bit_t stop_bit) = 0;
 
+            /**
+             * Set UART data bits length
+             * @param word_length: five to eight bits
+             * @return err_t::OK if success.
+             */
+            virtual err_t _set_word_length(word_length_t word_length) = 0;
 
+        protected:
+
+            const static uint8_t XON = 0x11;
+            const static uint8_t XOFF = 0x13;
         public:
 
             /**
@@ -193,6 +208,19 @@ namespace aruna {
              * @return ONE ONE_HALF or TWO
              */
             virtual stop_bit_t get_stop_bit();
+
+            /**
+             * Set UART data bits length
+             * @param word_length: five to eight bits
+             * @return err_t::OK if success.
+             */
+            err_t set_word_length(word_length_t word_length);
+
+            /**
+             * Set UART data bits length
+             * @return word length.
+             */
+            virtual word_length_t get_word_length();
 
 //            TODO add support to lock UART, simular to I2C address locking.
 //            TODO add support for interupts. Simulair to https://github.com/espressif/esp-idf/blob/master/examples/peripherals/uart/uart_events/main/uart_events_example_main.c

@@ -102,3 +102,14 @@ size_t UART::try_read(uint8_t *buffer, size_t length) {
     }
     return ret;
 }
+
+err_t UART::set_word_length(UART::word_length_t word_length) {
+    err_t ret = err_t::OK;
+    ret = _set_word_length(word_length);
+    this->wordLength = ret != err_t::OK ? this->wordLength : wordLength;
+    return ret;
+}
+
+UART::word_length_t UART::get_word_length() {
+    return wordLength;
+}
