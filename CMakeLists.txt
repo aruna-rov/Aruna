@@ -6,7 +6,7 @@ set(COMPONENT_SRCS
         "src/log/log.cpp"
         "src/comm/comm.cpp"
         "src/control/control.cpp"
-        "src/comm/portable/esp32/UART.cpp"
+        "src/driver/port/ESP32/ESP32_UART.cpp"
         "src/control/ActuatorSet.cpp"
         "src/driver/Stepper.cpp"
         "src/driver/port/ESP32/ESP32_Stepper.cpp"

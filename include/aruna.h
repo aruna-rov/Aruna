@@ -16,7 +16,7 @@
     #include "aruna/control/controlTypes.h"
     #include "aruna/control.h"
     #include "aruna/comm/Link.h"
-    #include "aruna/comm/portable/esp32/UART.h"
+    #include "aruna/driver/port/ESP32/ESP32_UART.h"
     #include "aruna/control/ActuatorSet.h"
     #include "aruna/control/Actuator.h"
     #include "aruna/driver/Stepper.h"
