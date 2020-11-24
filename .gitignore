@@ -17,6 +17,9 @@ example/sdkconfig
 .idea
 cmake-build-*
 CMakeListsPrivate.txt
+# Eclipse
+.project
+.cproject
 
 # docs
 doxygen
