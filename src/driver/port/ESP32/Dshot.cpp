@@ -156,7 +156,7 @@ void Dshot::update_task() {
 
     while (true) {
         pthread_mutex_lock(&dshot_frame_lock);
-        ESP_ERROR_CHECK(rmt_write_items(driver_config.channel, dshot_frame, rmt_size, true))
+        ESP_ERROR_CHECK(rmt_write_items(driver_config.channel, dshot_frame, rmt_size, true));
         pthread_mutex_unlock(&dshot_frame_lock);
         vTaskDelay(1);
     }

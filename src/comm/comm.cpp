@@ -122,7 +122,6 @@ namespace aruna {
         }
 
         void * transmissionQueueHandeler(void *) {
-            transmitpackage_t transpack;
             err_t transmit_msg = err_t::FAIL;
             while(1) {
 
@@ -133,9 +132,9 @@ namespace aruna {
                 }
                 transmit_msg = transmit(out_buffer.front());
                 if (transmit_msg != err_t::OK) {
-                    log->warning("transmit of: %d, to: %d, failed: %s", transpack.from_port, transpack.to_port,
+                    log->warning("transmit of: %d, to: %d, failed: %s", out_buffer.front().from_port, out_buffer.front().to_port,
                              err_to_char.at(transmit_msg));
-                    log->dump(log::level_t::WARNING, transpack.data_transmitting, transpack.data_lenght);
+                    log->dump(log::level_t::WARNING, out_buffer.front().data_transmitting, out_buffer.front().data_lenght);
                 } else {
                     out_buffer.pop();
                 }
@@ -492,7 +491,7 @@ namespace aruna {
     err_t unregister_candidate_driver(Link *driver) {
         if (driverCandidates.erase(driver)) {
 //        if we delete our own driver, search for a new one
-            if (driver == driver)
+            if (comm::driver == driver)
                 selectDriverTask();
             return err_t::OK;
         } else

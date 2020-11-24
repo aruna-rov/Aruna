@@ -77,7 +77,7 @@ namespace aruna {
                     led_status = !led_status;
                     break;
             }
-            ESP_ERROR_CHECK(gpio_set_level(LED_GPIO_PIN, led_status))
+            ESP_ERROR_CHECK(gpio_set_level(LED_GPIO_PIN, led_status));
         }
 
     }

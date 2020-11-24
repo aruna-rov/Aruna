@@ -4,7 +4,7 @@
 
 #include "aruna/arunaTypes.h"
 #include "aruna/control/ActuatorSet.h"
-#include <algorithm>
+#include <math.h>
 
 using namespace aruna::control;
 namespace aruna {

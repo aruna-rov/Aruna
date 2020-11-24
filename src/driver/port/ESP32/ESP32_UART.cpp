@@ -17,7 +17,7 @@ namespace aruna {
                                int RXD_PIN = UART_PIN_NO_CHANGE,
                                int RTS_PIN = UART_PIN_NO_CHANGE,
                                int CTS_PIN = UART_PIN_NO_CHANGE,
-                               uart_config_t UART_CONFIG = {
+                               uart_config_t UART_CONFIG = (uart_config_t) {
                                        .baud_rate = 115200,
                                        .data_bits = UART_DATA_8_BITS,
                                        .parity    = UART_PARITY_DISABLE,
