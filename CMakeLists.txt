@@ -10,7 +10,7 @@ set(COMPONENT_SRCS
         "src/control/ActuatorSet.cpp"
         "src/driver/Stepper.cpp"
         "src/driver/port/ESP32/ESP32_Stepper.cpp"
-        "src/driver/port/ESP32/Dshot.cpp"
+        "src/driver/Dshot.cpp"
         "src/sis/Performer.cpp"
         "src/sis/reporter.cpp"
         "src/sis/watcher.cpp"
@@ -26,6 +26,7 @@ set(COMPONENT_SRCS
         "src/control/Actuator.cpp"
         "src/driver/port/ESP32/ESP32_MCPwm.cpp"
         "src/driver/UART.cpp"
+        "src/driver/port/ESP32/ESP32_RMT_Dshot.cpp"
         )
 set(COMPONENT_ADD_INCLUDEDIRS
         "include"
