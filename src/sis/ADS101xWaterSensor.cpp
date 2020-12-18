@@ -4,9 +4,9 @@
 
 #include "aruna/sis/ADS101xWaterSensor.h"
 #include "math.h"
-using namespace aruna::driver::ADS101x;
+using aruna::driver::ADS101x;
 
-aruna::sis::ADS101xWaterSensor::ADS101xWaterSensor(MUX compare, uint8_t I2C_address, pthread_mutex_t *I2C_mutex,
+aruna::sis::ADS101xWaterSensor::ADS101xWaterSensor(ADS101x::MUX compare, uint8_t I2C_address, pthread_mutex_t *I2C_mutex,
                                                    char location[7]) : compare(compare), I2C_address(I2C_address),
                                                                      I2C_mutex(I2C_mutex) {
     log = new log::channel_t("ADS101xWaterSensor");
@@ -41,10 +41,10 @@ int16_t aruna::sis::ADS101xWaterSensor::voltage_to_mm(uint16_t mV) {
 }
 
 aruna::sis::status_t *aruna::sis::ADS101xWaterSensor::update_status() {
-    uint16_t mV;
+    uint16_t mV = 0;
     uint16_t mm;
     pthread_mutex_lock(I2C_mutex);
-    mV = read(compare, I2C_address);
+//    mV = read(compare, I2C_address);
     pthread_mutex_unlock(I2C_mutex);
     mm = voltage_to_mm(mV);
     status.water_level_mm = mm;

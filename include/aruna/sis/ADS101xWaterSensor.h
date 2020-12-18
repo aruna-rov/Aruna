@@ -8,7 +8,7 @@
 #include "aruna/sis/Water.h"
 #include "aruna/log.h"
 #include "pthread.h"
-#include "aruna/driver/ADS101x/ADS101x.h"
+#include "aruna/driver/ADS101x.h"
 namespace aruna {
     namespace sis {
         class ADS101xWaterSensor: public Water {

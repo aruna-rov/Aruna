@@ -26,7 +26,7 @@
 	#include "aruna/driver/port/ESP32/ESP32_RMT_Dshot.h"
     #include "aruna/sis.h"
     #include "aruna/sis/portable/esp32/WaterSensor.h"
-    #include "aruna/driver/ADS101x/ADS101x.h"
+    #include "aruna/driver/ADS101x.h"
     #include "aruna/sis/ADS101xWaterSensor.h"
 	#include "aruna/driver/ADC.h"
 
