@@ -9,14 +9,14 @@ namespace aruna {
             uint16_t read(MUX compare, uint8_t address) {
                 uint16_t VCC_mV = 3300;
                 int16_t conversion = 0;
-                uint16_t config = (int) OS::W_START_A_SINGLE_CONVERSION << 15 |
-                                  (int) compare << 12 |
-                                  (int) PGA::DEFAULT << 9 |
-                                  (int) MODE::CONTINUOUS_CONVERSION << 8 |
-                                  (int) DR::DEFAULT << 5 |
-                                  (int) COMP_MODE::DEFAULT << 4 |
-                                  (int) COMP_POL::DEFAULT << 3 |
-                                  (int) COMP_LAT::DEFAULT << 2 |
+                uint16_t config = (int) OS::W_START_A_SINGLE_CONVERSION |
+                                  (int) compare |
+                                  (int) PGA::DEFAULT |
+                                  (int) MODE::CONTINUOUS_CONVERSION |
+                                  (int) DR::DEFAULT |
+                                  (int) COMP_MODE::DEFAULT |
+                                  (int) COMP_POL::DEFAULT |
+                                  (int) COMP_LAT::DEFAULT |
                                   (int) COMP_QUEUE::DEFAULT;
                 conversion = readConversion(config, address);
                 conversion = conversion >> 4;
