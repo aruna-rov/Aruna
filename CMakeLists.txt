@@ -27,6 +27,7 @@ set(COMPONENT_SRCS
         "src/driver/port/ESP32/ESP32_MCPwm.cpp"
         "src/driver/UART.cpp"
         "src/driver/port/ESP32/ESP32_RMT_Dshot.cpp"
+        "src/driver/ADC.cpp"
         )
 set(COMPONENT_ADD_INCLUDEDIRS
         "include"
