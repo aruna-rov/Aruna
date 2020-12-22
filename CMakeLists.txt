@@ -2,7 +2,6 @@
 if (DEFINED IDF_PATH)
 #    included as lib in ESP-IDF
 set(COMPONENT_SRCS
-        "src/blinky/blinky.cpp"
         "src/log/log.cpp"
         "src/comm/comm.cpp"
         "src/control/control.cpp"

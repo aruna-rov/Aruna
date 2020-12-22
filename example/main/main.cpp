@@ -64,7 +64,6 @@ extern "C" void app_main(void) {
 
 //		TODO task overflow?!
     xTaskCreate(comm_test_task, "comm test task", 2048, NULL, 0, NULL);
-    xTaskCreate(aruna::blinky::start_blinky_task, "blinky_app", 2048, NULL, 0, NULL);
 
 }
 

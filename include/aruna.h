@@ -10,7 +10,6 @@
     // include embedded files
     #include "aruna/arunaTypes.h"
     #include "aruna/log.h"
-    #include "aruna/blinky.h"
     #include "aruna/comm/commTypes.h"
     #include "aruna/comm.h"
     #include "aruna/control/controlTypes.h"

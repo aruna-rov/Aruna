@@ -13,10 +13,6 @@ To get started all you need is an ESP32, anything else is optional. The library 
 
 This section describes the modules of the library.
 
-## blinky
-
-this is more of a test library, The one thing it does is blink a led on the device.
-
 ## comm
 
 This library is responsable for all communication. The library is quite extensive. Diffrent physical layer could be applied using the `Link`.virtual class to allow for diffrent physical implementations
