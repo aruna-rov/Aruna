@@ -9,6 +9,8 @@ using namespace aruna::sis;
 using namespace aruna::sensor;
 
 Water::Water() : status() {
+    status.water_level_mm = 0;
+    status.level = level_t::NOTIFY;
 //    update description
     status.update_description(status.water_level_mm);
 }
@@ -19,6 +21,22 @@ aruna::err_t Water::is_wet(bool &water_detected) {
     e = get_water_level(i);
     water_detected = i != 0;
     return e;
+}
+
+status_t *Water::update_status() {
+    uint16_t mm;
+    err_t e;
+    e = get_water_level(mm);
+    if ((uint8_t) e)
+        log->error("Error retrieving water level: %s", err_to_char.at(e));
+    status.water_level_mm = mm;
+    status.level = mm ? level_t::CRITICAL : level_t::NOTIFY;
+    status.update_description(mm);
+    return &status;
+}
+
+void Water::set_sis_status_location(char *location) {
+    strcpy(status.location, location);
 }
 
 

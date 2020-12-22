@@ -15,9 +15,7 @@ set(COMPONENT_SRCS
         "src/sis/reporter.cpp"
         "src/sis/watcher.cpp"
         "src/sensor/Water.cpp"
-        "src/sis/portable/esp32/WaterSensor.cpp"
         "src/driver/ADS101x.cpp"
-        "src/sis/ADS101xWaterSensor.cpp"
         "src/driver/I2C_master.cpp"
         "src/driver/port/ESP32/ESP32_I2C_master.cpp"
         "src/driver/Pwm.cpp"
@@ -27,6 +25,7 @@ set(COMPONENT_SRCS
         "src/driver/UART.cpp"
         "src/driver/port/ESP32/ESP32_RMT_Dshot.cpp"
         "src/driver/ADC.cpp"
+        "src/sensor/Rain40x16.cpp"
         )
 set(COMPONENT_ADD_INCLUDEDIRS
         "include"

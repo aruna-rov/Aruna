@@ -38,9 +38,10 @@ namespace aruna {
         };
 
         class Water : public sis::Performer {
+        private:
+            water_status_t status = *new water_status_t();
 
         public:
-            water_status_t status = *new water_status_t();
 
             /**
              * Water sensor
@@ -60,6 +61,14 @@ namespace aruna {
              * @return error retrieving wetness of sensor
              */
             err_t is_wet(bool &water_detected);
+
+            sis::status_t *update_status() override;
+
+            /**
+             * Set the location of the sensor. Usefull for SIS status reports.
+             * @param location: 7 char long location.
+             */
+            void set_sis_status_location(char* location);
         };
 
     }

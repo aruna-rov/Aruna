@@ -14,7 +14,7 @@
 
 template<typename T>
 aruna::err_t aruna::driver::ADC::read_raw(T &raw) {
-    return _read(&raw);
+    return _read(raw);
 }
 
 template<typename T>
