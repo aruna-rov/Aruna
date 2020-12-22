@@ -3,7 +3,7 @@
 //
 
 #include <cstdio>
-#include "aruna/sis/Water.h"
+#include "aruna/sensor/Water.h"
 
 using namespace aruna::sis;
 
