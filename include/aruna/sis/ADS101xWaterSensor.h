@@ -5,13 +5,13 @@
 #ifndef ARUNA_ADS101XWATERSENSOR_H
 #define ARUNA_ADS101XWATERSENSOR_H
 
-#include "aruna/sis/Water.h"
+#include "aruna/sensor/Water.h"
 #include "aruna/log.h"
 #include "pthread.h"
 #include "aruna/driver/ADS101x.h"
 namespace aruna {
     namespace sis {
-        class ADS101xWaterSensor: public Water {
+    class ADS101xWaterSensor: public sensor::Water {
         private:
             int16_t voltage_to_mm(uint16_t mV);
             const driver::ADS101x::MUX compare;
@@ -31,7 +31,10 @@ namespace aruna {
                                char location[7]);
 
             status_t* update_status() override;
-        };
+
+            err_t get_water_level(uint16_t &water_level_in_mm) override;
+
+    };
     }
 }
 

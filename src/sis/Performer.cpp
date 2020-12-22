@@ -44,6 +44,7 @@ void aruna::sis::Performer::update_handler() {
 #else
 //            usleep blocks CPU in ESP-IDF 3.2.2
 //          TODO update to newer version of EPS-IDF
+//          TODO ms and us are not the same thing
             usleep(update_ms);
 #endif
         }

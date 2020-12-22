@@ -23,26 +23,27 @@ namespace aruna {
 		FAIL = 100,
 
 		// running status
-				NOT_STOPPED = 101,
+        NOT_STOPPED = 101,
 		NOT_STARTED = 102,
 		NOT_PAUSED = 103,
 		ALREADY_STARTED = 104, // TODO redundant because NOT_STOPPED is basicly the same thing
 
 		//    hardware
-				HARDWARE_FAILURE = 110,
+        HARDWARE_FAILURE = 110,
 		NO_CONNECTION = 112,
 		NO_RESPONSE = 113,
 		PROTOCOL_ERROR = 114,
 		NO_HARDWARE_FOUND = 115,
+		NOT_SUPPORTED = 116,
 
 		//    config
-				BUFFER_OVERFLOW = 120,
+        BUFFER_OVERFLOW = 120,
 		INVALID_PARAMETERS = 121,
 		TASK_FAILED = 122,
 		BUFFER_UNDERFLOW = 123,
 
 		//    channel/driver registation
-				NO_CHANNEL = 130,
+        NO_CHANNEL = 130,
 		CHANNEL_EXISTS = 131,
 		NO_DRIVER = 132,
 		DRIVER_EXISTS = 133,
@@ -52,6 +53,7 @@ namespace aruna {
 	};
 	const std::map<err_t, char *> err_to_char = {
 			{err_t::OK,                 (char *) "OK"},
+            {err_t::UNDEFINED,          (char *) "UNDEFINED"},
 			{err_t::FAIL,               (char *) "FAIL"},
 
 			// running status
@@ -66,6 +68,7 @@ namespace aruna {
 			{err_t::NO_RESPONSE,        (char *) "NO_RESPONSE"},
 			{err_t::PROTOCOL_ERROR,     (char *) "PROTOCOL_ERROR"},
 			{err_t::NO_HARDWARE_FOUND,  (char *) "NO_HARDWARE_FOUND"},
+			{err_t::NOT_SUPPORTED,      (char *) "NOT_SUPPORTED"},
 
 			//    config
 			{err_t::BUFFER_OVERFLOW,    (char *) "BUFFER_OVERFLOW"},

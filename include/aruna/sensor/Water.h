@@ -5,13 +5,14 @@
 #ifndef ARUNA_WATER_H
 #define ARUNA_WATER_H
 
+#include <aruna/arunaTypes.h>
 #include "aruna/sis/Performer.h"
 
 namespace aruna {
-    namespace sis {
+    namespace sensor {
 
-
-        struct water_status_t : public status_t {
+// TODO water_status_t is polluting sensor namespace
+        struct water_status_t : public sis::status_t {
 //            location of sensor
 //          TODO location as parameter in constructor.
             char location[7] = "NOTDEV";
@@ -36,15 +37,29 @@ namespace aruna {
             water_status_t();
         };
 
-        class Water : public Performer {
+        class Water : public sis::Performer {
 
         public:
             water_status_t status = *new water_status_t();
 
             /**
-             * Water specific SIS performer
+             * Water sensor
              */
             Water();
+
+            /**
+             * Get water level in millimeters of the sensor
+             * @param water_level_in_mm: buffer to store water level in
+             * @return err_t::OK if water level could be retrieved
+             */
+            virtual err_t get_water_level(uint16_t &water_level_in_mm) = 0;
+
+            /**
+             * Is water detected at the sensor?
+             * @param water_detected: store result
+             * @return error retrieving wetness of sensor
+             */
+            err_t is_wet(bool &water_detected);
         };
 
     }

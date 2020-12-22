@@ -6,10 +6,19 @@
 #include "aruna/sensor/Water.h"
 
 using namespace aruna::sis;
+using namespace aruna::sensor;
 
 Water::Water() : status() {
 //    update description
     status.update_description(status.water_level_mm);
+}
+
+aruna::err_t Water::is_wet(bool &water_detected) {
+    err_t e;
+    uint16_t i;
+    e = get_water_level(i);
+    water_detected = i != 0;
+    return e;
 }
 
 

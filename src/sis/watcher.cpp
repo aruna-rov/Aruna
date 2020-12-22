@@ -6,7 +6,7 @@
 #include "aruna/log.h"
 #include <pthread.h>
 #include <aruna/sis/reporter.h>
-#include <aruna/sis/Water.h>
+#include <aruna/sensor/Water.h>
 
 using namespace aruna;
 namespace {
@@ -44,7 +44,7 @@ void *sis::watcher::watch(void *) {
 //        TODO this feels off, is there any better way of handling this?
         switch (received_type) {
             case type_t::WATER:
-                status_buffer = new sis::water_status_t();
+                status_buffer = reinterpret_cast<status_t *>(new sensor::water_status_t());
                 break;
             case type_t::UNKNOWN:
             case type_t::MAX:

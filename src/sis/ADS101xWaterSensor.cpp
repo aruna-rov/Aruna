@@ -53,3 +53,8 @@ aruna::sis::status_t *aruna::sis::ADS101xWaterSensor::update_status() {
     log->debug("%i mm, %i mV", mm, mV);
     return &status;
 }
+
+aruna::err_t aruna::sis::ADS101xWaterSensor::get_water_level(uint16_t &water_level_in_mm) {
+//    TODO implement
+    return aruna::err_t::NOT_SUPPORTED;
+}

@@ -5,12 +5,12 @@
 #ifndef ARUNA_WATERSENSOR_H
 #define ARUNA_WATERSENSOR_H
 
-#include "aruna/sis/Water.h"
+#include "aruna/sensor/Water.h"
 #include "esp_adc_cal.h"
 
 namespace aruna {
     namespace sis {
-        class WaterSensor: public Water {
+        class WaterSensor: public sensor::Water {
         private:
             esp_adc_cal_characteristics_t *adc_chars;
             int16_t voltage_to_mm(uint32_t voltage);

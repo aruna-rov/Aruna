@@ -14,7 +14,7 @@ set(COMPONENT_SRCS
         "src/sis/Performer.cpp"
         "src/sis/reporter.cpp"
         "src/sis/watcher.cpp"
-        "src/sis/Water.cpp"
+        "src/sensor/Water.cpp"
         "src/sis/portable/esp32/WaterSensor.cpp"
         "src/driver/ADS101x.cpp"
         "src/sis/ADS101xWaterSensor.cpp"
