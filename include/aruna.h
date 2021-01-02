@@ -34,7 +34,7 @@
 	#include "aruna/arunaTypes.h"
     #include "aruna/log.h"
     #include "aruna/comm/commTypes.h"
-    #include "aruna/comm/portable/posix/Serial.h"
+    #include "aruna/driver/port/POSIX/POSIX_UART.h"
     #include "aruna/comm.h"
     #include <aruna/sis.h>
 #elif defined(STM32F1)

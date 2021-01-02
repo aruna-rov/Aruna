@@ -10,7 +10,7 @@ set(aruna_sources
 if (UNIX)
     set(aruna_sources
             ${aruna_sources}
-            ${aruna_DIR}/src/comm/portable/posix/Serial.cpp
+            ${aruna_DIR}/src/driver/port/POSIX/POSIX_UART.cpp
             )
 
 endif()
