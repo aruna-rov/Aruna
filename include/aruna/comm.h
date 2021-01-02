@@ -117,18 +117,6 @@ namespace aruna {
         link_t get_link_type();
 
         /**
-         * get the name of the driver.
-         * @param buffer char* to put the name into
-         */
-        void getName(char *buffer);
-
-        /**
-         * get the name of the driver
-         * @return char*, name of the driver.
-         */
-        char *getName();
-
-        /**
          * @brief get all names of the channels currently registered
          * @param buffer to write the names into.
          * @return err_t

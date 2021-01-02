@@ -7,90 +7,58 @@
 
 #include "aruna/arunaTypes.h"
 #include <aruna/comm/commTypes.h>
-namespace aruna { namespace comm {
-class Link {
-public:
 
-    /**
-     * @brief  directly transmit a package on the link.
-     * @param  package: package to be send
-     * @param  package_size: size of the package
-     * @retval  `OK` if all went well.
-     *          `HARDWARE` if the hardware failes
-     */
-    virtual err_t transmit(uint8_t *package, uint8_t package_size) = 0;
+namespace aruna::comm {
+    class Link {
+    private:
+        /**
+         * write data to the link/bus.
+         * @param data: bytes to write
+         * @param data_size: length of data
+         * @return amount of bytes written.
+         */
+        virtual size_t _write(uint8_t *data, uint8_t data_size) = 0;
 
-    /**
-     * Get name of link.
-     * @param buffer
-     */
-    void getName(char *buffer) {
-        //    TODO testen
-        *buffer = *getName();
+        /**
+         *
+         * @param package
+         * @param package_size
+         * @return
+         */
+        virtual size_t _read(uint8_t *package, uint8_t package_size) = 0;
+
+    public:
+        err_t startup_error = err_t::NOT_STARTED;
+
+        /**
+         * @brief  directly transmit a package on the link.
+         * @param  package: package to be send
+         * @param  package_size: size of the package
+         * @return
+         */
+        size_t transmit(uint8_t *package, uint8_t package_size);
+
+        /**
+         * Read data from the receive buffer.
+         * @param buffer: write received data to buffer
+         * @param buffer_size: amounts of bytes to read
+         * @return amount of bytes received.
+         */
+        size_t receive(uint8_t *buffer, uint8_t buffer_size);
+
+        /**
+         * Get speed of link (bits per second)
+         * @return unsigned int speed in Bytes per second.
+         */
+        virtual unsigned int get_speed() = 0;
+
+        /**
+         * Does the link have an active connection with a client?
+         * @return true/false
+         */
+        bool is_connected();
+
     };
 
-    /**
-     * Get name of the driver
-     * @return pointer to char array.
-     */
-    virtual char* getName() = 0;
-
-    /**
-     * Get speed of link (B/s)
-     * @return unsigned int speed in Bytes per second.
-     */
-    virtual unsigned int getSpeed() {
-        return 0;
-    }
-
-    /**
-     * Does the link have time guarantee?
-     * @return true, is does, false it does not.
-     */
-    virtual bool isRealTime() {
-        return false;
-    }
-
-    /**
-     * Get link type (RADIO, WIRED, NONE)
-     * @return link_t. NONE if not connected.
-     */
-    virtual link_t getLinkType() {
-        return link_t::NONE;
-    };
-
-    /**
-     * Does the link have an active connection with a client?
-     * @return true/false
-     */
-    virtual bool isEndpointConnected() {
-        return false;
-    }
-
-    /**
-     * is the external hardware found and operationable?
-     * @return true/false
-     */
-    virtual bool isHardwareConnected() {
-        return isEndpointConnected();
-    }
-
-    /**
-     * start the driver.
-     * @return err_t, `OK` if started succesfully, `HARDWARE` or other hardware error on failure.
-     */
-    virtual err_t start(){
-        return err_t::OK;
-    }
-
-    /**
-     * Stop the driver.
-     * @return err_t, `OK` if started succesfully, `HARDWARE` or other hardware error on failure.
-     */
-    virtual err_t stop(){
-        return err_t::OK;
-    }
-};
-
-}}
+}
 #endif //ARUNA_COMMLINK_H

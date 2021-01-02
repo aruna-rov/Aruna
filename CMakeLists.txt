@@ -25,6 +25,7 @@ set(COMPONENT_SRCS
         "src/driver/port/ESP32/ESP32_RMT_Dshot.cpp"
         "src/driver/ADC.cpp"
         "src/sensor/Rain40x16.cpp"
+        "src/comm/Link.cpp"
         )
 set(COMPONENT_ADD_INCLUDEDIRS
         "include"
@@ -35,7 +36,7 @@ else()
 #    standalone unit test
     cmake_minimum_required(VERSION 3.15)
     project(Aruna)
-    set(CMAKE_CXX_STANDARD 14)
+    set(CMAKE_CXX_STANDARD 17)
     file(GLOB_RECURSE ARUNA_TEST_SOURCES
             "test/*.*"
             )

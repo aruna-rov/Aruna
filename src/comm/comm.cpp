@@ -23,6 +23,7 @@ namespace aruna {
         static log::channel_t *log;
 
         pthread_t transmissionQueueHandeler_thread_handeler;
+        pthread_t receiveHandeler_thread_handeler;
         pthread_cond_t out_buffer_not_empty;
         pthread_mutex_t out_buffer_critical;
         std::queue<transmitpackage_t> out_buffer;
@@ -104,6 +105,12 @@ namespace aruna {
          */
         void selectDriverTask();
 
+        /**
+         * Task to handle incomming connections.
+         * @return the big void
+         */
+        void * receiveHandeler(void *);
+
 //        end ahead declaration
 
         void set_status(status_t status) {
@@ -111,12 +118,14 @@ namespace aruna {
         }
 
         err_t transmit(transmitpackage_t transmitpackage) {
-            err_t return_msg;
+            err_t return_msg = err_t::OK;
+            size_t send;
             uint8_t* data = (uint8_t*) malloc(transmitpackage.data_lenght + transmitpackage_t::HEADER_SIZE);
 
             transmitpackage_t::transmitpackage_to_binary(transmitpackage, data);
-            return_msg = getDriver()->transmit(data, transmitpackage.size);
-
+            send = getDriver()->transmit(data, transmitpackage.size);
+            if (send != transmitpackage.size)
+                return_msg = err_t::FAIL;
             free(data);
             return return_msg;
         }
@@ -169,41 +178,17 @@ namespace aruna {
 
         unsigned int rateDriver(Link &driver) {
             unsigned int score = 0;
-            err_t drivstrt = driver.start();
+            err_t drivstrt = driver.startup_error;
             if (drivstrt != err_t::OK) {
-                log->warning("driver:%s, failed to start: %s", driver.getName(), err_to_char.at(drivstrt));
+                log->warning("driver failed to start: %s", err_to_char.at(drivstrt));
                 return score;
             }
-            if (!driver.isHardwareConnected())
-                return score;
-            else
-                score += 10;
-            if (!driver.isEndpointConnected())
+            if (!driver.is_connected())
                 return score;
             else
                 score += 15;
+            score *= (int) driver.get_speed() / 100;
 
-            switch (driver.getLinkType()) {
-                case link_t::WIRED:
-                    score *= 3;
-                    break;
-                case link_t::RADIO:
-                    score *= 2;
-                    break;
-                case link_t::NONE:
-//            TODO is NONE even posible?
-                    return score;
-            }
-            score *= (int) driver.getSpeed() / 100;
-
-            if (driver.isRealTime())
-                score *= 6;
-
-            err_t drivstp = driver.stop();
-            if (drivstp != err_t::OK) {
-                log->warning("driver: %s, failed to stop: %s", driver.getName(), err_to_char.at(drivstp));
-                return score / 1000;
-            }
             return score;
         }
         void * _selectDriverTask(void *) {
@@ -230,6 +215,33 @@ namespace aruna {
                 registerd = true;
             }
             return registerd;
+        }
+
+        void * receiveHandeler(void *) {
+            uint16_t bytes_read = 0;
+            uint8_t size = 0;
+            uint8_t *buff;
+            Link* driver;
+//            TODO make it less busyloopy.
+            while (1) {
+                driver = getDriver();
+//        read the size of the package
+                bytes_read = driver->receive(&size, 1);
+//                TODO if statement seems odd, `size = 1` should suffise.
+                if (bytes_read && size >= 2) {
+                    log->verbose("new incoming connection, size: %i", size);
+                    buff = (uint8_t *) malloc(size);
+                    buff[0] = size;
+                    bytes_read = driver->receive(&buff[1], (size - 1));
+                    log->dump(aruna::log::level_t::VERBOSE, buff, size);
+
+                    incoming_connection(buff, size);
+//            cleanup
+                    free(buff);
+                    size = 0;
+                    bytes_read = 0;
+                }
+            }
         }
     }
 
@@ -264,7 +276,7 @@ namespace aruna {
         err_t driver_err;
         setDriver(*driver);
 // TODO check if driver is not NULL
-        driver_err = getDriver()->start();
+        driver_err = getDriver()->startup_error;
 //        init pthread mutex and cond
         pthread_cond_init(&out_buffer_not_empty, NULL);
         pthread_mutex_init(&out_buffer_critical, NULL);
@@ -275,9 +287,15 @@ namespace aruna {
         if (err) {
             log->error("failed to start transmissionQueueHandeler: %i", err);
 //        stop when task failes
-            driver_err = getDriver()->stop();
-            if (driver_err != err_t::OK)
-                log->error("Driver failed to stop: %s", err_to_char.at(driver_err));
+//        TODO destroy driver object
+//        TODO driver unsetten en destroyen.
+            return err_t::TASK_FAILED;
+        }
+        err = pthread_create(&receiveHandeler_thread_handeler, NULL, receiveHandeler, NULL);
+        if (err) {
+            log->error("failed to start receiveHandeler: %i", err);
+//        stop when task failes
+//        TODO destroy driver object
 //        TODO driver unsetten en destroyen.
             return err_t::TASK_FAILED;
         }
@@ -297,7 +315,9 @@ namespace aruna {
         }
 //    stop all
         err_t driver_err;
-        driver_err = getDriver()->stop();
+//        TODO destory driver object
+        pthread_cancel(receiveHandeler_thread_handeler);
+        pthread_cancel(transmissionQueueHandeler_thread_handeler);
         int pret = 0;
         pthread_cond_destroy(&out_buffer_not_empty);
         pthread_mutex_destroy(&out_buffer_critical);
@@ -376,7 +396,7 @@ namespace aruna {
         //        datasize pointer
         size_t ds_p = 0;
 
-        if (!getDriver()->isEndpointConnected())
+        if (!getDriver()->is_connected())
             return err_t::NO_CONNECTION;
 
 //	TODO check if tp is allocated
@@ -414,25 +434,11 @@ namespace aruna {
     }
 
     bool is_connected() {
-        return getDriver()->isEndpointConnected();
+        return getDriver()->is_connected();
     }
 
     status_t get_status() {
         return status;
-    }
-
-
-
-    link_t get_link_type() {
-        return getDriver()->getLinkType();
-    }
-
-    void getName(char *buffer) {
-        getDriver()->getName(buffer);
-    }
-
-    char *getName() {
-        return getDriver()->getName();
     }
 
     err_t get_channels(char *buffer) {
@@ -441,7 +447,7 @@ namespace aruna {
     }
 
     unsigned int get_speed() {
-        return getDriver()->getSpeed();
+        return getDriver()->get_speed();
     }
 
     err_t incoming_connection(uint8_t *package, uint8_t package_size) {
@@ -473,7 +479,7 @@ namespace aruna {
     err_t register_candidate_driver(Link *driver) {
 //    comdriver moet eigenlijk een referentie zijn en niet een levend object.
         register_log();
-        log->debug("registering driver: %s", driver->getName());
+        log->debug("registering driver");
         if (driverCandidates.find(driver) != driverCandidates.end()) {
             return err_t::DRIVER_EXISTS;
         }
