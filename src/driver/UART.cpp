@@ -10,7 +10,8 @@ using namespace aruna::driver;
 size_t UART::write(uint8_t *data, size_t dataSize) {
     size_t ret = 0;
     pthread_mutex_lock(&write_atomic);
-    ret = _write(data, dataSize);
+//    TODO this might end badly is comm::Link decite to do comm specific things in transmit.
+    ret = transmit(data, dataSize);
     pthread_mutex_unlock(&write_atomic);
     return ret;
 }
@@ -18,7 +19,7 @@ size_t UART::write(uint8_t *data, size_t dataSize) {
 size_t UART::read(uint8_t *buffer, size_t length) {
     size_t ret = 0;
     pthread_mutex_lock(&read_atomic);
-    ret = _read(buffer, length);
+    ret = receive(buffer, length);
     pthread_mutex_unlock(&read_atomic);
     return ret;
 }
@@ -88,7 +89,7 @@ UART::~UART() {
 size_t UART::try_write(uint8_t *data, size_t dataSize) {
     size_t ret = 0;
     if (!pthread_mutex_trylock(&write_atomic)) {
-        ret = _write(data, dataSize);
+        ret = transmit(data, dataSize);
         pthread_mutex_unlock(&write_atomic);
     }
     return ret;
@@ -97,7 +98,7 @@ size_t UART::try_write(uint8_t *data, size_t dataSize) {
 size_t UART::try_read(uint8_t *buffer, size_t length) {
     size_t ret = 0;
     if (!pthread_mutex_trylock(&read_atomic)) {
-        ret = _read(buffer, length);
+        ret = transmit(buffer, length);
         pthread_mutex_unlock(&read_atomic);
     }
     return ret;
@@ -112,4 +113,8 @@ err_t UART::set_word_length(UART::word_length_t word_length) {
 
 UART::word_length_t UART::get_word_length() {
     return wordLength;
+}
+
+uint32_t UART::get_speed() {
+    return get_baudrate();
 }

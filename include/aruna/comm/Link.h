@@ -17,15 +17,15 @@ namespace aruna::comm {
          * @param data_size: length of data
          * @return amount of bytes written.
          */
-        virtual size_t _write(uint8_t *data, uint8_t data_size) = 0;
+        virtual size_t _write(uint8_t *data, size_t data_size) = 0;
 
         /**
-         *
-         * @param package
-         * @param package_size
-         * @return
+         * Read bytes and out them in the buffer
+         * @param buffer: buffer to read
+         * @param buffer_size: amount of bytes to read
+         * @return amount of byte read
          */
-        virtual size_t _read(uint8_t *package, uint8_t package_size) = 0;
+        virtual size_t _read(uint8_t *buffer, size_t buffer_size) = 0;
 
     public:
         err_t startup_error = err_t::NOT_STARTED;
@@ -36,7 +36,7 @@ namespace aruna::comm {
          * @param  package_size: size of the package
          * @return
          */
-        size_t transmit(uint8_t *package, uint8_t package_size);
+        size_t transmit(uint8_t *package, size_t package_size);
 
         /**
          * Read data from the receive buffer.
@@ -44,13 +44,16 @@ namespace aruna::comm {
          * @param buffer_size: amounts of bytes to read
          * @return amount of bytes received.
          */
-        size_t receive(uint8_t *buffer, uint8_t buffer_size);
+        size_t receive(uint8_t *buffer, size_t buffer_size);
+
+//        TODO allow to receive and transmit comm_package directly.
+//       TODO write IO abstraction driver for all read an write functionality so I2C_Master, UART an Link can all inherit from it.
 
         /**
          * Get speed of link (bits per second)
          * @return unsigned int speed in Bytes per second.
          */
-        virtual unsigned int get_speed() = 0;
+        virtual uint32_t get_speed() = 0;
 
         /**
          * Does the link have an active connection with a client?

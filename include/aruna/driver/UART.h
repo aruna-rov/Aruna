@@ -7,14 +7,12 @@
 
 #include <pthread.h>
 #include <cstdint>
+#include <aruna/comm/Link.h>
 #include "aruna/arunaTypes.h"
 
 namespace aruna {
     namespace driver {
-        class UART
-//                TODO make UART a Link when driver is reformed.
-//                : public aruna::comm::Link
-        {
+        class UART: public aruna::comm::Link {
         public:
             enum class flowcontrol_t {
                 HARDWARE,
@@ -51,23 +49,7 @@ namespace aruna {
             pthread_mutex_t write_atomic;
             pthread_mutex_t read_atomic;
 
-            /**
-             * Write data to the UART.
-             * @param data: pointer to array of bytes to be written.
-             * @param dataSize: length of data
-             * @return amount of bytes written.
-             */
-            virtual size_t _write(uint8_t *data, size_t dataSize) = 0;
-
-            /**
-             * read data from the UART.
-             * @param buffer: pointer to buffer where UART read data will be written.
-             * @param length: amount of bytes to read.
-             * @return amount of bytes read.
-             */
-            virtual size_t _read(uint8_t *buffer, size_t length) = 0;
-
-
+//            TODO _read and _write are no exposed by comm::Link::transmit/receive. No so safe! Can be fixed with an IO abstraction layer
             /**
              * Set baudrate of the UART
              * @param new_baudrate: baudrate to change to.
@@ -132,7 +114,7 @@ namespace aruna {
              */
             size_t try_write(uint8_t *data, size_t dataSize);
 //            TODO add timed_write with mutex timeout.
-
+//            TODO add (try_)write/read and lock to IO abstraction layer.
             /**
              * read data from the UART.
              * @param buffer: pointer to buffer where UART read data will be written.
@@ -221,6 +203,8 @@ namespace aruna {
              * @return word length.
              */
             virtual word_length_t get_word_length();
+
+            uint32_t get_speed() override;
 
 //            TODO add support to lock UART, simular to I2C address locking.
 //            TODO add support for interupts. Simulair to https://github.com/espressif/esp-idf/blob/master/examples/peripherals/uart/uart_events/main/uart_events_example_main.c

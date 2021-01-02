@@ -6,11 +6,11 @@
 
 namespace aruna::comm {
 
-    size_t Link::transmit(uint8_t *package, uint8_t package_size) {
+    size_t Link::transmit(uint8_t *package, size_t package_size) {
         return _write(package, package_size);
     }
 
-    size_t Link::receive(uint8_t *buffer, uint8_t buffer_size){
+    size_t Link::receive(uint8_t *buffer, size_t buffer_size){
         return _read(buffer, buffer_size);
     }
 
