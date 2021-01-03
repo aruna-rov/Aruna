@@ -3,7 +3,7 @@ set(aruna_sources
         ${aruna_DIR}/src/comm/comm.cpp
         ${aruna_DIR}/src/sis/watcher.cpp
         ${aruna_DIR}/src/sis/Performer.cpp
-        ${aruna_DIR}/src/sis/Water.cpp
+        ${aruna_DIR}/src/sensor/Water.cpp
         ${aruna_DIR}/src/sis/reporter.cpp
         )
 

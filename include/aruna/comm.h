@@ -127,7 +127,7 @@ namespace aruna {
         err_t get_channels(char *buffer);
 
         /**
-         * @brief  Get the speed of the link to the other hosts in kB/s
+         * @brief  Get the speed of the link to the other hosts in bits per second.
          * @note   returns 0 if there is no connection.
          * @retval int, speed
          */
