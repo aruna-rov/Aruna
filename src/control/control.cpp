@@ -3,23 +3,20 @@
 //
 
 
-#include <freertos/FreeRTOS.h>
-#include <freertos/task.h>
-#include <freertos/FreeRTOSConfig.h>
 #include <aruna/control.h>
 #include <set>
-#include <esp_log.h>
 #include <aruna/comm.h>
 #include "aruna/control/Actuator.h"
-
+#include <pthread.h>
+#include "aruna/log.h"
 
 namespace aruna { namespace control {
 
 namespace {
 //    variables
-	const char *LOG_TAG = "CONTROL";
+    log::channel_t* log;
 	status_t control_status = status_t::STOPPED;
-	TaskHandle_t control_comm_handler;
+	pthread_t control_comm_handler;
 	std::set<Actuator *> drivers;
 
 	axis_t<int16_t> currentSpeed = {0, 0, 0, 0, 0, 0};
@@ -35,9 +32,10 @@ status_t start() {
 	if (control_status == status_t::RUNNING)
 		return control_status;
 
+	log = new log::channel_t("Control");
 //    check if we got drivers
 	if (drivers.empty()) {
-		ESP_LOGW(LOG_TAG, "Start failed: No drivers found!");
+		log->warning("Start failed: No drivers found!");
 		return control_status;
 	}
 
@@ -46,11 +44,11 @@ status_t start() {
 		err_t stat = d->startup_error;
 		if (stat != err_t::OK)
 //            TODO print driver name?
-			ESP_LOGW(LOG_TAG, "Driver failed to start: %s", err_to_char.at(stat));
+			log->warning("Driver failed to start: %s", err_to_char.at(stat));
 	}
 
 //    start threads.
-    xTaskCreate(comm_handler_task, "control_comm_handler", 4048, NULL, 12, &control_comm_handler);
+	pthread_create(&control_comm_handler, NULL, comm_handler_task, NULL);
 	control_status = status_t::RUNNING;
 	return control_status;
 }
@@ -59,7 +57,7 @@ status_t get_status() {
 	return control_status;
 }
 
-void comm_handler_task(void *arg) {
+void* comm_handler_task(void *arg) {
 	enum comm_commands_t {
 		NO_COMMAND = 0x00,
 
@@ -106,7 +104,7 @@ void comm_handler_task(void *arg) {
 	void (*set_value)(axis_mask_t mode, int16_t speed);
 	comm_commands_t command;
 	if((int) control_channel.register_err) {
-		ESP_LOGE(LOG_TAG, "failed to register comm channel: %s", err_to_char.at(control_channel.register_err));
+		log->error("failed to register comm channel: %s", err_to_char.at(control_channel.register_err));
 	}
 	while (1) {
 		if (control_channel.receive(&request)) {
@@ -117,7 +115,7 @@ void comm_handler_task(void *arg) {
 			get_value = nullptr;
 			set_value = nullptr;
 			command = NO_COMMAND;
-			ESP_LOGD(LOG_TAG, "comm command:%X, flag:%X, data:%d", request.data_received[0], request.data_received[1], data);
+			log->debug("comm command:%X, flag:%X, data:%d", request.data_received[0], request.data_received[1], data);
 			switch (request.data_received[0]) {
 //				basic functionality
 
@@ -147,8 +145,8 @@ void comm_handler_task(void *arg) {
 							speed = get_value((axis_mask_t) mask);
 							buffer[2] = (speed >> 8);
 							buffer[3] = speed & 0xff;
-//							ESP_LOGD(LOG_TAG, "mask: %X flag: %X", mask, flags);
-//							ESP_LOGD(LOG_TAG, "GET_COMMAND: %X, value: %d",command,  speed);
+//							log->debug("mask: %X flag: %X", mask, flags);
+//							log->debug("GET_COMMAND: %X, value: %d",command,  speed);
 //							TODO error check comm.send return value
 							control_channel.send(request.from_port, buffer, 4);
 						}
@@ -170,7 +168,7 @@ void comm_handler_task(void *arg) {
 						set_value = set_speed;
 						command = SET_SPEED;
 					}
-					ESP_LOGV(LOG_TAG, "command: %X, axis: 0X%02X, speed: %i", command, flags, data);
+					log->verbose("command: %X, axis: 0X%02X, speed: %i", command, flags, data);
 					set_value((axis_mask_t) flags, data);
 					break;
 //				control
@@ -259,7 +257,7 @@ void comm_handler_task(void *arg) {
 			control_channel.receive_clear();
 		}
 	}
-	vTaskDelete(NULL);
+	pthread_exit(0);
 }
 
 status_t stop() {
@@ -272,7 +270,7 @@ status_t stop() {
 	}
 
 //    stop task
-	vTaskDelete(control_comm_handler);
+    pthread_cancel(control_comm_handler);
 	control_status = status_t::STOPPED;
 	return control_status;
 }
@@ -302,7 +300,7 @@ void set_speed(axis_mask_t axisMask, int16_t speed) {
 	for (Actuator *d: drivers) {
 		ret = d->set(axisMask, speed);
 		if (ret != err_t::OK) {
-			ESP_LOGW(LOG_TAG, "setting speed of driver failed: %s", err_to_char.at(ret));
+			log->warning("setting speed of driver failed: %s", err_to_char.at(ret));
 		}
 	}
 	for (uint i = 0; i < (uint8_t) axis_mask_t::MAX; i++) {

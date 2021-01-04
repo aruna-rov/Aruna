@@ -3,6 +3,8 @@
 //
 
 #include "aruna/driver/Dshot.h"
+#include <stdlib.h>
+#include <unistd.h>
 
 using namespace aruna;
 using namespace aruna::driver;

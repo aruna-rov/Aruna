@@ -44,10 +44,10 @@ status_t stop();
 status_t get_status();
 
 /**
- * FreeRTOS task to handle all the incoming comm requests.
+ * task to handle all the incoming comm requests.
  * @param arg, not used.
  */
-void comm_handler_task(void *arg);
+void* comm_handler_task(void *arg);
 
 
 /**
