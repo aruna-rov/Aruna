@@ -37,13 +37,20 @@ else()
     cmake_minimum_required(VERSION 3.15)
     project(Aruna)
     set(CMAKE_CXX_STANDARD 17)
-    file(GLOB_RECURSE ARUNA_TEST_SOURCES
-            "test/*.*"
-            )
 
-    add_executable(aruna-test ${ARUNA_TEST_SOURCES})
+    add_executable(aruna-test test/test.cpp test/log/testLog.cpp)
     set(aruna_DIR .)
     find_package(aruna)
     add_dependencies(aruna-test aruna)
     target_link_libraries(aruna-test aruna)
+
+    add_executable(aruna-gtest test/comm/LinkTest.cpp test/control/ActuatorTest.cpp test/control/ActuatorSetTest.cpp)
+    enable_testing()
+
+    find_package(GTest REQUIRED CONFIG)
+    add_dependencies(aruna-gtest aruna GTest::gtest GTest::gmock)
+    target_link_libraries(aruna-gtest GTest::gtest GTest::gmock GTest::gmock_main aruna)
+    include(GoogleTest)
+    gtest_discover_tests(aruna-gtest)
+
 endif()
