@@ -22,14 +22,13 @@ namespace aruna {
 			err_t last_failure = err;
 			for (int i = 0; i < transform_size; ++i) {
 				if ((uint8_t) transform[i].transform_to & (uint8_t) axisMask) {
-					int32_t adjusted_speed = (uint16_t) ((float) speed *
-														  (transform[i].speed_percentage / (float) 100.0));
+					int32_t adjusted_speed = ((float) speed * (transform[i].speed_percentage / (float) 100.0));
 					adjusted_speed = transform[i].flip_direction ? adjusted_speed * -1: adjusted_speed;
-					adjusted_speed = fmax(adjusted_speed, -32767);
-					adjusted_speed = fmin(adjusted_speed, 32767);
+					adjusted_speed = fmax(adjusted_speed, INT16_MIN);
+					adjusted_speed = fmin(adjusted_speed, INT16_MAX);
 					log.verbose("setting driver transformed: %i, axis: 0x%X, speed:%i", i, transform[i].axis,
 								adjusted_speed);
-					err = transform[i].driver->set(transform[i].axis, (uint16_t) adjusted_speed);
+					err = transform[i].driver->set(transform[i].axis, (int16_t) adjusted_speed);
 				} else {
 					log.verbose("setting driver: %i, axis: 0x%X, speed:%i", i, axisMask, speed);
 					err = transform[i].driver->set(axisMask, speed);

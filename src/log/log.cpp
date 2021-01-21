@@ -20,7 +20,11 @@ namespace aruna {
     namespace log {
 //    private
 //    variables
-        std::set<channel_t *> channels;
+        auto& channels() {
+//            mitigate Static Initialization Order Fiasco
+            static std::set<channel_t *> channels;
+            return channels;
+        }
         level_t max_level = level_t::VERBOSE;
         vprintf_like_t print_function = vprintf;
 
@@ -105,7 +109,7 @@ namespace aruna {
         }
 
         channel_t::channel_t(const char *name, level_t level) : name(name), level(level) {
-            if (!register_channel((channel_t *) this))
+            if (!register_channel(this))
 //                TODO return error instead of printing!
                 out("LOG ERROR inserting channel");
         }
@@ -171,16 +175,16 @@ namespace aruna {
         }
 
         int register_channel(channel_t *channel) {
-            if (channels.find(channel) != channels.end()) {
+            if (channels().find(channel) != channels().end()) {
                 return 0;
             }
-            return channels.insert(channel).second;
+            return channels().insert(channel).second;
         }
 
         int set_level(const char *channel_name, level_t new_level) {
 //            TODO set level on channel instead of log manager
             int success = false;
-            for (auto candidate: channels) {
+            for (auto candidate: channels()) {
                 if (!strcmp(candidate->name, channel_name)) {
                     success = true;
                     candidate->level = new_level;
