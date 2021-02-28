@@ -3,20 +3,20 @@
 //
 
 
-#include <aruna/control.h>
+#include <aruna/movement.h>
 #include <set>
 #include <aruna/comm.h>
-#include "aruna/control/Actuator.h"
+#include "aruna/movement/Actuator.h"
 #include <pthread.h>
 #include "aruna/log.h"
 
-namespace aruna { namespace control {
+namespace aruna { namespace movement {
 
 namespace {
 //    variables
     log::channel_t* log;
-	status_t control_status = status_t::STOPPED;
-	pthread_t control_comm_handler;
+	status_t movement_status = status_t::STOPPED;
+	pthread_t movement_comm_handler;
 	std::set<Actuator *> drivers;
 
 	axis_t<int16_t> currentSpeed = {0, 0, 0, 0, 0, 0};
@@ -28,15 +28,15 @@ namespace {
 }
 
 status_t start() {
-//    check control status.
-	if (control_status == status_t::RUNNING)
-		return control_status;
+//    check movement status.
+	if (movement_status == status_t::RUNNING)
+		return movement_status;
 
-	log = new log::channel_t("Control");
+	log = new log::channel_t("Movement");
 //    check if we got drivers
 	if (drivers.empty()) {
 		log->warning("Start failed: No drivers found!");
-		return control_status;
+		return movement_status;
 	}
 
 //    start all drivers
@@ -48,13 +48,13 @@ status_t start() {
 	}
 
 //    start threads.
-	pthread_create(&control_comm_handler, NULL, comm_handler_task, NULL);
-	control_status = status_t::RUNNING;
-	return control_status;
+	pthread_create(&movement_comm_handler, NULL, comm_handler_task, NULL);
+    movement_status = status_t::RUNNING;
+	return movement_status;
 }
 
 status_t get_status() {
-	return control_status;
+	return movement_status;
 }
 
 void* comm_handler_task(void *arg) {
@@ -97,17 +97,17 @@ void* comm_handler_task(void *arg) {
 	int16_t data;
 	uint8_t buffer[6];
 	axis_mask_t active_axis;
-	comm::channel_t control_channel = {
+	comm::channel_t movement_channel = {
 			.port = 3,
 	};
 	int16_t (*get_value)(axis_mask_t mode);
 	void (*set_value)(axis_mask_t mode, int16_t speed);
 	comm_commands_t command;
-	if((int) control_channel.register_err) {
-		log->error("failed to register comm channel: %s", err_to_char.at(control_channel.register_err));
+	if((int) movement_channel.register_err) {
+		log->error("failed to register comm channel: %s", err_to_char.at(movement_channel.register_err));
 	}
 	while (1) {
-		if (control_channel.receive(&request)) {
+		if (movement_channel.receive(&request)) {
 //			if (request.data_received_lenght < 2)
 //				continue;
 			flags = request.data_received[1];
@@ -148,7 +148,7 @@ void* comm_handler_task(void *arg) {
 //							log->debug("mask: %X flag: %X", mask, flags);
 //							log->debug("GET_COMMAND: %X, value: %d",command,  speed);
 //							TODO error check comm.send return value
-							control_channel.send(request.from_port, buffer, 4);
+							movement_channel.send(request.from_port, buffer, 4);
 						}
 					}
 					break;
@@ -183,7 +183,7 @@ void* comm_handler_task(void *arg) {
 							buffer[0] = GET_DAMPING;
 							buffer[1] = mask;
 							buffer[2] = (uint8_t) get_damping((axis_mask_t) mask);
-							control_channel.send(request.from_port, buffer, 3);
+							movement_channel.send(request.from_port, buffer, 3);
 						}
 					}
 					break;
@@ -198,7 +198,7 @@ void* comm_handler_task(void *arg) {
 				case GET_RUNNING_STATE:
 					buffer[0] = GET_RUNNING_STATE;
 					buffer[1] = (uint8_t) get_status();
-					control_channel.send(request.from_port, buffer, 2);
+					movement_channel.send(request.from_port, buffer, 2);
 					break;
 //				set running state
 				case SET_RUNNING_STATE:
@@ -220,7 +220,7 @@ void* comm_handler_task(void *arg) {
 					t = test_sensor();
 					buffer[0] = TEST_SENSORS;
 					buffer[1] = t;
-					control_channel.send(request.from_port, buffer, 2);
+					movement_channel.send(request.from_port, buffer, 2);
 					break;
 //				calibrate sensors
 				case CALIBRATE_SENSORS:
@@ -230,7 +230,7 @@ void* comm_handler_task(void *arg) {
 				case GET_SUPPORTED_AXIS:
 					buffer[0] = GET_SUPPORTED_AXIS;
 					buffer[1] = (uint8_t) get_active_axis();
-					control_channel.send(request.from_port, buffer, 2);
+					movement_channel.send(request.from_port, buffer, 2);
 					break;
 				case SET_SENSOR_OFFSET:
 				case GET_SENSOR_OFFSET:
@@ -240,7 +240,7 @@ void* comm_handler_task(void *arg) {
 					break;
 				case GET_MPU_STATUS:
 					buffer[0] = GET_MPU_STATUS;
-					control_channel.send(request.from_port, buffer, 1);
+					movement_channel.send(request.from_port, buffer, 1);
 					break;
 //				advanced automated control
 
@@ -254,15 +254,15 @@ void* comm_handler_task(void *arg) {
 				default:
 					break;
 			}
-			control_channel.receive_clear();
+			movement_channel.receive_clear();
 		}
 	}
 	pthread_exit(0);
 }
 
 status_t stop() {
-	if (control_status == status_t::STOPPED)
-		return control_status;
+	if (movement_status == status_t::STOPPED)
+		return movement_status;
 
 	//    stop all drivers
 	for (Actuator *d: drivers) {
@@ -270,9 +270,9 @@ status_t stop() {
 	}
 
 //    stop task
-    pthread_cancel(control_comm_handler);
-	control_status = status_t::STOPPED;
-	return control_status;
+    pthread_cancel(movement_comm_handler);
+    movement_status = status_t::STOPPED;
+	return movement_status;
 }
 
 err_t register_driver(Actuator *driver) {

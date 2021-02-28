@@ -5,12 +5,12 @@
 #include "gtest/gtest.h"
 #include "gmock/gmock.h"
 #include "aruna/arunaTypes.h"
-#include "aruna/control/controlTypes.h"
-#include "aruna/control/Actuator.h"
+#include "aruna/movement/movementTypes.h"
+#include "aruna/movement/Actuator.h"
 #include "MockActuator.h"
 
 using namespace aruna;
-using namespace aruna::control;
+using namespace aruna::movement;
 using ::testing::Return;
 using ::testing::_;
 

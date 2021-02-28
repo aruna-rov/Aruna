@@ -2,13 +2,13 @@
 // Created by noeel on 6-7-19.
 //
 
-#ifndef ARUNA_CONTROLTYPES_H
-#define ARUNA_CONTROLTYPES_H
+#ifndef ARUNA_MOVEMENTTYPES_H
+#define ARUNA_MOVEMENTTYPES_H
 
 #include <stdint.h>
 #include "stddef.h"
 
-namespace aruna { namespace control {
+namespace aruna { namespace movement {
 
         enum class axis_mask_t: uint8_t {
             X = (1 << 0),
@@ -33,7 +33,7 @@ namespace aruna { namespace control {
             KEEP_DEGREE = 0x02,
         };
 
-        // status of control
+        // status of movement
         enum class status_t {
             RUNNING = 0,
             STOPPED = 1,
@@ -76,4 +76,4 @@ namespace aruna { namespace control {
         };
     }
 }
-#endif //ARUNA_CONTROLTYPES_H
+#endif //ARUNA_MOVEMENTTYPES_H

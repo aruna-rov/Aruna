@@ -32,7 +32,7 @@ Dshot::Dshot(uint32_t speed_hz, bool bidirectional): frequency(speed_hz), bidire
 }
 
 
-aruna::err_t Dshot::_set(control::axis_mask_t axisMask, int16_t speed) {
+aruna::err_t Dshot::_set(movement::axis_mask_t axisMask, int16_t speed) {
    return set_speed(speed);
 }
 

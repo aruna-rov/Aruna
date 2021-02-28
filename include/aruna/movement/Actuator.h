@@ -2,14 +2,14 @@
 // Created by noeel on 27-3-19.
 //
 
-#ifndef ARUNA_CONTROLACTUATOR_H
-#define ARUNA_CONTROLACTUATOR_H
+#ifndef ARUNA_MOVEMENTACTUATOR_H
+#define ARUNA_MOVEMENTACTUATOR_H
 
 #include "aruna/arunaTypes.h"
-#include "aruna/control/controlTypes.h"
+#include "aruna/movement/movementTypes.h"
 
 namespace aruna {
-    namespace control {
+    namespace movement {
 
         class Actuator {
         protected:
@@ -45,7 +45,7 @@ namespace aruna {
             err_t startup_error = err_t::NOT_STARTED;
 
             /**
-             * Actuator object, used by the control module for vehicle movement.
+             * Actuator object, used by the movement module for vehicle movement.
              * Define possible axis this Actuator can move in.
              * @param axis: axis_mask_t possible containing multiple axis
              */
@@ -62,8 +62,8 @@ namespace aruna {
             err_t set_axis(axis_mask_t new_axis);
 
             /**
-            * get the control modes that this driver supports.
-            * @return control_mode mask ORed.
+            * get the movement modes that this driver supports.
+            * @return movement_mode mask ORed.
             */
             axis_mask_t get_axis();
 
@@ -89,4 +89,4 @@ namespace aruna {
     }
 }
 
-#endif //ARUNA_CONTROLACTUATOR_H
+#endif //ARUNA_MOVEMENTACTUATOR_H

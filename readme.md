@@ -1,7 +1,7 @@
 # Aruna
 
 Aruna is a library for ROV (remote operated vehicle's) This can be an aircraft, rover, submarine etc. 
-The design of the library is very flexable, allowing for multiple diffrent drivers for control of communication, so that it can be used on many diffrent applications. The library's main focus is to create a abstraction layer between the hardware and the application logic.
+The design of the library is very flexable, allowing for multiple diffrent drivers for movement of communication, so that it can be used on many diffrent applications. The library's main focus is to create a abstraction layer between the hardware and the application logic.
 
 **For documentation see [codedocs.xyz](https://codedocs.xyz/aruna-rov/Aruna/)**
 
@@ -17,7 +17,7 @@ This section describes the modules of the library.
 
 This library is responsable for all communication. The library is quite extensive. Diffrent physical layer could be applied using the `Link`.virtual class to allow for diffrent physical implementations
 
-## control
+## movement
 
 This library handles all the movement of the rov, and is dependand of the `comm` module for communication and uses `Actuator` as a virtual class for drivers.
 

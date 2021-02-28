@@ -2,10 +2,10 @@
 // Created by noeel on 22-10-20.
 //
 
-#include <aruna/control/Actuator.h>
+#include <aruna/movement/Actuator.h>
 
 using namespace aruna;
-using namespace aruna::control;
+using namespace aruna::movement;
 
 // TODO find a nice way to set speed to zero on destrion without calling a virtual function from destructor.
 

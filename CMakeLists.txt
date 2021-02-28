@@ -4,9 +4,9 @@ if (DEFINED IDF_PATH)
 set(COMPONENT_SRCS
         "src/log/log.cpp"
         "src/comm/comm.cpp"
-        "src/control/control.cpp"
+        "src/movement/movement.cpp"
         "src/driver/port/ESP32/ESP32_UART.cpp"
-        "src/control/ActuatorSet.cpp"
+        "src/movement/ActuatorSet.cpp"
         "src/driver/Stepper.cpp"
         "src/driver/port/ESP32/ESP32_Stepper.cpp"
         "src/driver/Dshot.cpp"
@@ -19,7 +19,7 @@ set(COMPONENT_SRCS
         "src/driver/port/ESP32/ESP32_I2C_master.cpp"
         "src/driver/Pwm.cpp"
         "src/driver/PCA9685.cpp"
-        "src/control/Actuator.cpp"
+        "src/movement/Actuator.cpp"
         "src/driver/port/ESP32/ESP32_MCPwm.cpp"
         "src/driver/UART.cpp"
         "src/driver/port/ESP32/ESP32_RMT_Dshot.cpp"
@@ -44,7 +44,7 @@ else()
     add_dependencies(aruna-test aruna)
     target_link_libraries(aruna-test aruna)
 
-    add_executable(aruna-gtest test/comm/LinkTest.cpp test/control/ActuatorTest.cpp test/control/ActuatorSetTest.cpp)
+    add_executable(aruna-gtest test/comm/LinkTest.cpp test/movement/ActuatorTest.cpp test/movement/ActuatorSetTest.cpp)
     enable_testing()
 
     find_package(GTest REQUIRED CONFIG)

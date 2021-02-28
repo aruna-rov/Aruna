@@ -3,12 +3,12 @@
 //
 
 #include "aruna/arunaTypes.h"
-#include "aruna/control/ActuatorSet.h"
+#include "aruna/movement/ActuatorSet.h"
 #include <math.h>
 
-using namespace aruna::control;
+using namespace aruna::movement;
 namespace aruna {
-	namespace control {
+	namespace movement {
         log::channel_t ActuatorSet::log("ActuatorSet");
 		ActuatorSet::ActuatorSet(transform_t *transform, size_t transform_size) : Actuator(axis_mask_t::NONE), transform(transform),
 																				  transform_size(transform_size){

@@ -12,7 +12,7 @@
 using namespace aruna;
 
 comm::Link *uart_driver;
-control::Actuator* l293d_driver;
+movement::Actuator* l293d_driver;
 comm::Link *rs485_driver;
 aruna::log::channel_t *example_log;
 
@@ -57,8 +57,8 @@ extern "C" void app_main(void) {
     register_drivers();
     start_comm();
 
-    control::start();
-//	control::set_X_velocity(100, direction_t::PLUS);
+    movement::start();
+//	movement::set_X_velocity(100, direction_t::PLUS);
 
 //    test application
 
@@ -97,10 +97,10 @@ void register_drivers() {
 //  comm::register_candidate_driver(rs485_driver);
 
 
-//  Control
+//  Movement
 // TODO error check
-    l293d_driver = new control::Pwm(control::axis_mask_t::X,(gpio_num_t) 32,(gpio_num_t) 33, MCPWM_UNIT_0, MCPWM_TIMER_0, MCPWM0A, MCPWM0B);
-    aruna::control::register_driver(l293d_driver);
+    l293d_driver = new movement::Pwm(movement::axis_mask_t::X,(gpio_num_t) 32,(gpio_num_t) 33, MCPWM_UNIT_0, MCPWM_TIMER_0, MCPWM0A, MCPWM0B);
+    aruna::movement::register_driver(l293d_driver);
 }
 
 void start_comm() {

@@ -9,7 +9,7 @@
 #include "Actuator.h"
 
 namespace aruna {
-	namespace control {
+	namespace movement {
 		class ActuatorSet : public Actuator {
 		private:
             err_t _set(axis_mask_t axisMask, int16_t speed) override;

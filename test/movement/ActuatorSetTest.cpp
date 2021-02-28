@@ -4,10 +4,10 @@
 
 #include "gtest/gtest.h"
 #include "MockActuator.h"
-#include "aruna/control/ActuatorSet.h"
+#include "aruna/movement/ActuatorSet.h"
 
 using namespace aruna;
-using namespace aruna::control;
+using namespace aruna::movement;
 using ::testing::Return;
 using ::testing::_;
 

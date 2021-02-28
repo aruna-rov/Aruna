@@ -2,13 +2,13 @@
 // Created by noeel on 6-1-19.
 //
 
-#ifndef ARUNA_CONTROL_H
-#define ARUNA_CONTROL_H
+#ifndef ARUNA_MOVEMENT_H
+#define ARUNA_MOVEMENT_H
 
 #include <stdint.h>
-#include "aruna/control/controlTypes.h"
-#include "aruna/control/Actuator.h"
-namespace aruna { namespace control {
+#include "aruna/movement/movementTypes.h"
+#include "aruna/movement/Actuator.h"
+namespace aruna { namespace movement {
 // variables
 
 
@@ -17,12 +17,12 @@ namespace aruna { namespace control {
 
 /**
  * Get active modus (X,Y,Z,yawn,pitch,roll)
- * @return `control_mode_t` with a bit high on enabled modus. Use `control_mode_mask_t` to decipher.
+ * @return `movement_mode_t` with a bit high on enabled modus. Use `movement_mode_mask_t` to decipher.
  */
 axis_mask_t get_active_axis();
 
 /**
- * initialise control and communicate with hardware for active modes.
+ * initialise movement and communicate with hardware for active modes.
  * @return status_t, returns current status of the modulke
  *  * `RUNNING` if it is running,
  *  * `STOPPED` is it us currenty stopped.
@@ -38,7 +38,7 @@ status_t start();
 status_t stop();
 
 /**
- * get the status of the control unit.
+ * get the status of the movement unit.
  * @return status enum, current running status.
  */
 status_t get_status();
@@ -138,4 +138,4 @@ int16_t get_degree(axis_mask_t single_axis);
 
 
 }}
-#endif //ARUNA_CONTROL_H
+#endif //ARUNA_MOVEMENT_H

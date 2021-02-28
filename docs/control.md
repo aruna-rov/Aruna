@@ -1,9 +1,9 @@
-# Control
+# Movement
 
 ## Acceleration and gyroscope
 The sensor for the closed looped system can be (almost) any MPU controller. Please see [esp-mpu-driver repo](https://github.comm/natanaeljr/esp32-MPU-driver) for more information.
 
-The sensor is not required. The control module will try to find an attached MPU controller and print "MPU functionality disabled." if the controller is not working propely. The following functionality is then disabled:
+The sensor is not required. The movement module will try to find an attached MPU controller and print "MPU functionality disabled." if the controller is not working propely. The following functionality is then disabled:
 * Closed loop control (damping, keep velocity or degree etc.)
 * get/set velocity or degree
 
@@ -20,11 +20,11 @@ GRND	| GND	| GND
 v3.3	| -		| VCC
 
 ## Drivers
-The control module can have multiple drivers at the same time for diffrent axis.
+The movement module can have multiple drivers at the same time for diffrent axis.
 
 ### L293D
 The L293D is a low cost motor driver. Any motors (5v-30v) can be attached.
-The control module does not check if the L293D is attached, so it wil always asume it is on.
+The movement module does not check if the L293D is attached, so it wil always asume it is on.
 
 **L293D pinout:**
 
@@ -40,7 +40,7 @@ GRND	| GND	| 4, 5, 13 or 12	|
 
 ## Comm
 
-comm interface with the control unit.
+comm interface with the movement unit.
 
 * Port: `3`
 * Priority: `1`
@@ -198,7 +198,7 @@ get the damping rules for a given axis
 foreach axis in request a seperate response will be send.
 
 #### Set running state
-Set the state of the control tasks.
+Set the state of the movement tasks.
 
 **This command uses the simple comm package**
 
@@ -210,7 +210,7 @@ Set the state of the control tasks.
 * none...
 
 #### Get running state
-get the state of the control tasks.
+get the state of the movement tasks.
 
 **This command uses the simple comm package**
 

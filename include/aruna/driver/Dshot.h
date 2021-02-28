@@ -5,12 +5,12 @@
 #ifndef ARUNA_DSHOT_H
 #define ARUNA_DSHOT_H
 
-#include "aruna/control/Actuator.h"
+#include "aruna/movement/Actuator.h"
 #include "pthread.h"
 
 namespace aruna {
     namespace driver {
-        class Dshot: public control::Actuator {
+        class Dshot: public movement::Actuator {
         private:
             bool _continues_write = false;
             pthread_mutex_t write_mut;
@@ -33,7 +33,7 @@ namespace aruna {
              */
             uint16_t create_dshotFrame(uint16_t speed, uint8_t telemetry);
 
-            err_t _set(control::axis_mask_t axisMask, int16_t speed) override;
+            err_t _set(movement::axis_mask_t axisMask, int16_t speed) override;
 
             /**
              * Write set Dshot frame continuously on the bus
