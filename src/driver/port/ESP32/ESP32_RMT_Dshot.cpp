@@ -58,7 +58,7 @@ ESP32_RMT_Dshot::ESP32_RMT_Dshot(rmt_channel_t channel, gpio_num_t gpio_port) {
 
 ESP32_RMT_Dshot::~ESP32_RMT_Dshot() {
     rmt_driver_uninstall(driver_config.channel);
-    pthread_exit(&update_handler);
+    pthread_cancel(update_handler);
     pthread_mutex_destroy(&dshot_frame_lock);
 }
 
