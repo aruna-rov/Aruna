@@ -17,7 +17,7 @@ namespace aruna {
             status_t status;
         protected:
 //            update thread
-            pthread_t *thread;
+            pthread_t thread;
             pthread_cond_t do_update_con;
             pthread_mutex_t do_update_mut;
 //

@@ -12,7 +12,7 @@
 
 namespace aruna {
     namespace driver {
-        class ESP32_RMT_Dshot: Dshot{
+        class ESP32_RMT_Dshot: public Dshot{
         private:
             //                tick tock
             uint16_t T0H_ticks: 15;

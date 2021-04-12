@@ -20,7 +20,7 @@ namespace aruna {
     namespace log {
 //    private
 //    variables
-        auto& channels() {
+        std::set<channel_t *> channels() {
 //            mitigate Static Initialization Order Fiasco
             static std::set<channel_t *> channels;
             return channels;
