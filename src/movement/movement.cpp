@@ -303,7 +303,7 @@ void set_speed(axis_mask_t axisMask, int16_t speed) {
 			log->warning("setting speed of driver failed: %s", err_to_char.at(ret));
 		}
 	}
-	for (uint i = 0; i < (uint8_t) axis_mask_t::MAX; i++) {
+	for (int i = 0; i < (uint8_t) axis_mask_t::MAX; i++) {
 		j= 1 << i;
 		if ((uint8_t) axisMask & j & (uint8_t) active_axis) {
 			currentSpeed[j] = speed;
