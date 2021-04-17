@@ -18,18 +18,20 @@ SCENARIO("logging", "[log]") {
         char channel_name[] = "test_channel";
         level_t log_level = level_t::INFO;
         channel_t log = channel_t(channel_name, log_level);
+        THEN("startup should have no errors") {
+            REQUIRE(log.startup_status == aruna::err_t::OK);
+        }
 
         WHEN("create identical log channel") {
             channel_t log2 = channel_t(channel_name);
-            THEN("an error must accour") {
-//                TODO can't measure
+            THEN("an error must accour for log2") {
+                REQUIRE(log2.startup_status == aruna::err_t::CHANNEL_EXISTS);
             }
-            AND_WHEN("Printing") {
+            WHEN("Printing") {
                 int p = 0;
                 p = log2.error("error print");
-                THEN("cant print anything") {
-//                    TODO make design desisions if this is what I want.
-                    CHECK(p > 0);
+                THEN("log 2 cant print anything") {
+                    CHECK(p > 0); // TODO
                 }
             }
         }
@@ -96,7 +98,10 @@ SCENARIO("logging", "[log]") {
             set_print_function(old_func);
         }
         WHEN("lowering log level") {
-            set_level(channel_name, level_t::VERBOSE);
+            bool success = set_level(channel_name, level_t::VERBOSE);
+            THEN("should succeed") {
+                REQUIRE(success);
+            }
             AND_WHEN("printing verbose") {
                 int l = log.verbose("verbose");
                 THEN("printed") {
