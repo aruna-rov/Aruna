@@ -34,6 +34,13 @@ namespace aruna { namespace log {
 
         channel_t(const char* name, level_t level = default_level);
 
+        ~channel_t();
+
+        /**
+         * Contains the error happens at construction
+         */
+        err_t startup_status = err_t::NOT_STARTED;
+
         /**
          * log verbose message
          * @param format, char array

@@ -52,6 +52,8 @@ namespace aruna {
 //             TODO explicit?
             Actuator(axis_mask_t axis = axis_mask_t::NONE);
 
+            virtual ~Actuator();
+
 
 
             /**

@@ -20,7 +20,7 @@ aruna::sis::Performer::Performer(): status(type_t::DEFAULT) {
 //    create task
         pthread_cond_init(&do_update_con, NULL);
         pthread_mutex_init(&do_update_mut, NULL);
-        pthread_create(thread, NULL, _update_handler, this);
+        pthread_create(&thread, NULL, _update_handler, this);
     }
 // set standard values for status_t
     status.level = level_t::NOTIFY;
@@ -67,6 +67,6 @@ Performer::~Performer() {
     if (not interrupt_based) {
         pthread_cond_destroy(&do_update_con);
         pthread_mutex_destroy(&do_update_mut);
-        pthread_exit(thread);
+        pthread_exit(&thread);
     }
 }
