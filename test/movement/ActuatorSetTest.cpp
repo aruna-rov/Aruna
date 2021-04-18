@@ -2,17 +2,18 @@
 // Created by noeel on 18-01-21.
 //
 
-#include "gtest/gtest.h"
 #include "MockActuator.h"
 #include "aruna/movement/ActuatorSet.h"
+#include <catch2/catch.hpp>
+#include "gmock/gmock.h"
 
 using namespace aruna;
 using namespace aruna::movement;
 using ::testing::Return;
 using ::testing::_;
 
-class ActuatorSetTest : public ::testing::Test {
-protected:
+SCENARIO("ActuatorSet", "[movement]") {
+
     MockActuator drv1;
     MockActuator drv2;
     MockActuator drv3;
@@ -57,128 +58,118 @@ protected:
                     .speed_percentage = -100.f,
             }
     };
+    drv1.set_axis(axis_mask_t::X);
+    drv2.set_axis((axis_mask_t) ((int) axis_mask_t::Y | (int) axis_mask_t::YAW));
+    drv3.set_axis(axis_mask_t::Z);
+    drv4.set_axis(axis_mask_t::PITCH);
 
-    void SetUp() override {
+    drv1.startup_error = drv1_startup_error;
+    drv2.startup_error = err_t::OK;
+    drv3.startup_error = err_t::OK;
+    drv4.startup_error = err_t::OK;
 
-        drv1.set_axis(axis_mask_t::X);
-        drv2.set_axis((axis_mask_t) ((int) axis_mask_t::Y | (int) axis_mask_t::YAW));
-        drv3.set_axis(axis_mask_t::Z);
-        drv4.set_axis(axis_mask_t::PITCH);
-
-        drv1.startup_error = drv1_startup_error;
-        drv2.startup_error = err_t::OK;
-        drv3.startup_error = err_t::OK;
-        drv4.startup_error = err_t::OK;
-
-        actuatorSet = new ActuatorSet(trans, 4);
+    actuatorSet = new ActuatorSet(trans, 4);
+    THEN("Startup error of set should be that of single object") {
+        REQUIRE(drv1_startup_error == actuatorSet->startup_error);
     }
-//    TODO write TearDown() that will remove ActuatorSet from log.
-};
 
+    THEN("actuatorset should be the combined axis of all actuators") {
+        REQUIRE(all_axis_combined == actuatorSet->get_axis());
+    }
 
-TEST_F(ActuatorSetTest, startup) {
-    EXPECT_EQ(drv1_startup_error, actuatorSet->startup_error);
-}
-
-TEST_F(ActuatorSetTest, axis) {
-    EXPECT_EQ(all_axis_combined, actuatorSet->get_axis());
-}
-
-TEST_F(ActuatorSetTest, set_error) {
-
-//    Test transform_to
-//    Test correct driver called
-//    Test flip_direction
-//    Test speed_percentage
-//    Test return correct error
-//    Test correct driver called
-    EXPECT_CALL(drv1, _set(axis_mask_t::X, -1 * (speed[1] / 2.f)))
-            .Times(1)
-            .WillOnce(Return(err_t::DRIVER_EXISTS));
-    EXPECT_CALL(drv2, _set(axis_mask_t::YAW, speed[1]))
-            .Times(1)
-            .WillOnce(Return(err_t::OK));
-    EXPECT_CALL(drv3, _set(axis_mask_t::Z, speed[1]))
-            .Times(1)
-            .WillOnce(Return(err_t::OK));
-    EXPECT_CALL(drv4, _set(_, _))
-            .Times(0);
-
-    EXPECT_EQ(err_t::DRIVER_EXISTS, actuatorSet->set(axis_mask_t::Z, speed[1]));
-
-}
-
-TEST_F(ActuatorSetTest, set_speed) {
-    //    Test speeds
-    for (int i = 0; i < speed_size; ++i) {
-        EXPECT_CALL(drv1, _set(axis_mask_t::X, -1 * (speed[i] / 2.f)))
+    WHEN("Setting actuators while one driver returns an error") {
+        //    Test transform_to
+        //    Test correct driver called
+        //    Test flip_direction
+        //    Test speed_percentage
+        //    Test return correct error
+        //    Test correct driver called
+        EXPECT_CALL(drv1, _set(axis_mask_t::X, -1 * (speed[1] / 2.f)))
                 .Times(1)
-                .WillOnce(Return(err_t::OK))
-                .RetiresOnSaturation();
-        EXPECT_CALL(drv2, _set(axis_mask_t::YAW, speed[i]))
+                .WillOnce(Return(err_t::DRIVER_EXISTS));
+        EXPECT_CALL(drv2, _set(axis_mask_t::YAW, speed[1]))
                 .Times(1)
-                .WillOnce(Return(err_t::OK))
-                .RetiresOnSaturation();
-        EXPECT_CALL(drv3, _set(axis_mask_t::Z, speed[i]))
+                .WillOnce(Return(err_t::OK));
+        EXPECT_CALL(drv3, _set(axis_mask_t::Z, speed[1]))
                 .Times(1)
-                .WillOnce(Return(err_t::OK))
-                .RetiresOnSaturation();
+                .WillOnce(Return(err_t::OK));
         EXPECT_CALL(drv4, _set(_, _))
                 .Times(0);
 
-        EXPECT_EQ(err_t::OK, actuatorSet->set(axis_mask_t::Z, speed[i]));
+        THEN("actuatorSet should return error") {
+            REQUIRE(err_t::DRIVER_EXISTS == actuatorSet->set(axis_mask_t::Z, speed[1]));
+        }
     }
-}
 
-TEST_F(ActuatorSetTest, set_percentage) {
+    WHEN("Calling actuatorset with different speeds") {
+        for (int i = 0; i < speed_size; ++i) {
+            EXPECT_CALL(drv1, _set(axis_mask_t::X, -1 * (speed[i] / 2.f)))
+                    .Times(1)
+                    .WillOnce(Return(err_t::OK))
+                    .RetiresOnSaturation();
+            EXPECT_CALL(drv2, _set(axis_mask_t::YAW, speed[i]))
+                    .Times(1)
+                    .WillOnce(Return(err_t::OK))
+                    .RetiresOnSaturation();
+            EXPECT_CALL(drv3, _set(axis_mask_t::Z, speed[i]))
+                    .Times(1)
+                    .WillOnce(Return(err_t::OK))
+                    .RetiresOnSaturation();
+            EXPECT_CALL(drv4, _set(_, _))
+                    .Times(0);
 
-    int32_t speed_drv3;
+            REQUIRE(err_t::OK == actuatorSet->set(axis_mask_t::Z, speed[i]));
+        }
+    }
+
+    WHEN("Setting percentages") {
+        int32_t speed_drv3;
 //    Test if percentage is over- and under-flow protected.
-    for (int i = 0; i < speed_size; ++i) {
-        speed_drv3 = speed[i] * 2;
-        speed_drv3 = fmax(speed_drv3, INT16_MIN);
-        speed_drv3 = fmin(speed_drv3, INT16_MAX);
-        EXPECT_CALL(drv1, _set(_, _))
-                .Times(0);
-        EXPECT_CALL(drv2, _set(_, _))
-                .Times(0);
-        EXPECT_CALL(drv3, _set(axis_mask_t::Z, speed_drv3))
-                .Times(1)
-                .WillOnce(Return(err_t::OK))
-                .RetiresOnSaturation();
-        EXPECT_CALL(drv4, _set(axis_mask_t::PITCH, fmin(INT16_MAX, -1 * speed[i])))
-                .Times(1)
-                .WillOnce(Return(err_t::OK))
-                .RetiresOnSaturation();
-        EXPECT_EQ(err_t::OK, actuatorSet->set(axis_mask_t::ROLL, speed[i]));
+        for (int i = 0; i < speed_size; ++i) {
+            speed_drv3 = speed[i] * 2;
+            speed_drv3 = fmax(speed_drv3, INT16_MIN);
+            speed_drv3 = fmin(speed_drv3, INT16_MAX);
+            EXPECT_CALL(drv1, _set(_, _))
+                    .Times(0);
+            EXPECT_CALL(drv2, _set(_, _))
+                    .Times(0);
+            EXPECT_CALL(drv3, _set(axis_mask_t::Z, speed_drv3))
+                    .Times(1)
+                    .WillOnce(Return(err_t::OK))
+                    .RetiresOnSaturation();
+            EXPECT_CALL(drv4, _set(axis_mask_t::PITCH, fmin(INT16_MAX, -1 * speed[i])))
+                    .Times(1)
+                    .WillOnce(Return(err_t::OK))
+                    .RetiresOnSaturation();
+            REQUIRE(err_t::OK == actuatorSet->set(axis_mask_t::ROLL, speed[i]));
+        }
     }
 
-}
+    WHEN("setting axis that a driver can handle alone") {
+        //    Test to see if native `sets` still work
+        EXPECT_CALL(drv1, _set(axis_mask_t::X, speed[1]))
+                .Times(1)
+                .WillOnce(Return(err_t::OK));
+        EXPECT_CALL(drv2, _set(axis_mask_t::Y, speed[1]))
+                .Times(1)
+                .WillOnce(Return(err_t::OK));
+        EXPECT_CALL(drv2, _set((axis_mask_t) ((int) axis_mask_t::Y | (int) axis_mask_t::YAW), speed[1]))
+                .Times(1)
+                .WillOnce(Return(err_t::OK));
+        EXPECT_CALL(drv2, _set(axis_mask_t::YAW, speed[1]))
+                .Times(1)
+                .WillOnce(Return(err_t::OK));
+        EXPECT_CALL(drv3, _set(axis_mask_t::Z, speed[1]))
+                .Times(0);
+        EXPECT_CALL(drv4, _set(axis_mask_t::PITCH, speed[1]))
+                .Times(1)
+                .WillOnce(Return(err_t::OK));
 
-TEST_F(ActuatorSetTest, set_native) {
-//    Test to see if native `sets` still work
-    EXPECT_CALL(drv1, _set(axis_mask_t::X, speed[1]))
-            .Times(1)
-            .WillOnce(Return(err_t::OK));
-    EXPECT_CALL(drv2, _set(axis_mask_t::Y, speed[1]))
-            .Times(1)
-            .WillOnce(Return(err_t::OK));
-    EXPECT_CALL(drv2, _set((axis_mask_t) ((int)axis_mask_t::Y | (int) axis_mask_t::YAW), speed[1]))
-            .Times(1)
-            .WillOnce(Return(err_t::OK));
-    EXPECT_CALL(drv2, _set(axis_mask_t::YAW, speed[1]))
-            .Times(1)
-            .WillOnce(Return(err_t::OK));
-    EXPECT_CALL(drv3, _set(axis_mask_t::Z, speed[1]))
-            .Times(0);
-    EXPECT_CALL(drv4, _set(axis_mask_t::PITCH, speed[1]))
-            .Times(1)
-            .WillOnce(Return(err_t::OK));
+        REQUIRE(err_t::OK == actuatorSet->set(axis_mask_t::X, speed[1]));
+        REQUIRE(err_t::OK == actuatorSet->set(axis_mask_t::Y, speed[1]));
+        REQUIRE(err_t::OK == actuatorSet->set((axis_mask_t) ((int) axis_mask_t::Y | (int) axis_mask_t::YAW), speed[1]));
+        REQUIRE(err_t::OK == actuatorSet->set(axis_mask_t::YAW, speed[1]));
+        REQUIRE(err_t::OK == actuatorSet->set(axis_mask_t::PITCH, speed[1]));
+    }
 
-    EXPECT_EQ(err_t::OK, actuatorSet->set(axis_mask_t::X, speed[1]));
-    EXPECT_EQ(err_t::OK, actuatorSet->set(axis_mask_t::Y, speed[1]));
-    EXPECT_EQ(err_t::OK, actuatorSet->set((axis_mask_t) ((int)axis_mask_t::Y | (int) axis_mask_t::YAW), speed[1]));
-    EXPECT_EQ(err_t::OK, actuatorSet->set(axis_mask_t::YAW, speed[1]));
-    EXPECT_EQ(err_t::OK, actuatorSet->set(axis_mask_t::PITCH, speed[1]));
-
-}
+};

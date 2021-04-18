@@ -1,5 +1,5 @@
 
-#include "gtest/gtest.h"
+#include "catch2/catch.hpp"
 #include "gmock/gmock.h"
 #include "aruna/comm/Link.h"
 
@@ -14,14 +14,21 @@ public:
     MOCK_METHOD(uint32_t, get_speed, (), (override));
 };
 
-TEST(Link, sending) {
-  MockLink link;
-  uint8_t data = 0x04;
-  EXPECT_CALL(link, _write(&data, 1))
-    .Times(1)
-    .WillOnce(Return(1));
+SCENARIO("link", "[comm]") {
+    GIVEN("link object") {
+        MockLink link;
+        WHEN("transmitting data") {
+            uint8_t data = 0x04;
+            EXPECT_CALL(link, _write(&data, 1))
+                    .Times(1)
+                    .WillOnce(Return(1));
 
-  link.transmit(&data, 1);
+            link.transmit(&data, 1);
+            THEN("_write should be called")  {
+                // TODO cant test
+            }
+        }
+    }
 }
 
 // TODO add receiving.
