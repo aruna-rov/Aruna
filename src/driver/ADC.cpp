@@ -25,8 +25,16 @@ namespace aruna {
         }
 
         int32_t ADC::raw_to_voltage(int32_t raw) {
-//            TODO are negative values possible?
-            return ((raw * (this->reference - 0)) / (sizeof(raw) * 8)) + 0;
+            double input, inputLow, inputHigh, outputHigh, outputLow;
+            input = raw;
+            inputLow = 0;
+            inputHigh = INT32_MAX;
+            outputHigh = reference;
+            outputLow = 0;
+// TODO make convert_range function and replace Actuator::convert_range with this
+// https://gamedev.stackexchange.com/questions/33441/how-to-convert-a-number-from-one-min-max-set-to-another-min-max-set
+            return ((input - inputLow) / (inputHigh - inputLow)) * (outputHigh - outputLow) + outputLow;
+
         }
 
         uint16_t ADC::get_reference() const {

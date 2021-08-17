@@ -35,7 +35,12 @@ namespace aruna {
              */
             err_t isConnected(uint8_t address);
 
-
+            /**
+             * ADS101x I²C 12 bit ADC with four channels.
+             * @param compare select pin and comparison
+             * @param i2c_bus I²C Bus for communication
+             * @param address optional I²C address, will use default address if not omitted.
+             */
             ADS101x(MUX compare, I2C_master *i2c_bus, uint8_t address = default_address);
 
         private:

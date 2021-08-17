@@ -43,7 +43,10 @@ else ()
             test/log/LogTest.cpp
             test/movement/ActuatorTest.cpp
             test/movement/ActuatorSetTest.cpp
-            test/comm/LinkTest.cpp)
+            test/comm/LinkTest.cpp
+            test/driver/cross_platform/FT_I2CTest.cpp
+            test/driver/ADS101xTest.cpp
+            test/driver/ADCTest.cpp)
 
     set(aruna_DIR .)
     find_package(aruna)

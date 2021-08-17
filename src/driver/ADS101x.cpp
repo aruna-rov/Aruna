@@ -2,6 +2,7 @@
 // Created by noeel on 17-08-20.
 //
 #include <math.h>
+#include <cstdio>
 #include "aruna/driver/ADS101x.h"
 
 using namespace aruna;
@@ -22,18 +23,29 @@ err_t ADS101x::_read(int32_t &raw) {
                       (int) ADS101x::COMP_QUEUE::DEFAULT;
 
     uint8_t data[2];
+    uint8_t config_array[2]={ static_cast<uint8_t>(config & 0xff), static_cast<uint8_t>(config >> 8) };
 //                write config
-    err = i2c_bus->write(i2c_address, (uint8_t) register_address_pointer::CONFIG, reinterpret_cast<uint8_t *>(config),
-                         2);
+    err = i2c_bus->write(i2c_address, (uint8_t) register_address_pointer::CONFIG, config_array, 2);
     if ((bool) err)
         return err;
 //                set Conversion register to read and read conversion register
     err = i2c_bus->read(i2c_address, (uint8_t) register_address_pointer::CONVERSION, data, 2);
-
+//    printf("read: 0x%X%X\n", data[0], data[1]);
     conversion = (int16_t) (data[0] << 8 | (data[1] & 0xFF));
     conversion = conversion >> 4;
 //              TODO use function from Actuator.h
-    raw = ((conversion * (pow(2, 31) - 0)) / 2047) + 0;
+//    raw = ((conversion * (4096 - 0)) / 2047) + 0;
+
+    double input, inputLow, inputHigh, outputHigh, outputLow;
+    input = conversion;
+    inputLow = -2048;
+    inputHigh = 2047;
+    outputHigh = INT32_MAX;
+    outputLow = INT32_MIN;
+// TODO make convert_range function and replace Actuator::convert_range with this
+// TODO range converting should be done by the ADC parent.
+// https://gamedev.stackexchange.com/questions/33441/how-to-convert-a-number-from-one-min-max-set-to-another-min-max-set
+    raw = ((input - inputLow) / (inputHigh - inputLow)) * (outputHigh - outputLow) + outputLow;
     return err;
 }
 
